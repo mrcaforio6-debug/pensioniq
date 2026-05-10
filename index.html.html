@@ -2109,27 +2109,52 @@ function safeParseJSON(text, filename) {
   return { anbieter: (filename || 'Unbekannt').replace(/\.[^.]+$/, ''), produkt: null, jahrespraemie: null, verwaltungskosten: null, umwandlungssatz: null, verzinsung: null, sparbeitraege: null, risikobeitraege: null, zusatzdeckungen: null, kuendigungsfrist: null, besonderheiten: 'Analyse fehlgeschlagen.', datenqualitaet: 'niedrig' };
 }
 
-// ── PARAMETERS ──
-const ALL_PARAMS = [
-  { key: 'jahrespraemie',     label: 'Jahresprämie (CHF)',    default: true  },
-  { key: 'verwaltungskosten', label: 'Verwaltungskosten',     default: true  },
-  { key: 'umwandlungssatz',   label: 'Umwandlungssatz (UWS)', default: true  },
-  { key: 'verzinsung',        label: 'Verzinsung',            default: true  },
-  { key: 'sparbeitraege',     label: 'Sparbeiträge',          default: true  },
-  { key: 'risikobeitraege',   label: 'Risikobeiträge',        default: false },
-  { key: 'zusatzdeckungen',   label: 'Zusatzdeckungen',       default: false },
-  { key: 'kuendigungsfrist',  label: 'Kündigungsfrist',       default: false },
-  { key: 'besonderheiten',    label: 'Besonderheiten',        default: false },
+// ── PARAMETER GROUPS ──
+const PARAM_GROUPS = [
+  {
+    group: 'Leistungen',
+    color: 'var(--blue)',
+    params: [
+      { key: 'leistung_alter',         label: 'Altersleistung (Rente/Kapital)', default: true },
+      { key: 'leistung_tod',           label: 'Todesfallkapital',               default: true },
+      { key: 'leistung_invaliditaet',  label: 'Invalidenrente',                 default: true },
+      { key: 'leistung_ks_invalide',   label: 'Kinderrente bei Invalidität',    default: true },
+      { key: 'leistung_ks_tod',        label: 'Kinderrente bei Tod',            default: true },
+      { key: 'umwandlungssatz',        label: 'Umwandlungssatz (UWS)',          default: true },
+      { key: 'verzinsung',             label: 'Verzinsung Altersguthaben',      default: true },
+      { key: 'zusatzdeckungen',        label: 'Zusatzdeckungen',                default: false },
+    ]
+  },
+  {
+    group: 'Beiträge',
+    color: 'var(--teal)',
+    params: [
+      { key: 'beitrag_total_an',       label: 'Total Beitrag Arbeitnehmer',     default: true },
+      { key: 'beitrag_total_ag',       label: 'Total Beitrag Arbeitgeber',      default: true },
+      { key: 'beitrag_total_gesamt',   label: 'Totalbeitrag (AN + AG)',         default: true },
+      { key: 'beitrag_spar_an',        label: 'Sparbeitrag Arbeitnehmer',       default: false },
+      { key: 'beitrag_spar_ag',        label: 'Sparbeitrag Arbeitgeber',        default: false },
+      { key: 'beitrag_risiko_an',      label: 'Risikobeitrag Arbeitnehmer',     default: false },
+      { key: 'beitrag_risiko_ag',      label: 'Risikobeitrag Arbeitgeber',      default: false },
+      { key: 'verwaltungskosten',      label: 'Verwaltungskosten',              default: true },
+    ]
+  }
 ];
+
+const ALL_PARAMS = PARAM_GROUPS.flatMap(g => g.params);
 
 function renderParamCheckboxes() {
   const el = document.getElementById('param-checkboxes');
   if (!el) return;
-  el.innerHTML = ALL_PARAMS.map(p => `
-    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:5px 0;border-bottom:1px solid var(--border)">
-      <input type="checkbox" id="param-${p.key}" ${p.default ? 'checked' : ''} style="width:14px;height:14px;accent-color:var(--blue);cursor:pointer">
-      <span style="font-size:12px;color:var(--text-2)">${p.label}</span>
-    </label>`).join('');
+  el.innerHTML = PARAM_GROUPS.map(g => `
+    <div style="margin-bottom:8px">
+      <div style="font-size:9px;font-weight:700;color:${g.color};letter-spacing:.08em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;padding:5px 0 4px;border-bottom:2px solid ${g.color}22;margin-bottom:4px">${g.group}</div>
+      ${g.params.map(p => `
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:4px 0;border-bottom:1px solid var(--border)">
+          <input type="checkbox" id="param-${p.key}" ${p.default ? 'checked' : ''} style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer">
+          <span style="font-size:11px;color:var(--text-2)">${p.label}</span>
+        </label>`).join('')}
+    </div>`).join('');
 }
 
 function toggleAllParams(on) {
@@ -2140,6 +2165,13 @@ function getActiveParams() {
   return ALL_PARAMS.filter(p => document.getElementById('param-' + p.key)?.checked);
 }
 
+function getActiveGroups() {
+  return PARAM_GROUPS.map(g => ({
+    ...g,
+    params: g.params.filter(p => document.getElementById('param-' + p.key)?.checked)
+  })).filter(g => g.params.length > 0);
+}
+
 // ── MAIN ANALYSIS ──
 async function startAnalysis() {
   const apiKey = localStorage.getItem('piq_api_key');
@@ -2148,9 +2180,29 @@ async function startAnalysis() {
   btn.disabled = true;
   btn.innerHTML = '<div class="spinner" style="border-color:rgba(255,255,255,.2);border-top-color:#fff"></div> Analysiere...';
 
-  const activeParams = getActiveParams();
-  const paramKeys = activeParams.map(p => `  "${p.key}": "${p.label} oder null"`).join(',\n');
-  const paramPrompt = `Analysiere diese BVG-Offerte und extrahiere die folgenden Parameter. Antworte NUR mit JSON ohne Backticks:\n{\n  "anbieter": "Name des Versicherers",\n  "produkt": "Produktname oder null",\n${paramKeys},\n  "datenqualitaet": "hoch/mittel/niedrig"\n}`;
+  const paramPrompt = `Du analysierst eine BVG-Offerte. Extrahiere alle Werte exakt aus dem Dokument. Antworte NUR mit JSON ohne Backticks, keine Erklärungen:
+{
+  "anbieter": "Name des Versicherers",
+  "produkt": "Produktname oder Planbezeichnung oder null",
+  "leistung_alter": "Altersrente oder Alterskapital (Betrag CHF oder Formel) oder null",
+  "leistung_tod": "Todesfallkapital in CHF oder null",
+  "leistung_invaliditaet": "Invalidenrente pro Jahr in CHF oder null",
+  "leistung_ks_invalide": "Kinderrente bei Invalidität in CHF oder null",
+  "leistung_ks_tod": "Kinderrente bei Tod in CHF oder null",
+  "umwandlungssatz": "Umwandlungssatz in % oder null",
+  "verzinsung": "Verzinsung Altersguthaben in % oder null",
+  "zusatzdeckungen": "Aufzählung aller Zusatzdeckungen oder null",
+  "beitrag_total_an": "Totalbeitrag Arbeitnehmer in CHF/Jahr oder % oder null",
+  "beitrag_total_ag": "Totalbeitrag Arbeitgeber in CHF/Jahr oder % oder null",
+  "beitrag_total_gesamt": "Gesamtbeitrag AN+AG in CHF/Jahr oder null",
+  "beitrag_spar_an": "Sparbeitrag Arbeitnehmer in CHF oder % oder null",
+  "beitrag_spar_ag": "Sparbeitrag Arbeitgeber in CHF oder % oder null",
+  "beitrag_risiko_an": "Risikobeitrag Arbeitnehmer in CHF oder % oder null",
+  "beitrag_risiko_ag": "Risikobeitrag Arbeitgeber in CHF oder % oder null",
+  "verwaltungskosten": "Verwaltungskosten in CHF oder % oder null",
+  "besonderheiten": "Wichtige Punkte in 1-2 Sätzen oder null",
+  "datenqualitaet": "hoch/mittel/niedrig"
+}`;
   const kunde = document.getElementById('kunde-name').value || 'Unbekannter Kunde';
   const ma = document.getElementById('mitarbeitende').value || 'k.A.';
   const startTime = Date.now();
@@ -2205,58 +2257,178 @@ async function startAnalysis() {
 // ── RENDER RESULTS ──
 function renderResults() {
   const { results, recommendation, elapsed, kunde } = analysisResults;
-  const activeParams = getActiveParams();
   const bestAnbieter = recommendation?.empfehlung_anbieter;
+  const activeGroups = getActiveGroups();
+
   document.getElementById('empty-state').style.display = 'none';
   document.getElementById('result-view').style.display = 'block';
   document.getElementById('result-meta').textContent = `${results.length} Anbieter · ${elapsed}s · ${kunde}`;
 
-  document.getElementById('comp-thead').innerHTML = `<tr><th>Parameter</th>${results.map(r=>`<th>${r.anbieter}${r.anbieter===bestAnbieter?'<span class="top-badge">★ TOP</span>':''}</th>`).join('')}</tr>`;
-  document.getElementById('comp-tbody').innerHTML = activeParams.map(p=>`<tr class="${results.some(r=>r.anbieter===bestAnbieter&&r[p.key])?'best-row':''}"><td style="color:var(--text-3);font-size:10px;text-transform:uppercase;letter-spacing:.04em">${p.label}</td>${results.map(r=>`<td class="${r.anbieter===bestAnbieter?'val-good':''}">${r[p.key]||'—'}</td>`).join('')}</tr>`).join('');
+  // ── Vergleichstabelle ──
+  const thead = `<tr>
+    <th style="text-align:left;min-width:200px">Leistung / Beitrag</th>
+    ${results.map(r => `<th style="text-align:center;min-width:140px">
+      ${r.anbieter}
+      ${r.anbieter === bestAnbieter ? '<br><span class="top-badge">★ Empfohlen</span>' : ''}
+    </th>`).join('')}
+  </tr>`;
 
+  const tbody = activeGroups.map(g => {
+    const groupHeader = `<tr>
+      <td colspan="${results.length + 1}" style="background:var(--sand-2);padding:8px 12px;font-size:10px;font-weight:700;color:${g.color};letter-spacing:.1em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;border-bottom:1px solid var(--border)">${g.group}</td>
+    </tr>`;
+
+    const paramRows = g.params.map(p => {
+      // Find best value for this param (lowest for costs, highest for benefits)
+      const vals = results.map(r => r[p.key]);
+      const hasVals = vals.some(v => v && v !== '—' && v !== null);
+
+      return `<tr>
+        <td style="padding:9px 12px;font-size:12px;color:var(--text-3);border-bottom:1px solid var(--border);font-weight:400">${p.label}</td>
+        ${results.map(r => {
+          const val = r[p.key] || '—';
+          const isBest = r.anbieter === bestAnbieter;
+          const isTotal = p.key.includes('total') || p.key.includes('gesamt');
+          return `<td style="padding:9px 12px;text-align:center;border-bottom:1px solid var(--border);font-family:'JetBrains Mono',monospace;font-size:11px;${isBest && val !== '—' ? 'color:var(--teal);font-weight:600;background:rgba(14,124,110,.04)' : 'color:var(--text-2)'}${isTotal ? ';font-weight:700;font-size:12px' : ''}">${val}</td>`;
+        }).join('')}
+      </tr>`;
+    }).join('');
+
+    return groupHeader + paramRows;
+  }).join('');
+
+  // Total summary row
+  const totalRow = `<tr style="background:var(--sand)">
+    <td style="padding:11px 12px;font-size:12px;font-weight:700;color:var(--text-1);font-family:'Fraunces',serif">Gesamtbeitrag (AN + AG)</td>
+    ${results.map(r => {
+      const val = r.beitrag_total_gesamt || r.beitrag_total_an || '—';
+      const isBest = r.anbieter === bestAnbieter;
+      return `<td style="padding:11px 12px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;${isBest ? 'color:var(--teal)' : 'color:var(--text-1)'}">${val}</td>`;
+    }).join('')}
+  </tr>`;
+
+  document.getElementById('comp-thead').innerHTML = thead;
+  document.getElementById('comp-tbody').innerHTML = tbody + totalRow;
+
+  // ── Besonderheiten row ──
+  if (results.some(r => r.besonderheiten)) {
+    document.getElementById('comp-tbody').innerHTML += `<tr>
+      <td style="padding:9px 12px;font-size:12px;color:var(--text-3);border-top:2px solid var(--border-2)">Besonderheiten</td>
+      ${results.map(r => `<td style="padding:9px 12px;font-size:11px;color:var(--text-3);font-family:'DM Sans',sans-serif;border-top:2px solid var(--border-2);text-align:center">${r.besonderheiten || '—'}</td>`).join('')}
+    </tr>`;
+  }
+
+  // ── Empfehlung Tab ──
   if (recommendation) {
     document.getElementById('rec-content').innerHTML = `
       <div class="rec-card"><div class="rec-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div><div><div class="rec-title">Empfehlung: ${recommendation.empfehlung_anbieter}</div><div class="rec-desc">${recommendation.hauptvorteil}</div></div></div>
-      ${recommendation.einsparung_pro_jahr?`<div class="param-grid"><div class="param-card"><div class="param-val" style="color:var(--teal)">${recommendation.einsparung_pro_jahr}</div><div class="param-lbl">Einsparung/Jahr</div></div><div class="param-card"><div class="param-val" style="color:var(--blue)">${results.length}</div><div class="param-lbl">Anbieter</div></div><div class="param-card"><div class="param-val" style="color:var(--gold)">${elapsed}s</div><div class="param-lbl">Analysezeit</div></div></div>`:''}
+      ${recommendation.einsparung_pro_jahr ? `<div class="param-grid"><div class="param-card"><div class="param-val" style="color:var(--teal)">${recommendation.einsparung_pro_jahr}</div><div class="param-lbl">Einsparung/Jahr</div></div><div class="param-card"><div class="param-val" style="color:var(--blue)">${results.length}</div><div class="param-lbl">Anbieter</div></div><div class="param-card"><div class="param-val" style="color:var(--gold)">${elapsed}s</div><div class="param-lbl">Analysezeit</div></div></div>` : ''}
       <div class="ai-summary"><div class="ai-summary-hdr"><div class="ai-tag">AI · BEGRÜNDUNG</div></div><p>${recommendation.begruendung}</p></div>
       <div class="ai-summary" style="background:var(--warning-lt);border-color:rgba(192,92,42,.2)"><div class="ai-summary-hdr"><div class="ai-tag" style="background:var(--warning-lt);color:var(--warning);border-color:rgba(192,92,42,.3)">RISIKEN</div></div><p style="color:var(--text-2)">${recommendation.risiken}</p></div>
       <div class="ai-summary"><div class="ai-summary-hdr"><div class="ai-tag">GESAMTBEWERTUNG</div></div><p>${recommendation.gesamtbewertung}</p></div>`;
   }
 
-  document.getElementById('detail-content').innerHTML = results.map(r=>`<div style="margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border)"><div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><div style="font-family:'Fraunces',serif;font-size:16px;font-weight:400;color:var(--text-1)">${r.anbieter}</div>${r.anbieter===bestAnbieter?'<span class="top-badge" style="font-size:10px;padding:3px 8px">★ Empfohlen</span>':''}<div style="margin-left:auto;font-size:9px;color:var(--text-4);font-family:\'JetBrains Mono\',monospace">Datenqualität: ${r.datenqualitaet||'k.A.'}</div></div>${r.zusatzdeckungen?`<div style="margin-bottom:8px;font-size:12px;color:var(--text-2)">${r.zusatzdeckungen}</div>`:''} ${r.besonderheiten?`<div style="background:var(--sand);border-radius:6px;padding:8px 10px;font-size:12px;color:var(--text-3)">${r.besonderheiten}</div>`:''}</div>`).join('');
+  // ── Detail Tab ──
+  document.getElementById('detail-content').innerHTML = results.map(r => `
+    <div style="margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid var(--border)">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+        <div style="font-family:'Fraunces',serif;font-size:18px;font-weight:400;color:var(--text-1)">${r.anbieter}</div>
+        ${r.produkt ? `<span style="font-size:12px;color:var(--text-3)">${r.produkt}</span>` : ''}
+        ${r.anbieter === bestAnbieter ? '<span class="top-badge" style="font-size:10px;padding:3px 8px">★ Empfohlen</span>' : ''}
+        <div style="margin-left:auto;font-size:9px;color:var(--text-4);font-family:\'JetBrains Mono\',monospace">Datenqualität: ${r.datenqualitaet || 'k.A.'}</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
+        <div style="background:var(--blue-lt);border:1px solid rgba(27,79,216,.15);border-radius:8px;padding:10px 14px">
+          <div style="font-size:9px;color:var(--blue);font-family:\'JetBrains Mono\',monospace;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Beitrag Arbeitnehmer</div>
+          <div style="font-size:14px;font-weight:600;color:var(--text-1);font-family:\'JetBrains Mono\',monospace">${r.beitrag_total_an || '—'}</div>
+        </div>
+        <div style="background:var(--teal-lt);border:1px solid rgba(14,124,110,.15);border-radius:8px;padding:10px 14px">
+          <div style="font-size:9px;color:var(--teal);font-family:\'JetBrains Mono\',monospace;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Beitrag Arbeitgeber</div>
+          <div style="font-size:14px;font-weight:600;color:var(--text-1);font-family:\'JetBrains Mono\',monospace">${r.beitrag_total_ag || '—'}</div>
+        </div>
+      </div>
+      ${r.besonderheiten ? `<div style="background:var(--sand);border-radius:6px;padding:8px 12px;font-size:12px;color:var(--text-3);line-height:1.6">${r.besonderheiten}</div>` : ''}
+    </div>`).join('');
 }
 
 // ── DOWNLOAD EXCEL ──
 function downloadExcel() {
   if (!analysisResults) return;
   const { results, kunde } = analysisResults;
-  const activeParams = getActiveParams();
-  const rows = [['Parameter', ...results.map(r=>r.anbieter)]];
-  activeParams.forEach(p => rows.push([p.label, ...results.map(r=>r[p.key]||'—')]));
+  const activeGroups = getActiveGroups();
+  const rows = [['', ...results.map(r => r.anbieter)]];
+
+  activeGroups.forEach(g => {
+    rows.push([g.group.toUpperCase()]);
+    g.params.forEach(p => rows.push([p.label, ...results.map(r => r[p.key] || '—')]));
+    rows.push([]);
+  });
+
+  // Total row
+  rows.push(['GESAMTBEITRAG (AN + AG)', ...results.map(r => r.beitrag_total_gesamt || '—')]);
+
   if (analysisResults.recommendation) {
-    rows.push([]); rows.push(['Empfehlung', analysisResults.recommendation.empfehlung_anbieter]);
+    rows.push([]);
+    rows.push(['EMPFEHLUNG', analysisResults.recommendation.empfehlung_anbieter]);
     rows.push(['Begründung', analysisResults.recommendation.begruendung]);
     if (analysisResults.recommendation.einsparung_pro_jahr) rows.push(['Einsparung/Jahr', analysisResults.recommendation.einsparung_pro_jahr]);
   }
+
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet(rows);
-  ws['!cols'] = [{ wch:22 }, ...results.map(()=>({ wch:20 }))];
+  ws['!cols'] = [{ wch: 28 }, ...results.map(() => ({ wch: 22 }))];
   XLSX.utils.book_append_sheet(wb, ws, 'BVG-Offertvergleich');
-  XLSX.writeFile(wb, `PensionIQ_${kunde.replace(/\s/g,'_')}.xlsx`);
+  XLSX.writeFile(wb, `PensionIQ_${kunde.replace(/\s/g, '_')}.xlsx`);
 }
 
 // ── DOWNLOAD PDF ──
 function downloadPDF() {
   if (!analysisResults) return;
   const { results, recommendation, kunde, ma, elapsed } = analysisResults;
-  const activeParams = getActiveParams();
+  const activeGroups = getActiveGroups();
   const date = new Date().toLocaleDateString('de-CH');
-  const rows = activeParams.map(p=>`<tr><td style="padding:8px 12px;border-bottom:1px solid #eee;font-size:12px;color:#6B7194;font-weight:500">${p.label}</td>${results.map(r=>`<td style="padding:8px 12px;border-bottom:1px solid #eee;font-size:12px;text-align:center;color:${r.anbieter===recommendation?.empfehlung_anbieter?'#0E7C6E':'#0F1117'}">${r[p.key]||'—'}</td>`).join('')}</tr>`).join('');
-  const html = `<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><style>body{font-family:'Helvetica Neue',Arial,sans-serif;margin:0;padding:40px;color:#0F1117}.header{display:flex;justify-content:space-between;margin-bottom:32px;padding-bottom:20px;border-bottom:2px solid #0F1117}.logo{font-size:20px;font-weight:300}.logo b{font-weight:700}h2{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:#9EA4BE;margin:24px 0 12px}table{width:100%;border-collapse:collapse}th{padding:9px 12px;text-align:center;font-size:11px;font-weight:600;color:#fff;background:#0F1117}th:first-child{text-align:left}.rec{background:#E8F5F3;border-left:4px solid #0E7C6E;padding:14px 18px;border-radius:4px;margin-bottom:12px}.rec h3{font-size:13px;font-weight:600;color:#0E7C6E;margin:0 0 5px}.rec p{font-size:12px;color:#3A3F52;margin:0;line-height:1.6}.footer{margin-top:40px;padding-top:14px;border-top:1px solid #eee;font-size:10px;color:#9EA4BE;display:flex;justify-content:space-between}</style></head><body>
-  <div class="header"><div><div class="logo">Pension<b>IQ</b></div><div style="font-size:22px;font-weight:300;letter-spacing:-.5px;margin:6px 0 4px">BVG-Offertvergleich</div><div style="font-size:13px;color:#6B7194">${kunde} · ${ma} Mitarbeitende</div></div><div style="font-size:11px;color:#9EA4BE;text-align:right;line-height:1.8">Erstellt: ${date}<br>Anbieter: ${results.length}<br>Analysezeit: ${elapsed}s</div></div>
-  <h2>Vergleichstabelle</h2><table><thead><tr><th style="text-align:left">Parameter</th>${results.map(r=>`<th>${r.anbieter}${r.anbieter===recommendation?.empfehlung_anbieter?' ★':''}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>
-  ${recommendation?`<h2>Empfehlung</h2><div class="rec"><h3>★ ${recommendation.empfehlung_anbieter}</h3><p>${recommendation.begruendung}</p>${recommendation.einsparung_pro_jahr?`<p style="margin-top:8px"><b>Einsparung:</b> ${recommendation.einsparung_pro_jahr}/Jahr</p>`:''}</div>${recommendation.risiken?`<div style="background:#FDF0E8;border-left:4px solid #C05C2A;padding:10px 14px;border-radius:4px;font-size:12px;color:#3A3F52"><b style="color:#C05C2A">Hinweise:</b> ${recommendation.risiken}</div>`:''}`:''}
-  <div class="footer"><span>PensionIQ AG · Zürich</span><span>Vertraulich</span></div></body></html>`;
+  const bestAnbieter = recommendation?.empfehlung_anbieter;
+
+  const tableRows = activeGroups.map(g => `
+    <tr><td colspan="${results.length + 1}" style="background:#F5F3EE;padding:7px 12px;font-size:10px;font-weight:700;color:#1B4FD8;letter-spacing:.08em;text-transform:uppercase">${g.group}</td></tr>
+    ${g.params.map(p => `<tr>
+      <td style="padding:7px 12px;border-bottom:1px solid #eee;font-size:12px;color:#6B7194">${p.label}</td>
+      ${results.map(r => `<td style="padding:7px 12px;border-bottom:1px solid #eee;font-size:12px;text-align:center;${r.anbieter===bestAnbieter&&r[p.key]?'color:#0E7C6E;font-weight:600':'color:#0F1117'}">${r[p.key]||'—'}</td>`).join('')}
+    </tr>`).join('')}`).join('');
+
+  const totalRow = `<tr style="background:#F5F3EE">
+    <td style="padding:9px 12px;font-size:13px;font-weight:700;color:#0F1117">Gesamtbeitrag (AN + AG)</td>
+    ${results.map(r => `<td style="padding:9px 12px;text-align:center;font-size:13px;font-weight:700;${r.anbieter===bestAnbieter?'color:#0E7C6E':'color:#0F1117'}">${r.beitrag_total_gesamt||r.beitrag_total_an||'—'}</td>`).join('')}
+  </tr>`;
+
+  const html = `<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><style>
+    body{font-family:'Helvetica Neue',Arial,sans-serif;margin:0;padding:36px;color:#0F1117;font-size:13px}
+    .header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:28px;padding-bottom:18px;border-bottom:2px solid #0F1117}
+    .logo{font-size:20px;letter-spacing:-.5px}.logo b{font-weight:700}
+    h1{font-size:22px;font-weight:300;margin:4px 0;letter-spacing:-.5px}
+    h2{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:#9EA4BE;margin:20px 0 10px}
+    table{width:100%;border-collapse:collapse;margin-bottom:20px}
+    th{padding:9px 12px;text-align:center;font-size:11px;font-weight:600;color:#fff;background:#0F1117}
+    th:first-child{text-align:left;width:30%}
+    .rec{background:#E8F5F3;border-left:4px solid #0E7C6E;padding:12px 16px;border-radius:3px;margin-bottom:10px}
+    .rec h3{font-size:13px;font-weight:600;color:#0E7C6E;margin:0 0 4px}
+    .rec p{font-size:12px;color:#3A3F52;margin:0;line-height:1.6}
+    .footer{margin-top:32px;padding-top:12px;border-top:1px solid #eee;font-size:10px;color:#9EA4BE;display:flex;justify-content:space-between}
+    @media print{body{padding:20px}}
+  </style></head><body>
+  <div class="header">
+    <div><div class="logo">Pension<b>IQ</b></div><h1>BVG-Offertvergleich</h1><div style="color:#6B7194">${kunde} · ${ma} Mitarbeitende</div></div>
+    <div style="text-align:right;font-size:11px;color:#9EA4BE;line-height:1.8">Erstellt: ${date}<br>Anbieter: ${results.length}<br>Analysezeit: ${elapsed}s</div>
+  </div>
+  <h2>Leistungen & Beiträge</h2>
+  <table>
+    <thead><tr><th style="text-align:left">Parameter</th>${results.map(r=>`<th>${r.anbieter}${r.anbieter===bestAnbieter?' ★':''}</th>`).join('')}</tr></thead>
+    <tbody>${tableRows}${totalRow}</tbody>
+  </table>
+  ${recommendation ? `<h2>Empfehlung</h2><div class="rec"><h3>★ ${recommendation.empfehlung_anbieter}</h3><p>${recommendation.begruendung}</p>${recommendation.einsparung_pro_jahr?`<p style="margin-top:6px"><b>Einsparung:</b> ${recommendation.einsparung_pro_jahr}/Jahr</p>`:''}</div>${recommendation.risiken?`<div style="background:#FDF0E8;border-left:4px solid #C05C2A;padding:10px 14px;border-radius:3px;font-size:12px"><b style="color:#C05C2A">Hinweise:</b> ${recommendation.risiken}</div>`:''}`:''}
+  <div class="footer"><span>PensionIQ AG · Zürich · pensioniq.ch</span><span>Vertraulich · Nur für interne Verwendung</span></div>
+  </body></html>`;
+
   const win = window.open('', '_blank');
   win.document.write(html);
   win.document.close();
