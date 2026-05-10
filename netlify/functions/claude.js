@@ -1,5 +1,4 @@
 export default async (request, context) => {
-  // Handle CORS preflight
   if (request.method === 'OPTIONS') {
     return new Response(null, {
       headers: {
@@ -11,7 +10,7 @@ export default async (request, context) => {
   }
 
   try {
-    const body = await request.json();
+    const body = await request.text();
     const apiKey = request.headers.get('x-api-key');
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -21,12 +20,12 @@ export default async (request, context) => {
         'x-api-key': apiKey,
         'anthropic-version': '2023-06-01',
       },
-      body: JSON.stringify(body),
+      body: body,
     });
 
-    const data = await response.json();
+    const text = await response.text();
 
-    return new Response(JSON.stringify(data), {
+    return new Response(text, {
       status: response.status,
       headers: {
         'Content-Type': 'application/json',
