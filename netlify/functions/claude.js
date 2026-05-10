@@ -1,17 +1,19 @@
-export default async (request, context) => {
-  if (request.method === 'OPTIONS') {
-    return new Response(null, {
+exports.handler = async function(event, context) {
+  // Handle CORS preflight
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 200,
       headers: {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type, x-api-key, anthropic-version',
-      }
-    });
+      },
+      body: ''
+    };
   }
 
   try {
-    const body = await request.text();
-    const apiKey = request.headers.get('x-api-key');
+    const apiKey = event.headers['x-api-key'];
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -20,27 +22,27 @@ export default async (request, context) => {
         'x-api-key': apiKey,
         'anthropic-version': '2023-06-01',
       },
-      body: body,
+      body: event.body,
     });
 
     const text = await response.text();
 
-    return new Response(text, {
-      status: response.status,
+    return {
+      statusCode: response.status,
       headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
-      }
-    });
+      },
+      body: text
+    };
   } catch (error) {
-    return new Response(JSON.stringify({ error: { message: error.message } }), {
-      status: 500,
+    return {
+      statusCode: 500,
       headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
-      }
-    });
+      },
+      body: JSON.stringify({ error: { message: error.message } })
+    };
   }
 };
-
-export const config = { path: '/api/claude' };
