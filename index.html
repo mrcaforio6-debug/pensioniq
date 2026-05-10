@@ -1,4 +1,3 @@
-<!-- v2 -->
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -2181,27 +2180,27 @@ async function startAnalysis() {
   btn.disabled = true;
   btn.innerHTML = '<div class="spinner" style="border-color:rgba(255,255,255,.2);border-top-color:#fff"></div> Analysiere...';
 
-  const paramPrompt = `Du analysierst eine BVG-Offerte. Extrahiere alle Werte exakt aus dem Dokument. Antworte NUR mit JSON ohne Backticks, keine Erklärungen:
+  const paramPrompt = `Du analysierst eine BVG-Offerte. Extrahiere NUR die TOTALEN Jahreswerte für alle Versicherten zusammen — KEINE Auflistung pro Person, KEINE Erklärungen. Wenn mehrere Wahlpläne vorhanden sind, nimm den Standardplan. Antworte NUR mit JSON ohne Backticks:
 {
   "anbieter": "Name des Versicherers",
   "produkt": "Produktname oder Planbezeichnung oder null",
-  "leistung_alter": "Altersrente oder Alterskapital (Betrag CHF oder Formel) oder null",
-  "leistung_tod": "Todesfallkapital in CHF oder null",
-  "leistung_invaliditaet": "Invalidenrente pro Jahr in CHF oder null",
-  "leistung_ks_invalide": "Kinderrente bei Invalidität in CHF oder null",
-  "leistung_ks_tod": "Kinderrente bei Tod in CHF oder null",
-  "umwandlungssatz": "Umwandlungssatz in % oder null",
-  "verzinsung": "Verzinsung Altersguthaben in % oder null",
-  "zusatzdeckungen": "Aufzählung aller Zusatzdeckungen oder null",
-  "beitrag_total_an": "Totalbeitrag Arbeitnehmer in CHF/Jahr oder % oder null",
-  "beitrag_total_ag": "Totalbeitrag Arbeitgeber in CHF/Jahr oder % oder null",
-  "beitrag_total_gesamt": "Gesamtbeitrag AN+AG in CHF/Jahr oder null",
-  "beitrag_spar_an": "Sparbeitrag Arbeitnehmer in CHF oder % oder null",
-  "beitrag_spar_ag": "Sparbeitrag Arbeitgeber in CHF oder % oder null",
-  "beitrag_risiko_an": "Risikobeitrag Arbeitnehmer in CHF oder % oder null",
-  "beitrag_risiko_ag": "Risikobeitrag Arbeitgeber in CHF oder % oder null",
-  "verwaltungskosten": "Verwaltungskosten in CHF oder % oder null",
-  "besonderheiten": "Wichtige Punkte in 1-2 Sätzen oder null",
+  "leistung_alter": "Totales Alterskapital oder Altersrente in CHF (nur eine Zahl) oder null",
+  "leistung_tod": "Totales Todesfallkapital in CHF (nur eine Zahl) oder null",
+  "leistung_invaliditaet": "Totale Invalidenrente pro Jahr in CHF (nur eine Zahl) oder null",
+  "leistung_ks_invalide": "Totale Kinderrente bei Invalidität in CHF (nur eine Zahl) oder null",
+  "leistung_ks_tod": "Totale Kinderrente bei Tod in CHF (nur eine Zahl) oder null",
+  "umwandlungssatz": "Umwandlungssatz in % (nur eine Zahl) oder null",
+  "verzinsung": "Verzinsung in % (nur eine Zahl) oder null",
+  "zusatzdeckungen": "Kurze Aufzählung der Zusatzdeckungen oder null",
+  "beitrag_total_an": "TOTAL Arbeitnehmer-Beitrag pro Jahr in CHF (nur eine Zahl, alle Personen summiert) oder null",
+  "beitrag_total_ag": "TOTAL Arbeitgeber-Beitrag pro Jahr in CHF (nur eine Zahl, alle Personen summiert) oder null",
+  "beitrag_total_gesamt": "TOTAL Gesamtbeitrag AN+AG pro Jahr in CHF (nur eine Zahl) oder null",
+  "beitrag_spar_an": "TOTAL Sparbeitrag AN in CHF (nur eine Zahl) oder null",
+  "beitrag_spar_ag": "TOTAL Sparbeitrag AG in CHF (nur eine Zahl) oder null",
+  "beitrag_risiko_an": "TOTAL Risikobeitrag AN in CHF (nur eine Zahl) oder null",
+  "beitrag_risiko_ag": "TOTAL Risikobeitrag AG in CHF (nur eine Zahl) oder null",
+  "verwaltungskosten": "TOTAL Verwaltungskosten in CHF (nur eine Zahl) oder null",
+  "besonderheiten": "Max. 1 Satz zu wichtigen Besonderheiten oder null",
   "datenqualitaet": "hoch/mittel/niedrig"
 }`;
   const kunde = document.getElementById('kunde-name').value || 'Unbekannter Kunde';
