@@ -1,0 +1,2360 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PensionIQ — Der erste AI Copilot für BVG-Broker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400&family=DM+Sans:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+/* ── PENSIONIQ BRAND TOKENS ── */
+:root {
+  --ink:       #0F1117;
+  --ink-2:     #1A1D27;
+  --ink-3:     #22263A;
+  --slate:     #2D3352;
+  --blue:      #1B4FD8;
+  --blue-mid:  #2460E8;
+  --blue-lt:   #EEF3FD;
+  --teal:      #0E7C6E;
+  --teal-lt:   #E8F5F3;
+  --sand:      #F5F3EE;
+  --sand-2:    #EAE7DF;
+  --white:     #FFFFFF;
+  --text-1:    #0F1117;
+  --text-2:    #3A3F52;
+  --text-3:    #6B7194;
+  --text-4:    #9EA4BE;
+  --border:    rgba(15,17,23,0.09);
+  --border-2:  rgba(15,17,23,0.15);
+  --gold:      #B8965A;
+  --gold-lt:   #F9F3E8;
+  /* Semantic */
+  --positive:  var(--teal);
+  --positive-lt: var(--teal-lt);
+  --warning:   #C05C2A;
+  --warning-lt: #FDF0E8;
+  --danger:    #B83232;
+  --danger-lt: #FDEAEA;
+  --r:10px; --rl:14px; --rxl:20px;
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:'DM Sans',sans-serif;
+  background:var(--sand);
+  color:var(--text-1);
+  overflow-x:hidden;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{
+  font-family:'Fraunces',serif;
+  line-height:1.1;
+  letter-spacing:-.02em;
+  font-weight:300;
+}
+em { font-style:italic; }
+
+/* ── PAGES ── */
+.page{display:none;animation:fadein .3s ease}
+.page.active{display:block}
+@keyframes fadein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* ── NAV ── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:1000;
+  padding:16px 0;
+  transition:all .3s;
+  border-bottom:1px solid transparent;
+  background:transparent;
+}
+nav.scrolled{
+  background:rgba(245,243,238,0.92);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  border-bottom-color:var(--border);
+}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;max-width:1100px;margin:0 auto;padding:0 32px}
+.logo{display:flex;align-items:center;gap:10px;cursor:pointer;text-decoration:none}
+.logo-mark{
+  width:34px;height:34px;
+  background:var(--ink);
+  border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Fraunces',serif;
+  font-weight:500;font-size:13px;color:var(--white);
+  letter-spacing:-.3px;
+}
+.logo-text{font-family:'Fraunces',serif;font-weight:400;font-size:17px;color:var(--text-1);letter-spacing:-.3px}
+.nav-links{display:flex;align-items:center;gap:2px;list-style:none}
+.nav-links a{
+  color:var(--text-3);text-decoration:none;font-size:14px;font-weight:400;
+  padding:7px 13px;border-radius:7px;transition:all .2s;cursor:pointer;
+}
+.nav-links a:hover,.nav-links a.active{color:var(--text-1)}
+.nav-right{display:flex;align-items:center;gap:8px}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:6px;cursor:pointer;text-decoration:none;transition:all .2s;font-family:'DM Sans',sans-serif;border:none}
+.btn-primary{
+  background:var(--ink);color:var(--white);
+  font-size:14px;font-weight:500;padding:9px 20px;border-radius:8px;
+}
+.btn-primary:hover{background:var(--ink-2);transform:translateY(-1px)}
+.btn-primary.lg{font-size:15px;padding:12px 26px;border-radius:10px}
+.btn-ghost{
+  background:transparent;color:var(--text-2);
+  font-size:14px;padding:8px 16px;border-radius:8px;
+  border:1px solid var(--border-2);cursor:pointer;
+  font-family:'DM Sans',sans-serif;transition:all .2s;
+}
+.btn-ghost:hover{border-color:var(--text-4);color:var(--text-1)}
+.btn-outline{
+  background:transparent;color:var(--text-1);font-size:14px;padding:10px 22px;border-radius:10px;
+  border:1px solid var(--border-2);display:inline-flex;align-items:center;gap:6px;
+  cursor:pointer;transition:all .2s;text-decoration:none;font-family:'DM Sans',sans-serif;
+}
+.btn-outline:hover{background:var(--sand-2);border-color:var(--text-4)}
+
+/* ── LAYOUT ── */
+.container{max-width:1100px;margin:0 auto;padding:0 32px}
+.section{padding:100px 0}
+.bg-sand{background:var(--sand)}
+.bg-sand-2{background:var(--sand-2)}
+.bg-white{background:var(--white)}
+.bg-ink{background:var(--ink)}
+
+/* ── SECTION EYEBROW ── */
+.section-eyebrow{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+.eyebrow-num{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-4);font-weight:400}
+.eyebrow-line{flex:1;max-width:32px;height:1px;background:var(--border-2)}
+.eyebrow-label{font-size:11px;font-weight:500;color:var(--text-3);letter-spacing:.1em;text-transform:uppercase;font-family:'JetBrains Mono',monospace}
+.section-title{font-size:clamp(28px,3.5vw,46px);font-weight:300;letter-spacing:-.03em;margin-bottom:16px;color:var(--text-1)}
+.section-title em{font-style:italic;color:var(--text-3)}
+.section-intro{font-size:16px;color:var(--text-3);max-width:540px;font-weight:300;line-height:1.7}
+.section-header{text-align:center;margin-bottom:64px}
+.section-header .section-intro{margin:0 auto}
+
+/* ── BADGE ── */
+.badge{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--teal-lt);border:1px solid rgba(14,124,110,.18);
+  color:var(--teal);font-size:11px;font-weight:500;
+  padding:4px 11px;border-radius:100px;
+  font-family:'JetBrains Mono',monospace;letter-spacing:.04em;
+}
+.badge-dot{width:5px;height:5px;border-radius:50%;background:var(--teal);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* ── HERO ── */
+.hero{
+  min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  text-align:center;padding:140px 32px 80px;
+  position:relative;overflow:hidden;
+  background:var(--sand);
+}
+
+.hero-content{position:relative;z-index:1;max-width:820px}
+.hero-title{
+  font-family:'Fraunces',serif;
+  font-size:clamp(44px,6vw,80px);
+  font-weight:300;letter-spacing:-.04em;
+  margin-bottom:24px;color:var(--text-1);
+  line-height:1.02;
+}
+.hero-title em{font-style:italic;color:var(--text-3)}
+.hero-sub{font-size:18px;color:var(--text-3);max-width:520px;margin:0 auto 40px;line-height:1.7;font-weight:300}
+.hero-actions{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:52px}
+.hero-social{display:flex;align-items:center;justify-content:center;gap:16px;color:var(--text-4);font-size:13px}
+.avatars{display:flex}
+.av{
+  width:30px;height:30px;border-radius:50%;
+  border:2px solid var(--sand);
+  margin-left:-7px;font-family:'Fraunces',serif;
+  font-size:11px;font-weight:400;
+  display:flex;align-items:center;justify-content:center;color:var(--white);
+}
+.av:first-child{margin-left:0}
+.av1{background:var(--blue)}.av2{background:var(--teal)}.av3{background:var(--slate)}.av4{background:var(--gold)}
+
+/* ── DASHBOARD MOCKUP ── */
+.dash-frame{
+  background:var(--white);
+  border:1px solid var(--border-2);border-radius:16px;
+  overflow:hidden;
+  box-shadow:0 1px 3px var(--border),0 32px 80px rgba(15,17,23,0.1);
+}
+.dash-titlebar{
+  background:var(--sand);padding:11px 18px;
+  display:flex;align-items:center;gap:10px;
+  border-bottom:1px solid var(--border);
+}
+.dots{display:flex;gap:5px}
+.dot{width:11px;height:11px;border-radius:50%}
+.dot-r{background:#FF5F57}.dot-y{background:#FFBD2E}.dot-g{background:#28C840}
+.url-bar{
+  flex:1;background:var(--sand-2);border:1px solid var(--border);
+  border-radius:5px;padding:4px 13px;
+  font-size:11px;color:var(--text-3);
+  font-family:'JetBrains Mono',monospace;text-align:center;
+}
+.dash-body{display:grid;grid-template-columns:200px 1fr 250px;min-height:460px}
+.sidebar{background:var(--sand);border-right:1px solid var(--border);padding:14px 0}
+.sb-logo{
+  padding:0 12px 14px;border-bottom:1px solid var(--border);margin-bottom:8px;
+  display:flex;align-items:center;gap:7px;
+  font-family:'Fraunces',serif;font-weight:400;font-size:13px;color:var(--text-1);
+}
+.sb-mark{width:24px;height:24px;background:var(--ink);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:500;color:var(--white);font-family:'Fraunces',serif;}
+.sb-item{
+  display:flex;align-items:center;gap:8px;
+  padding:7px 9px;border-radius:6px;
+  font-size:12px;color:var(--text-3);
+  margin:1px 7px;cursor:pointer;transition:all .15s;
+}
+.sb-item.active{background:var(--sand-2);color:var(--text-1);border:1px solid var(--border)}
+.sb-badge{
+  margin-left:auto;background:var(--blue-lt);color:var(--blue);
+  font-size:9px;font-weight:600;padding:2px 6px;border-radius:100px;
+  font-family:'JetBrains Mono',monospace;
+}
+.main{padding:18px}
+.main-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.main-title{font-family:'Fraunces',serif;font-size:14px;font-weight:400;color:var(--text-1)}
+.upload-zone{
+  border:1px dashed var(--border-2);border-radius:8px;
+  padding:14px;text-align:center;margin-bottom:10px;
+  background:var(--sand);cursor:pointer;transition:all .2s;
+}
+.upload-zone:hover{border-color:var(--blue);background:var(--blue-lt)}
+.up-icon{width:28px;height:28px;background:var(--blue-lt);border-radius:7px;display:flex;align-items:center;justify-content:center;margin:0 auto 7px}
+.up-text{font-size:11px;color:var(--text-2)}
+.up-hint{font-size:10px;color:var(--text-4);margin-top:2px}
+.file-list{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+.file-item{
+  display:flex;align-items:center;gap:8px;
+  background:var(--sand);border:1px solid var(--border);
+  border-radius:7px;padding:7px 10px;
+}
+.f-icon{
+  width:26px;height:26px;border-radius:5px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:8px;font-weight:700;flex-shrink:0;
+  font-family:'JetBrains Mono',monospace;
+}
+.f-pdf{background:var(--danger-lt);color:var(--danger)}
+.f-xlsx{background:var(--teal-lt);color:var(--teal)}
+.f-name{font-size:10px;color:var(--text-2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.f-sz{font-size:9px;color:var(--text-4)}
+.f-ok{font-size:9px;font-weight:600;padding:2px 6px;border-radius:100px;background:var(--teal-lt);color:var(--teal);white-space:nowrap;font-family:'JetBrains Mono',monospace}
+.f-loading{font-size:9px;font-weight:600;padding:2px 6px;border-radius:100px;background:var(--warning-lt);color:var(--warning);white-space:nowrap;font-family:'JetBrains Mono',monospace}
+.ai-chip{
+  display:inline-flex;align-items:center;gap:4px;
+  background:var(--blue-lt);border:1px solid rgba(27,79,216,.2);
+  border-radius:4px;padding:2px 7px;
+  font-size:9px;font-weight:600;color:var(--blue);
+  letter-spacing:.05em;font-family:'JetBrains Mono',monospace;
+}
+.mini-table{width:100%;border-collapse:collapse;font-size:11px;margin-top:8px}
+.mini-table th{text-align:left;color:var(--text-4);font-weight:500;padding:4px 7px;border-bottom:1px solid var(--border);font-size:9px;font-family:'JetBrains Mono',monospace}
+.mini-table td{padding:5px 7px;color:var(--text-2);border-bottom:1px solid var(--border);font-family:'JetBrains Mono',monospace;font-size:10px}
+.mini-table tr:last-child td{border:none}
+.vg{color:var(--teal)!important;font-weight:500}
+.vw{color:var(--warning)!important}
+.vb{color:var(--danger)!important}
+.chat-panel{background:var(--sand);border-left:1px solid var(--border);display:flex;flex-direction:column}
+.chat-hdr{padding:12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.chat-av{width:24px;height:24px;background:var(--ink);border-radius:6px;display:flex;align-items:center;justify-content:center}
+.chat-msgs{flex:1;padding:12px;display:flex;flex-direction:column;gap:8px;overflow:hidden}
+.msg{font-size:10px;line-height:1.5;padding:8px 10px;border-radius:8px;max-width:190px}
+.msg-u{background:var(--ink);color:rgba(255,255,255,.85);align-self:flex-end;border-radius:8px 8px 2px 8px}
+.msg-a{background:var(--white);border:1px solid var(--border);color:var(--text-2);border-radius:8px 8px 8px 2px}
+.msg-a strong{color:var(--text-4);display:block;margin-bottom:2px;font-size:9px;font-family:'JetBrains Mono',monospace;letter-spacing:.05em}
+.chat-input-area{padding:9px;border-top:1px solid var(--border)}
+.chat-input{display:flex;align-items:center;background:var(--white);border:1px solid var(--border-2);border-radius:6px;padding:6px 9px;gap:6px}
+.chat-input-txt{flex:1;font-size:10px;color:var(--text-4)}
+.chat-send{width:20px;height:20px;background:var(--ink);border-radius:4px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+
+/* ── METRICS ── */
+.metrics-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;margin-top:48px}
+.metric{background:var(--white);padding:28px 20px;text-align:center}
+.metric-val{font-family:'Fraunces',serif;font-size:36px;font-weight:300;letter-spacing:-.04em;color:var(--text-1);margin-bottom:4px}
+.metric-lbl{font-size:12px;color:var(--text-3);font-weight:300}
+
+/* ── TRUST ── */
+.trust{padding:52px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:var(--white)}
+.trust-hdr{text-align:center;font-size:11px;font-weight:500;color:var(--text-4);letter-spacing:.1em;text-transform:uppercase;margin-bottom:28px;font-family:'JetBrains Mono',monospace}
+.trust-logos{display:flex;align-items:center;justify-content:center;flex-wrap:wrap}
+.trust-logo{padding:8px 22px;border-right:1px solid var(--border);color:var(--text-3);font-family:'Fraunces',serif;font-weight:400;font-size:14px;letter-spacing:-.02em;transition:color .2s;white-space:nowrap}
+.trust-logo:last-child{border-right:none}
+.trust-logo:hover{color:var(--text-1)}
+.trust-badges{display:flex;align-items:center;justify-content:center;gap:18px;margin-top:32px;flex-wrap:wrap}
+.trust-badge{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-2)}
+.trust-badge-icon{width:28px;height:28px;border-radius:6px;background:var(--sand);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px}
+
+/* ── FEATURES GRID ── */
+.features-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);border-radius:var(--rl);overflow:hidden;border:1px solid var(--border)}
+.feat-card{background:var(--white);padding:40px;position:relative;overflow:hidden;transition:background .2s}
+.feat-card:hover{background:var(--sand)}
+.feat-num{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-4);margin-bottom:18px}
+.feat-icon{width:40px;height:40px;border-radius:9px;border:1px solid var(--border-2);background:var(--sand);display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+.feat-title{font-family:'Fraunces',serif;font-size:18px;font-weight:400;margin-bottom:9px;color:var(--text-1)}
+.feat-desc{font-size:14px;color:var(--text-3);line-height:1.65;font-weight:300;margin-bottom:16px}
+.feat-tags{display:flex;flex-wrap:wrap;gap:4px}
+.feat-tag{font-size:10px;font-weight:400;color:var(--text-3);padding:2px 8px;border-radius:100px;border:1px solid var(--border-2);font-family:'JetBrains Mono',monospace}
+.feat-demo{margin-top:18px;background:var(--sand);border:1px solid var(--border);border-radius:8px;padding:12px}
+
+/* ── STEPS ── */
+.steps-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.step-card{background:var(--white);border:1px solid var(--border);border-radius:var(--rl);padding:28px;text-align:center;transition:border-color .2s}
+.step-card:hover{border-color:var(--border-2)}
+.step-num{width:42px;height:42px;border-radius:50%;background:var(--sand-2);border:1px solid var(--border-2);display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-weight:300;font-size:18px;margin:0 auto 16px;color:var(--text-1)}
+.step-card:nth-child(2) .step-num{background:var(--blue-lt);border-color:rgba(27,79,216,.2);color:var(--blue)}
+.step-title{font-family:'Fraunces',serif;font-size:16px;font-weight:400;margin-bottom:8px;color:var(--text-1)}
+.step-desc{font-size:14px;color:var(--text-3);line-height:1.6;font-weight:300}
+
+/* ── PRICING ── */
+.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.price-card{background:var(--white);border:1px solid var(--border);border-radius:var(--rxl);padding:30px 26px;display:flex;flex-direction:column;transition:all .2s}
+.price-card:hover{border-color:var(--border-2);box-shadow:0 4px 16px rgba(15,17,23,.06)}
+.price-card.featured{border-color:rgba(27,79,216,.3);background:var(--blue-lt);position:relative}
+.price-card.featured::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--blue);border-radius:var(--rxl) var(--rxl) 0 0}
+.price-popular{position:absolute;top:16px;right:16px;background:var(--blue);color:var(--white);font-size:10px;font-weight:500;padding:3px 9px;border-radius:100px;font-family:'JetBrains Mono',monospace}
+.price-plan{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.08em;color:var(--text-3);margin-bottom:7px}
+.price-amount{font-family:'Fraunces',serif;font-size:40px;font-weight:300;letter-spacing:-.04em;line-height:1;color:var(--text-1)}
+.price-currency{font-size:15px;color:var(--text-3);font-weight:400}
+.price-period{font-size:12px;color:var(--text-4);font-family:'JetBrains Mono',monospace}
+.price-desc{font-size:13px;color:var(--text-3);margin:11px 0 18px;line-height:1.5;font-weight:300}
+.price-divider{height:1px;background:var(--border);margin-bottom:18px}
+.price-features{list-style:none;flex:1;margin-bottom:22px}
+.price-features li{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:var(--text-2);padding:4px 0;line-height:1.4}
+.pcheck{color:var(--teal);font-size:12px;flex-shrink:0;font-weight:500}
+.poff{color:var(--text-4)}
+.price-cta{
+  padding:10px;border-radius:8px;font-size:13px;font-weight:500;
+  text-align:center;cursor:pointer;
+  border:1px solid var(--border-2);color:var(--text-1);background:transparent;
+  transition:all .2s;font-family:'DM Sans',sans-serif;
+}
+.price-cta:hover{background:var(--sand);border-color:var(--border-2)}
+.price-cta.p-primary{background:var(--ink);border-color:transparent;color:var(--white)}
+.price-cta.p-primary:hover{background:var(--ink-2)}
+
+/* ── SECURITY ── */
+.sec-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:32px}
+.sec-card{background:var(--white);border:1px solid var(--border);border-radius:var(--rl);padding:24px;transition:border-color .2s}
+.sec-card:hover{border-color:var(--border-2)}
+.sec-icon{width:38px;height:38px;border-radius:9px;background:var(--blue-lt);border:1px solid rgba(27,79,216,.15);display:flex;align-items:center;justify-content:center;margin-bottom:12px}
+.sec-title{font-family:'Fraunces',serif;font-size:15px;font-weight:400;margin-bottom:6px;color:var(--text-1)}
+.sec-desc{font-size:13px;color:var(--text-3);line-height:1.6;font-weight:300}
+.certs{display:flex;align-items:center;justify-content:center;gap:32px;padding:24px;background:var(--white);border:1px solid var(--border);border-radius:var(--rl);flex-wrap:wrap}
+.cert{display:flex;flex-direction:column;align-items:center;gap:5px}
+.cert-icon{width:40px;height:40px;border-radius:9px;background:var(--sand);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:16px}
+.cert-lbl{font-size:10px;color:var(--text-3);font-weight:500;text-align:center;font-family:'JetBrains Mono',monospace}
+
+/* ── FAQ ── */
+.faq-list{max-width:680px;margin:0 auto;display:flex;flex-direction:column;gap:2px}
+.faq-item{background:var(--white);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:border-color .2s}
+.faq-item:hover{border-color:var(--border-2)}
+.faq-q{width:100%;background:none;border:none;text-align:left;padding:16px 20px;font-size:14px;font-weight:400;color:var(--text-1);cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;font-family:'Fraunces',serif}
+.faq-chevron{color:var(--text-4);transition:transform .2s;font-size:14px;flex-shrink:0}
+.faq-item.open .faq-chevron{transform:rotate(180deg)}
+.faq-a{display:none;padding:0 20px 16px;font-size:13px;color:var(--text-3);line-height:1.7;font-weight:300}
+.faq-item.open .faq-a{display:block}
+
+/* ── FINAL CTA ── */
+.cta-sec{text-align:center;padding:100px 32px;background:var(--ink);position:relative;overflow:hidden}
+
+.cta-title{font-size:clamp(32px,5vw,56px);font-weight:300;letter-spacing:-.04em;margin-bottom:14px;color:var(--white);position:relative;z-index:1}
+.cta-title em{font-style:italic;color:rgba(255,255,255,.5)}
+.cta-sub{font-size:16px;color:rgba(255,255,255,.5);margin-bottom:32px;font-weight:300;position:relative;z-index:1}
+.cta-actions{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;position:relative;z-index:1}
+.cta-note{margin-top:14px;font-size:12px;color:rgba(255,255,255,.25);position:relative;z-index:1;font-family:'JetBrains Mono',monospace;letter-spacing:.04em}
+.btn-primary-inv{background:var(--white);color:var(--ink);font-size:15px;padding:12px 26px;border-radius:10px;display:inline-flex;align-items:center;gap:6px;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;font-weight:500;transition:all .2s}
+.btn-primary-inv:hover{background:var(--sand);transform:translateY(-1px)}
+.btn-outline-inv{background:transparent;color:rgba(255,255,255,.7);font-size:14px;padding:11px 22px;border-radius:10px;border:1px solid rgba(255,255,255,.15);display:inline-flex;align-items:center;gap:6px;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif}
+.btn-outline-inv:hover{background:rgba(255,255,255,.07);color:var(--white)}
+
+/* ── FOOTER ── */
+footer{border-top:1px solid var(--border);padding:52px 0 32px;background:var(--white)}
+.footer-inner{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:40px}
+.footer-brand{max-width:240px}
+.footer-logo{display:flex;align-items:center;gap:8px;margin-bottom:12px;cursor:pointer}
+.footer-desc{font-size:13px;color:var(--text-3);line-height:1.65;font-weight:300;margin-bottom:16px}
+.footer-swiss{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--text-3);background:var(--sand);border:1px solid var(--border);border-radius:6px;padding:3px 9px;font-family:'JetBrains Mono',monospace}
+.footer-col-title{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--text-4);margin-bottom:12px}
+.footer-links{list-style:none}
+.footer-links li{margin-bottom:7px}
+.footer-links a{font-size:13px;color:var(--text-3);text-decoration:none;transition:color .15s;font-weight:300;cursor:pointer}
+.footer-links a:hover{color:var(--text-1)}
+.footer-bottom{border-top:1px solid var(--border);padding-top:22px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.footer-copy{font-size:12px;color:var(--text-4);font-family:'JetBrains Mono',monospace}
+.footer-legal{display:flex;gap:16px}
+.footer-legal a{font-size:12px;color:var(--text-4);text-decoration:none;cursor:pointer;font-family:'JetBrains Mono',monospace}
+.footer-legal a:hover{color:var(--text-2)}
+
+/* ── FEATURES PAGE ── */
+.page-hero{padding:140px 32px 56px;text-align:center;position:relative;overflow:hidden;background:var(--sand)}
+
+.page-hero-content{position:relative;z-index:1;max-width:700px;margin:0 auto}
+.page-title{font-size:clamp(32px,5vw,58px);font-weight:300;letter-spacing:-.04em;margin-bottom:16px;color:var(--text-1)}
+.page-title em{font-style:italic;color:var(--text-3)}
+.page-sub{font-size:16px;color:var(--text-3);max-width:500px;margin:0 auto 32px;font-weight:300;line-height:1.7}
+.feat-pills{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;padding-bottom:56px;background:var(--sand);border-bottom:1px solid var(--border)}
+.feat-pill{
+  display:flex;align-items:center;gap:5px;
+  background:var(--white);border:1px solid var(--border);
+  color:var(--text-3);font-size:13px;padding:6px 14px;border-radius:100px;
+  cursor:pointer;text-decoration:none;transition:all .2s;
+}
+.feat-pill:hover{border-color:var(--border-2);color:var(--text-1)}
+.feat-pill.active{background:var(--ink);border-color:var(--ink);color:var(--white)}
+.pill-dot{width:5px;height:5px;border-radius:50%}
+.feat-block{padding:80px 0;border-top:1px solid var(--border);background:var(--white)}
+.feat-block:nth-child(even){background:var(--sand)}
+.feat-block-inner{display:grid;grid-template-columns:1fr 1fr;gap:68px;align-items:center}
+.feat-block-inner.rev{direction:rtl}
+.feat-block-inner.rev>*{direction:ltr}
+.feat-label{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:600;color:var(--text-3);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px;font-family:'JetBrains Mono',monospace}
+.feat-label-n{background:var(--sand-2);border:1px solid var(--border-2);border-radius:4px;padding:2px 5px;font-size:9px;color:var(--text-3)}
+.feat-block-title{font-size:clamp(22px,3vw,36px);font-weight:300;letter-spacing:-.03em;margin-bottom:13px;color:var(--text-1)}
+.feat-block-desc{font-size:15px;color:var(--text-3);line-height:1.7;font-weight:300;margin-bottom:22px}
+.feat-bullets{list-style:none;display:flex;flex-direction:column;gap:8px;margin-bottom:24px}
+.feat-bullets li{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:var(--text-2);line-height:1.5}
+.bcheck{width:18px;height:18px;border-radius:4px;background:var(--teal-lt);border:1px solid rgba(14,124,110,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;font-size:10px;color:var(--teal)}
+.demo-card{background:var(--white);border:1px solid var(--border-2);border-radius:var(--rxl);overflow:hidden;box-shadow:0 8px 32px rgba(15,17,23,.08)}
+.dc-bar{background:var(--sand);padding:10px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)}
+.dc-label{font-size:10px;color:var(--text-3);font-family:'JetBrains Mono',monospace}
+.dc-body{padding:16px}
+.upload-z{border:1px dashed var(--border-2);border-radius:10px;padding:20px 16px;text-align:center;margin-bottom:10px;background:var(--sand);cursor:pointer;transition:all .2s}
+.upload-z:hover{border-color:var(--blue);background:var(--blue-lt)}
+.uz-icon{width:40px;height:40px;border-radius:10px;background:var(--blue-lt);border:1px solid rgba(27,79,216,.15);display:flex;align-items:center;justify-content:center;margin:0 auto 9px}
+.uz-text{font-size:12px;color:var(--text-2)}
+.uz-text strong{color:var(--text-1)}
+.uz-hint{font-size:10px;color:var(--text-4);margin-top:2px}
+.f-list{display:flex;flex-direction:column;gap:4px}
+.f-row{display:flex;align-items:center;gap:8px;background:var(--sand);border:1px solid var(--border);border-radius:8px;padding:8px 10px}
+.fb{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;flex-shrink:0;font-family:'JetBrains Mono',monospace}
+.fb-pdf{background:var(--danger-lt);color:var(--danger)}
+.fb-xlsx{background:var(--teal-lt);color:var(--teal)}
+.fb-docx{background:var(--blue-lt);color:var(--blue)}
+.fn{font-size:10px;color:var(--text-2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fs{font-size:9px;color:var(--text-4)}
+.fst{font-size:9px;font-weight:600;padding:2px 6px;border-radius:100px;white-space:nowrap;font-family:'JetBrains Mono',monospace}
+.fst-ok{background:var(--teal-lt);color:var(--teal)}
+.fst-ld{background:var(--warning-lt);color:var(--warning)}
+.prog-row{display:flex;flex-direction:column;gap:6px;margin-top:9px}
+.prog-item{display:flex;flex-direction:column;gap:2px}
+.prog-lbl{display:flex;justify-content:space-between;font-size:10px;color:var(--text-4);font-family:'JetBrains Mono',monospace}
+.prog-bar{height:3px;background:var(--sand-2);border-radius:100px;overflow:hidden}
+.prog-fill{height:100%;border-radius:100px}
+.pf-blue{background:var(--blue)}
+.pf-green{background:var(--teal)}
+.pf-amber{background:var(--gold)}
+.ctable{width:100%;border-collapse:collapse;font-size:11px;font-family:'JetBrains Mono',monospace}
+.ctable thead tr{background:var(--sand)}
+.ctable th{padding:7px 10px;text-align:left;color:var(--text-4);font-weight:500;font-size:9px;border-bottom:1px solid var(--border);letter-spacing:.05em}
+.ctable td{padding:8px 10px;color:var(--text-2);border-bottom:1px solid var(--border)}
+.ctable tr:last-child td{border:none}
+.ctable tr:hover td{background:var(--sand)}
+.rec{background:var(--teal-lt);color:var(--teal);font-size:8px;font-weight:700;padding:2px 5px;border-radius:100px;margin-left:3px;font-family:'JetBrains Mono',monospace}
+.hg{background:rgba(14,124,110,.03)}
+.hr{background:rgba(184,50,50,.02)}
+.chat-win{display:flex;flex-direction:column;gap:8px;padding:12px}
+.cm{font-size:10px;line-height:1.55;padding:8px 10px;border-radius:9px}
+.cm-u{background:var(--ink);color:rgba(255,255,255,.85);align-self:flex-end;border-radius:9px 9px 2px 9px;margin-left:auto;max-width:80%}
+.cm-a{background:var(--sand);border:1px solid var(--border);color:var(--text-2);border-radius:9px 9px 9px 2px;max-width:90%}
+.cm-a .sender{font-size:8px;font-weight:600;color:var(--text-4);display:block;margin-bottom:2px;font-family:'JetBrains Mono',monospace;letter-spacing:.06em}
+.hl{color:var(--teal);font-weight:500}
+.chat-in-row{display:flex;gap:6px;padding:9px 12px;border-top:1px solid var(--border);align-items:center}
+.chat-in-box{flex:1;background:var(--sand);border:1px solid var(--border-2);border-radius:6px;padding:6px 10px;font-size:10px;color:var(--text-4)}
+.chat-send-b{width:28px;height:28px;background:var(--ink);border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.qcmds{padding:0 12px 12px;display:flex;flex-direction:column;gap:3px}
+.qcmd{background:var(--sand);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:10px;color:var(--text-2);cursor:pointer;transition:all .15s;text-align:left;font-family:'DM Sans',sans-serif}
+.qcmd:hover{border-color:var(--border-2);color:var(--text-1)}
+.sum-card{background:var(--sand);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin:12px}
+.sum-hdr{background:var(--white);border-bottom:1px solid var(--border);padding:12px;display:flex;align-items:center;justify-content:space-between}
+.sum-title{font-family:'Fraunces',serif;font-size:13px;font-weight:400;color:var(--text-1)}
+.sum-meta{font-size:10px;color:var(--text-4);font-family:'JetBrains Mono',monospace}
+.sum-body{padding:12px}
+.kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px}
+.kpi{background:var(--white);border:1px solid var(--border);border-radius:6px;padding:8px;text-align:center}
+.kpi-v{font-family:'Fraunces',serif;font-size:18px;font-weight:300;letter-spacing:-.03em;margin-bottom:2px;color:var(--text-1)}
+.kpi-l{font-size:8px;color:var(--text-4);font-family:'JetBrains Mono',monospace}
+.kpi-green{color:var(--teal)}.kpi-blue{color:var(--blue)}.kpi-amber{color:var(--gold)}
+.sum-sec-title{font-size:9px;font-weight:600;color:var(--text-4);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;font-family:'JetBrains Mono',monospace}
+.finding{display:flex;align-items:flex-start;gap:6px;font-size:10px;color:var(--text-2);margin-bottom:4px;line-height:1.5}
+.f-dot{width:4px;height:4px;border-radius:50%;background:var(--blue);flex-shrink:0;margin-top:4px}
+.exp-row{display:flex;gap:4px;padding:9px 12px;border-top:1px solid var(--border);background:var(--white)}
+.exp-btn{flex:1;padding:6px;border-radius:5px;font-size:10px;font-weight:500;border:1px solid var(--border);color:var(--text-2);background:transparent;cursor:pointer;transition:all .15s;font-family:'DM Sans',sans-serif;text-align:center}
+.exp-btn:hover{border-color:var(--border-2);color:var(--text-1)}
+.exp-btn.ep{background:var(--ink);border-color:transparent;color:var(--white)}
+.all-feats{padding:80px 0;background:var(--sand-2);border-top:1px solid var(--border)}
+.af-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden}
+.af-card{background:var(--white);padding:24px;transition:background .2s;cursor:default}
+.af-card:hover{background:var(--sand)}
+.af-icon{width:34px;height:34px;border-radius:8px;background:var(--sand);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;margin-bottom:10px}
+.af-title{font-family:'Fraunces',serif;font-size:14px;font-weight:400;margin-bottom:5px;color:var(--text-1)}
+.af-desc{font-size:12px;color:var(--text-3);line-height:1.55;font-weight:300}
+.back-link{display:inline-flex;align-items:center;gap:5px;color:var(--text-2);font-size:13px;padding:7px 14px;border-radius:7px;border:1px solid var(--border-2);background:transparent;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif}
+.back-link:hover{border-color:var(--border-2);color:var(--text-1);background:var(--sand)}
+
+/* ── TYPING ── */
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+.td{display:inline-block;width:3px;height:3px;border-radius:50%;background:var(--text-4);animation:blink 1s infinite}
+.td:nth-child(2){animation-delay:.2s}.td:nth-child(3){animation-delay:.4s}
+
+/* ── ANIMATIONS ── */
+.fade-up{opacity:0;transform:translateY(16px);transition:opacity .5s ease,transform .5s ease}
+.fade-up.visible{opacity:1;transform:none}
+.d1{transition-delay:.1s}.d2{transition-delay:.2s}.d3{transition-delay:.3s}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  .dash-body{grid-template-columns:1fr}
+  .chat-panel,.sidebar{display:none}
+  .features-grid,.pricing-grid,.sec-grid,.steps-grid,.feat-block-inner,.feat-block-inner.rev{grid-template-columns:1fr}
+  .feat-block-inner.rev{direction:ltr}
+  .footer-inner{grid-template-columns:1fr 1fr}
+  .metrics-row{grid-template-columns:1fr 1fr}
+  .af-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:580px){
+  .nav-links{display:none}
+  .af-grid{grid-template-columns:1fr}
+  .kpi-row{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ══════ NAV ══════ -->
+<nav id="navbar">
+  <div class="nav-inner">
+    <div class="logo" onclick="showPage('home')">
+      <div class="logo-mark">PIQ</div>
+      <span class="logo-text">PensionIQ</span>
+    </div>
+    <ul class="nav-links">
+      <li><a id="nav-features" onclick="showPage('features')">Features</a></li>
+      <li><a id="nav-tool" onclick="showPage('tool')" style="color:var(--blue);font-weight:500">Offertvergleich →</a></li>
+      <li><a id="nav-pricing" onclick="showPage('pricing')">Preise</a></li>
+      <li><a id="nav-about" onclick="showPage('about')">Über uns</a></li>
+      <li><a id="nav-faq" onclick="showPage('faq')">FAQ</a></li>
+    </ul>
+    <div class="nav-right">
+      <button class="btn-ghost">Anmelden</button>
+      <button class="btn btn-primary" onclick="showPage('home')">Zur Homepage</button>
+    </div>
+  </div>
+</nav>
+
+
+<!-- ═══════════════════════════════════════
+     PAGE: HOME
+═══════════════════════════════════════ -->
+<div id="page-home" class="page active">
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="badge fade-up"><span class="badge-dot"></span>Beta · AI-gestützte BVG-Analyse</div>
+    <h1 class="hero-title fade-up d1">Der erste AI Copilot<br>für <em>BVG-Broker</em></h1>
+    <p class="hero-sub fade-up d2">PensionIQ analysiert Offerten, Verträge und Versicherungsvergleiche in Sekunden. Erstellt Berichte, erkennt Risiken und liefert klare Empfehlungen.</p>
+    <div class="hero-actions fade-up d3">
+      <button class="btn btn-primary lg" onclick="showPage('home')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Erste Offerte kostenlos analysieren
+      </button>
+      <button class="btn-outline" onclick="showPage('features')">Features ansehen →</button>
+    </div>
+    <div class="hero-social fade-up">
+      <div class="avatars">
+        <div class="av av1">MK</div><div class="av av2">SB</div><div class="av av3">TP</div><div class="av av4">AS</div>
+      </div>
+      <span>Bereits genutzt von <strong style="color:var(--text-2)">180+</strong> Broker-Teams in der Schweiz</span>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="container" style="margin-top:56px;width:100%">
+    <div class="fade-up" style="max-width:1040px;margin:0 auto">
+      <div class="dash-frame">
+        <div class="dash-titlebar">
+          <div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+          <div class="url-bar">app.pensioniq.ch — Offertvergleich</div>
+          <div style="display:flex;gap:5px;align-items:center"><div style="width:6px;height:6px;border-radius:50%;background:var(--teal)"></div><span style="font-size:10px;color:var(--text-3);font-family:'JetBrains Mono',monospace">Verbunden</span></div>
+        </div>
+        <div class="dash-body">
+          <!-- Sidebar -->
+          <div class="sidebar">
+            <div class="sb-logo"><div class="sb-mark">PIQ</div>PensionIQ</div>
+            <div style="padding:0 7px">
+              <div class="sb-item active"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Offertvergleich<span class="sb-badge">3</span></div>
+              <div class="sb-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Dokumente</div>
+              <div class="sb-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>AI Assistent</div>
+              <div class="sb-item"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Berichte</div>
+            </div>
+          </div>
+          <!-- Main -->
+          <div class="main">
+            <div class="main-hdr">
+              <div class="main-title">Offertvergleich — Muster AG</div>
+              <button class="btn-ghost" style="font-size:11px;padding:5px 10px">Export PDF</button>
+            </div>
+            <div class="upload-zone">
+              <div class="up-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+              <div class="up-text"><strong style="color:var(--text-1)">Weitere Offerte hinzufügen</strong></div>
+              <div class="up-hint">PDF, Excel, Word — bis 50 MB</div>
+            </div>
+            <div class="file-list">
+              <div class="file-item"><div class="f-icon f-pdf">PDF</div><div class="f-name">AXA_Offerte_MusterAG_2025.pdf</div><div class="f-sz">2.4 MB</div><div class="f-ok">✓ Analysiert</div></div>
+              <div class="file-item"><div class="f-icon f-pdf">PDF</div><div class="f-name">Zurich_BVG_Vorsorgelösung.pdf</div><div class="f-sz">1.8 MB</div><div class="f-ok">✓ Analysiert</div></div>
+              <div class="file-item"><div class="f-icon f-xlsx">XLS</div><div class="f-name">Swiss_Life_Vergleichstabelle.xlsx</div><div class="f-sz">340 KB</div><div class="f-loading">⟳ Analyse...</div></div>
+            </div>
+            <div style="background:var(--blue-lt);border:1px solid rgba(27,79,216,.15);border-radius:9px;padding:12px">
+              <div style="display:flex;align-items:center;gap:7px;margin-bottom:9px"><div class="ai-chip">AI · ANALYSE</div><span style="font-size:10px;color:var(--text-4);font-family:'JetBrains Mono',monospace">3 Anbieter erkannt</span></div>
+              <table class="mini-table">
+                <thead><tr><th>Anbieter</th><th>Verw.-Kosten</th><th>UWS</th><th>Verzinsung</th><th>Empfehlung</th></tr></thead>
+                <tbody>
+                  <tr><td style="font-weight:500;color:var(--text-1)">AXA</td><td class="vg">0.42%</td><td>6.8%</td><td class="vg">1.50%</td><td style="color:var(--teal);font-size:9px;font-weight:600">★ Empfohlen</td></tr>
+                  <tr><td style="font-weight:500;color:var(--text-1)">Zurich</td><td class="vw">0.61%</td><td class="vg">6.9%</td><td>1.25%</td><td style="font-size:9px;color:var(--text-4)">Mittel</td></tr>
+                  <tr><td style="font-weight:500;color:var(--text-1)">Swiss Life</td><td class="vb">0.78%</td><td class="vw">6.6%</td><td>1.10%</td><td style="font-size:9px;color:var(--text-4)">Prüfen</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <!-- Chat -->
+          <div class="chat-panel">
+            <div class="chat-hdr">
+              <div class="chat-av"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg></div>
+              <div><div style="font-size:11px;font-weight:500;color:var(--text-1);font-family:'Fraunces',serif">AI Assistent</div><div style="display:flex;align-items:center;gap:4px"><div style="width:4px;height:4px;border-radius:50%;background:var(--teal)"></div><span style="font-size:9px;color:var(--teal);font-family:'JetBrains Mono',monospace">Aktiv</span></div></div>
+            </div>
+            <div class="chat-msgs">
+              <div class="msg msg-a"><strong>PENSIONIQ</strong>3 Offerten analysiert. AXA bietet die niedrigsten Verwaltungskosten (0.42%).</div>
+              <div class="msg msg-u">Welche ist langfristig besser?</div>
+              <div class="msg msg-a"><strong>PENSIONIQ</strong>AXA spart ca. CHF 8'400 über 10 Jahre. Empfehle AXA für langfristige Planung.</div>
+              <div class="msg msg-u">Executive Summary erstellen</div>
+              <div class="msg msg-a"><strong>PENSIONIQ</strong>Erstelle Summary... <span style="display:inline-flex;gap:2px;margin-top:2px"><span class="td"></span><span class="td"></span><span class="td"></span></span></div>
+            </div>
+            <div class="chat-input-area">
+              <div class="chat-input"><div class="chat-input-txt">Analyse-Befehl eingeben...</div><div class="chat-send"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M5 12h14m-7-7 7 7-7 7"/></svg></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- METRICS -->
+      <div class="metrics-row fade-up">
+        <div class="metric"><div class="metric-val">94%</div><div class="metric-lbl">Zeitersparnis bei Offertvergleichen</div></div>
+        <div class="metric"><div class="metric-val">3 Sek.</div><div class="metric-lbl">Durchschnittliche Analysezeit</div></div>
+        <div class="metric"><div class="metric-val">180+</div><div class="metric-lbl">Broker-Teams in der Schweiz</div></div>
+        <div class="metric"><div class="metric-val">12k+</div><div class="metric-lbl">Analysierte Offerten pro Monat</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TRUST -->
+<section class="trust">
+  <div class="container">
+    <div class="trust-hdr">Vertrauen von führenden Schweizer Vorsorgeexperten</div>
+    <div class="trust-logos">
+      <div class="trust-logo">Helvetia Broker AG</div><div class="trust-logo">VorsorgePartner</div><div class="trust-logo">Swiss Benefits</div><div class="trust-logo">AlpenVorsorge</div><div class="trust-logo">PK Solutions</div><div class="trust-logo">Renta Consult</div>
+    </div>
+    <div class="trust-badges">
+      <div class="trust-badge"><div class="trust-badge-icon">🇨🇭</div>Schweizer Serverinfrastruktur</div>
+      <div class="trust-badge"><div class="trust-badge-icon">🔒</div>AES-256 Verschlüsselung</div>
+      <div class="trust-badge"><div class="trust-badge-icon">✓</div>DSGVO & DSG-konform</div>
+      <div class="trust-badge"><div class="trust-badge-icon">🏛</div>BVG-Regelkonform</div>
+      <div class="trust-badge"><div class="trust-badge-icon">⚡</div>SOC 2 Type II</div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES TEASER -->
+<div class="bg-white">
+<section class="section" id="features-section">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-eyebrow" style="justify-content:center"><span class="eyebrow-num">01</span><span class="eyebrow-line"></span><span class="eyebrow-label">Features</span></div>
+      <h2 class="section-title fade-up">Alles was ein moderner<br><em>BVG-Broker braucht</em></h2>
+      <p class="section-intro fade-up">Von der Offertanalyse bis zum fertigen Kundenbericht.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden" class="fade-up">
+      <!-- Module 1: Offertvergleich -->
+      <div class="feat-card" style="display:flex;flex-direction:column">
+        <div class="feat-num">01</div>
+        <div class="feat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+        <div class="feat-title">Offertvergleich</div>
+        <div class="feat-desc">BVG-Offerten hochladen, automatisch analysieren und mehrere Anbieter auf einen Blick vergleichen — inklusive AI-Befehle und Executive Summary.</div>
+        <div class="feat-tags" style="margin-bottom:16px"><span class="feat-tag">PDF · Excel</span><span class="feat-tag">Auto-Erkennung</span><span class="feat-tag">Executive Summary</span><span class="feat-tag">AI-Befehle</span></div>
+        <div class="feat-demo" style="margin-top:auto">
+          <div style="display:flex;gap:5px;margin-bottom:6px">
+            <div style="flex:1;background:var(--danger-lt);border:1px solid rgba(184,50,50,.12);border-radius:5px;padding:5px 7px;font-size:9px;color:var(--danger);font-family:'JetBrains Mono',monospace">📄 AXA.pdf</div>
+            <div style="flex:1;background:var(--teal-lt);border:1px solid rgba(14,124,110,.12);border-radius:5px;padding:5px 7px;font-size:9px;color:var(--teal);font-family:'JetBrains Mono',monospace">📊 Zurich.xlsx</div>
+            <div style="flex:1;background:var(--blue-lt);border:1px solid rgba(27,79,216,.12);border-radius:5px;padding:5px 7px;font-size:9px;color:var(--blue);font-family:'JetBrains Mono',monospace">📄 SwissL.</div>
+          </div>
+          <div style="background:var(--blue-lt);border:1px solid rgba(27,79,216,.15);border-radius:5px;padding:7px;font-size:9px;color:var(--text-2);font-family:'JetBrains Mono',monospace">✓ 9 Parameter erkannt · 3 Anbieter · 2.1s</div>
+        </div>
+      </div>
+
+      <!-- Module 2: Planvergleich -->
+      <div class="feat-card" style="display:flex;flex-direction:column">
+        <div class="feat-num">02</div>
+        <div class="feat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+        <div class="feat-title">Planvergleich & Optimierung</div>
+        <div class="feat-desc">Bestehende BVG-Pläne analysieren, Szenarien simulieren und Optimierungspotenzial für Arbeitgeber und Mitarbeitende aufzeigen.</div>
+        <div class="feat-tags" style="margin-bottom:16px"><span class="feat-tag">Leistungsvergleich</span><span class="feat-tag">Kostenanalyse</span><span class="feat-tag">Simulationen</span><span class="feat-tag">Kundenberichte</span></div>
+        <div class="feat-demo" style="margin-top:auto">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border);border-radius:5px;overflow:hidden;font-family:'JetBrains Mono',monospace;font-size:9px">
+            <div style="background:var(--sand-2);padding:4px 6px;color:var(--text-4)">Parameter</div>
+            <div style="background:var(--sand-2);padding:4px 6px;color:var(--text-3);text-align:center">Aktuell</div>
+            <div style="background:var(--sand-2);padding:4px 6px;color:var(--text-3);text-align:center">Neu</div>
+            <div style="background:var(--white);padding:4px 6px;color:var(--text-4)">Kosten</div>
+            <div style="background:var(--white);padding:4px 6px;color:var(--warning);text-align:center">0.78%</div>
+            <div style="background:var(--teal-lt);padding:4px 6px;color:var(--teal);text-align:center;font-weight:600">0.42%</div>
+            <div style="background:var(--white);padding:4px 6px;color:var(--text-4)">Verzinsung</div>
+            <div style="background:var(--white);padding:4px 6px;color:var(--text-2);text-align:center">1.10%</div>
+            <div style="background:var(--teal-lt);padding:4px 6px;color:var(--teal);text-align:center;font-weight:600">1.50%</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Module 3: Vertragsmanagement -->
+      <div class="feat-card" style="display:flex;flex-direction:column">
+        <div class="feat-num">03</div>
+        <div class="feat-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+        <div class="feat-title">Vertrags- & Ablaufmanagement</div>
+        <div class="feat-desc">Verträge hochladen, Ablaufdaten erkennen und Ausschreibungspotenziale automatisch identifizieren — bevor Kunden abwandern.</div>
+        <div class="feat-tags" style="margin-bottom:16px"><span class="feat-tag">Kündigungsfristen</span><span class="feat-tag">Renewal-Listen</span><span class="feat-tag">Ausschreibungen</span><span class="feat-tag">Dashboard</span></div>
+        <div class="feat-demo" style="margin-top:auto;display:flex;flex-direction:column;gap:4px">
+          <div style="display:flex;align-items:center;justify-content:space-between;background:var(--danger-lt);border:1px solid rgba(184,50,50,.12);border-radius:5px;padding:5px 9px;font-size:9px;font-family:'JetBrains Mono',monospace">
+            <span style="color:var(--text-2)">Muster AG</span><span style="color:var(--danger);font-weight:600">Läuft ab: 31.03.25</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;background:var(--warning-lt);border:1px solid rgba(192,92,42,.12);border-radius:5px;padding:5px 9px;font-size:9px;font-family:'JetBrains Mono',monospace">
+            <span style="color:var(--text-2)">Sommer AG</span><span style="color:var(--warning);font-weight:600">Läuft ab: 30.06.25</span>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;background:var(--teal-lt);border:1px solid rgba(14,124,110,.12);border-radius:5px;padding:5px 9px;font-size:9px;font-family:'JetBrains Mono',monospace">
+            <span style="color:var(--text-2)">Brügger AG</span><span style="color:var(--teal);font-weight:600">Ausschreibung möglich</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:28px">
+      <button class="btn-outline" onclick="showPage('features')">Alle Features im Detail ansehen →</button>
+    </div>
+  </div>
+</section>
+</div>
+
+
+
+<!-- HOW IT WORKS -->
+<div class="bg-white">
+<section class="section" id="how">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-eyebrow" style="justify-content:center"><span class="eyebrow-num">03</span><span class="eyebrow-line"></span><span class="eyebrow-label">Wie es funktioniert</span></div>
+      <h2 class="section-title fade-up">In 3 Schritten zur<br><em>perfekten Analyse</em></h2>
+    </div>
+    <div class="steps-grid fade-up">
+      <div class="step-card"><div class="step-num">1</div><h3 class="step-title">Dokument hochladen</h3><p class="step-desc">PDF, Excel oder Word — beliebige BVG-Offerten hochladen. Mehrere Dokumente gleichzeitig möglich.</p><div style="margin-top:14px;display:flex;gap:5px;justify-content:center"><span style="background:var(--danger-lt);border:1px solid rgba(184,50,50,.15);color:var(--danger);font-size:10px;padding:2px 8px;border-radius:100px;font-family:'JetBrains Mono',monospace">PDF</span><span style="background:var(--teal-lt);border:1px solid rgba(14,124,110,.15);color:var(--teal);font-size:10px;padding:2px 8px;border-radius:100px;font-family:'JetBrains Mono',monospace">Excel</span><span style="background:var(--blue-lt);border:1px solid rgba(27,79,216,.15);color:var(--blue);font-size:10px;padding:2px 8px;border-radius:100px;font-family:'JetBrains Mono',monospace">Word</span></div></div>
+      <div class="step-card"><div class="step-num">2</div><h3 class="step-title">AI analysiert automatisch</h3><p class="step-desc">PensionIQ erkennt Anbieter, Konditionen und Kosten — vergleicht alles und flaggt Risiken und Chancen.</p></div>
+      <div class="step-card"><div class="step-num">3</div><h3 class="step-title">Bericht erhalten</h3><p class="step-desc">Fertiger Kundenbericht als PDF oder Präsentation. Professionell, markenkonform, sofort einsatzbereit.</p></div>
+    </div>
+  </div>
+</section>
+</div>
+
+<!-- PRICING -->
+<div class="bg-sand" style="border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
+<section class="section" id="pricing">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-eyebrow" style="justify-content:center"><span class="eyebrow-num">04</span><span class="eyebrow-line"></span><span class="eyebrow-label">Preise</span></div>
+      <h2 class="section-title fade-up">Transparent. Skalierbar.<br><em>Ohne Überraschungen.</em></h2>
+      <p class="section-intro fade-up">Alle Pläne inklusive Schweizer Datenschutz und persönlichem Onboarding. Jährliche Zahlung spart 2 Monate.</p>
+    </div>
+
+    <div class="pricing-grid fade-up">
+      <!-- Starter -->
+      <div class="price-card">
+        <div class="price-plan">Starter</div>
+        <div style="display:flex;align-items:baseline;gap:4px;margin-bottom:4px"><span class="price-currency">CHF</span><span class="price-amount">149</span></div>
+        <div class="price-period">pro Monat, jährliche Abrechnung</div>
+        <div class="price-desc">Für unabhängige Broker mit überschaubarem Analysevolumen.</div>
+        <div class="price-divider"></div>
+        <ul class="price-features">
+          <li><span class="pcheck">✓</span>30 Offertanalysen pro Monat</li>
+          <li><span class="pcheck">✓</span>Offertvergleich (PDF & Excel)</li>
+          <li><span class="pcheck">✓</span>AI Vergleichstabellen</li>
+          <li><span class="pcheck">✓</span>Executive Summaries</li>
+          <li><span class="pcheck">✓</span>PDF Export</li>
+          <li><span class="pcheck">✓</span>AI-Befehle (DE/FR/EN)</li>
+          <li><span class="poff">–</span><span style="color:var(--text-4)">Planvergleich & Optimierung</span></li>
+          <li><span class="poff">–</span><span style="color:var(--text-4)">Vertragsmanagement</span></li>
+          <li><span class="poff">–</span><span style="color:var(--text-4)">Team-Funktionen</span></li>
+        </ul>
+        <button class="price-cta">Kostenlos starten</button>
+      </div>
+      <!-- Pro -->
+      <div class="price-card featured">
+        <div class="price-popular">Beliebtester Plan</div>
+        <div class="price-plan">Pro</div>
+        <div style="display:flex;align-items:baseline;gap:4px;margin-bottom:4px"><span class="price-currency">CHF</span><span class="price-amount">349</span></div>
+        <div class="price-period">pro Monat, jährliche Abrechnung</div>
+        <div class="price-desc">Für Broker-Teams mit allen drei Modulen und regelmässigem Analysebedarf.</div>
+        <div class="price-divider"></div>
+        <ul class="price-features">
+          <li><span class="pcheck">✓</span>Unbegrenzte Offertanalysen</li>
+          <li><span class="pcheck">✓</span>Alle Dateiformate (PDF, Excel, Word)</li>
+          <li><span class="pcheck">✓</span>Offertvergleich — vollständig</li>
+          <li><span class="pcheck">✓</span>Planvergleich & Optimierung</li>
+          <li><span class="pcheck">✓</span>Vertrags- & Ablaufmanagement</li>
+          <li><span class="pcheck">✓</span>Team-Collaboration (5 Nutzer)</li>
+          <li><span class="pcheck">✓</span>PDF, Word & PPT Export</li>
+          <li><span class="pcheck">✓</span>Markenkonformes Branding</li>
+          <li><span class="pcheck">✓</span>Prioritäts-Support</li>
+        </ul>
+        <button class="price-cta p-primary">14 Tage kostenlos testen</button>
+      </div>
+      <!-- Enterprise -->
+      <div class="price-card">
+        <div class="price-plan">Enterprise</div>
+        <div style="margin-bottom:4px"><span class="price-amount" style="font-size:28px">Auf Anfrage</span></div>
+        <div style="height:18px"></div>
+        <div class="price-desc">Für grosse Broker-Netzwerke mit individuellen Anforderungen und Integrationen.</div>
+        <div class="price-divider"></div>
+        <ul class="price-features">
+          <li><span class="pcheck">✓</span>Alles in Pro, plus:</li>
+          <li><span class="pcheck">✓</span>Unbegrenzte Nutzer</li>
+          <li><span class="pcheck">✓</span>White Label (Logo, Farben, Domain)</li>
+          <li><span class="pcheck">✓</span>REST API Integration</li>
+          <li><span class="pcheck">✓</span>Dedicated Server Schweiz</li>
+          <li><span class="pcheck">✓</span>SLA 99.9% Uptime</li>
+          <li><span class="pcheck">✓</span>Persönlicher Account Manager</li>
+          <li><span class="pcheck">✓</span>Custom Onboarding & Schulung</li>
+          <li><span class="pcheck">✓</span>Individuelle Integrationen</li>
+        </ul>
+        <button class="price-cta">Kontakt aufnehmen</button>
+      </div>
+    </div>
+
+    <!-- Link to full pricing page -->
+    <div class="fade-up" style="text-align:center;margin-top:36px">
+      <button class="btn-outline" onclick="showPage('pricing')">Detaillierter Planvergleich ansehen →</button>
+    </div>
+
+    <!-- Trust note -->
+    <div class="fade-up" style="margin-top:32px;display:flex;align-items:center;justify-content:center;gap:28px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-3)"><span style="color:var(--teal);font-size:16px">✓</span>Keine Kreditkarte für Testversion</div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-3)"><span style="color:var(--teal);font-size:16px">✓</span>Kündigung jederzeit möglich</div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-3)"><span style="color:var(--teal);font-size:16px">✓</span>Alle Daten auf Schweizer Servern</div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-3)"><span style="color:var(--teal);font-size:16px">✓</span>Persönliches Onboarding inklusive</div>
+    </div>
+
+  </div>
+</section>
+</div>
+
+
+
+<!-- FAQ -->
+<div class="bg-sand" style="border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
+<section class="section" id="faq">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-eyebrow" style="justify-content:center"><span class="eyebrow-num">06</span><span class="eyebrow-line"></span><span class="eyebrow-label">FAQ</span></div>
+      <h2 class="section-title fade-up"><em>Häufige Fragen</em></h2>
+    </div>
+    <div class="faq-list">
+      <div class="faq-item open fade-up"><button class="faq-q" onclick="toggleFaq(this)">Welche Dateiformate werden unterstützt?<span class="faq-chevron">⌄</span></button><div class="faq-a">PensionIQ unterstützt PDF, Excel (.xlsx, .xls), Word (.docx), CSV und Textdateien. Die AI erkennt automatisch das Format und extrahiert alle relevanten BVG-Parameter — ohne manuelle Konfiguration.</div></div>
+      <div class="faq-item fade-up d1"><button class="faq-q" onclick="toggleFaq(this)">Wie genau ist die AI-Analyse?<span class="faq-chevron">⌄</span></button><div class="faq-a">In internen Tests erreicht PensionIQ eine Genauigkeit von über 97% bei der Extraktion strukturierter BVG-Daten. Die AI wurde auf tausenden Schweizer BVG-Offerten trainiert und kennt alle gängigen Anbieter-Formate.</div></div>
+      <div class="faq-item fade-up d2"><button class="faq-q" onclick="toggleFaq(this)">Wo werden meine Dokumente gespeichert?<span class="faq-chevron">⌄</span></button><div class="faq-a">Alle Dokumente werden ausschliesslich auf Servern in der Schweiz (Zürich, Bern) gespeichert. Kein Datentransfer ins Ausland. Automatische Löschung nach 30/60/90 Tagen konfigurierbar.</div></div>
+      <div class="faq-item fade-up"><button class="faq-q" onclick="toggleFaq(this)">Gibt es eine kostenlose Testversion?<span class="faq-chevron">⌄</span></button><div class="faq-a">Ja — die erste Offertanalyse ist vollkommen kostenlos, ohne Kreditkarte. Beim Pro-Plan gibt es zusätzlich eine 14-tägige Testphase mit vollem Funktionsumfang.</div></div>
+      <div class="faq-item fade-up d1"><button class="faq-q" onclick="toggleFaq(this)">Kann ich PensionIQ in bestehende Tools integrieren?<span class="faq-chevron">⌄</span></button><div class="faq-a">Im Enterprise-Plan steht eine vollständige REST-API zur Verfügung. Zudem bieten wir native Integrationen mit Microsoft 365, Google Workspace und gängigen Schweizer Dokumentenmanagement-Systemen.</div></div>
+    </div>
+  </div>
+</section>
+</div>
+
+<!-- FINAL CTA -->
+<section class="cta-sec">
+  <h2 class="cta-title fade-up">Bereit für die Zukunft<br>der <em>BVG-Beratung?</em></h2>
+  <p class="cta-sub fade-up d1">Erste Analyse kostenlos. Keine Kreditkarte erforderlich.</p>
+  <div class="cta-actions fade-up d2">
+    <button class="btn-primary-inv" onclick="showPage('home')">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Jetzt kostenlos starten
+    </button>
+    <button class="btn-outline-inv" onclick="scrollTo('pricing')">Preise ansehen</button>
+  </div>
+  <p class="cta-note fade-up">Keine Kreditkarte · Schweizer Datenschutz · Kündigung jederzeit</p>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="footer-logo" onclick="showPage('home')">
+          <div class="logo-mark" style="width:28px;height:28px;font-size:11px">PIQ</div>
+          <span class="logo-text" style="font-size:15px">PensionIQ</span>
+        </div>
+        <p class="footer-desc">Der erste AI-Copilot für Schweizer BVG-Broker. Analyse, Vergleich und Bericht — in Sekunden.</p>
+        <div class="footer-swiss">🇨🇭 Made & hosted in Switzerland</div>
+      </div>
+      <div>
+        <div class="footer-col-title">Produkt</div>
+        <ul class="footer-links">
+          <li><a onclick="showPage('features')">Features</a></li>
+          <li><a onclick="scrollTo('pricing')">Preise</a></li>
+          <li><a onclick="showPage('home')">Demo</a></li>
+          <li><a>API Dokumentation</a></li>
+          <li><a>Changelog</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer-col-title">Unternehmen</div>
+        <ul class="footer-links">
+          <li><a>Über uns</a></li>
+          <li><a>Blog</a></li>
+          <li><a>Karriere</a></li>
+          <li><a>Presse</a></li>
+          <li><a>Kontakt</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer-col-title">Rechtliches</div>
+        <ul class="footer-links">
+          <li><a>Datenschutz</a></li>
+          <li><a>AGB</a></li>
+          <li><a>Impressum</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-copy">© 2025 PensionIQ AG, Zürich. Alle Rechte vorbehalten.</div>
+      <div class="footer-legal"><a>Datenschutz</a><a>AGB</a><a>Impressum</a></div>
+    </div>
+  </div>
+</footer>
+</div><!-- end page-home -->
+
+
+<!-- ═══════════════════════════════════════
+     PAGE: FEATURES
+═══════════════════════════════════════ -->
+<div id="page-features" class="page">
+
+<div class="page-hero">
+  <div class="page-hero-content">
+    <div class="badge fade-up"><span class="badge-dot"></span>Features</div>
+    <h1 class="page-title fade-up d1">Alles was Sie brauchen,<br>um <em>schneller zu beraten</em></h1>
+    <p class="page-sub fade-up d2">PensionIQ übernimmt die repetitive Analysearbeit — damit Sie sich auf Ihre Kunden konzentrieren können.</p>
+    <div class="fade-up d3" style="display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap">
+      <button class="back-link" onclick="showPage('home')">← Zur Homepage</button>
+      <button class="btn btn-primary" onclick="showPage('home')">Zur Homepage</button>
+    </div>
+  </div>
+</div>
+
+<div class="feat-pills fade-up">
+  <a class="feat-pill active" href="#f-offert"><span class="pill-dot" style="background:var(--blue)"></span>Offertvergleich</a>
+  <a class="feat-pill" href="#f-plan"><span class="pill-dot" style="background:var(--teal)"></span>Planvergleich & Optimierung</a>
+  <a class="feat-pill" href="#f-vertrag"><span class="pill-dot" style="background:var(--gold)"></span>Vertrags- & Ablaufmanagement</a>
+</div>
+
+<!-- ══ MODUL 1: OFFERTVERGLEICH ══ -->
+<section class="feat-block" id="f-offert">
+  <div class="container">
+    <div class="feat-block-inner">
+      <div class="fade-up">
+        <div class="feat-label"><span class="feat-label-n">01</span>Offertvergleich</div>
+        <h2 class="feat-block-title">Jedes Format.<br>Jeder Anbieter.<br><em>Sofort analysiert.</em></h2>
+        <p class="feat-block-desc">BVG-Offerten hochladen — als PDF oder Excel. PensionIQ erkennt automatisch alle relevanten Parameter und vergleicht mehrere Anbieter gleichzeitig ohne manuelle Eingabe.</p>
+        <div style="margin-bottom:20px">
+          <div style="font-size:10px;font-weight:600;color:var(--text-4);letter-spacing:.08em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:10px">Automatisch erkannt</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">
+            <div style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-2);background:var(--sand);border:1px solid var(--border);border-radius:6px;padding:6px 10px"><span style="color:var(--teal);font-weight:600;font-size:11px">✓</span>Sparbeiträge & Risikobeiträge</div>
+            <div style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-2);background:var(--sand);border:1px solid var(--border);border-radius:6px;padding:6px 10px"><span style="color:var(--teal);font-weight:600;font-size:11px">✓</span>Verwaltungskosten</div>
+            <div style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-2);background:var(--sand);border:1px solid var(--border);border-radius:6px;padding:6px 10px"><span style="color:var(--teal);font-weight:600;font-size:11px">✓</span>Umwandlungssätze & Verzinsung</div>
+            <div style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-2);background:var(--sand);border:1px solid var(--border);border-radius:6px;padding:6px 10px"><span style="color:var(--teal);font-weight:600;font-size:11px">✓</span>Leistungsunterschiede</div>
+            <div style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-2);background:var(--sand);border:1px solid var(--border);border-radius:6px;padding:6px 10px"><span style="color:var(--teal);font-weight:600;font-size:11px">✓</span>Zusatzdeckungen</div>
+            <div style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-2);background:var(--sand);border:1px solid var(--border);border-radius:6px;padding:6px 10px"><span style="color:var(--teal);font-weight:600;font-size:11px">✓</span>Kostenstrukturen</div>
+          </div>
+        </div>
+        <div style="margin-bottom:20px">
+          <div style="font-size:10px;font-weight:600;color:var(--text-4);letter-spacing:.08em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:10px">Erstellt automatisch</div>
+          <div class="feat-tags"><span class="feat-tag">Vergleichstabellen</span><span class="feat-tag">Zusammenfassungen</span><span class="feat-tag">Executive Summary</span><span class="feat-tag">Visuelle Analysen</span><span class="feat-tag">Empfehlungen</span></div>
+        </div>
+        <div>
+          <div style="font-size:10px;font-weight:600;color:var(--text-4);letter-spacing:.08em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:8px">AI-Befehle — Beispiele</div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <div style="background:var(--sand);border:1px solid var(--border);border-radius:5px;padding:6px 10px;font-size:12px;color:var(--text-2);font-style:italic">"Vergleiche die Verwaltungskosten"</div>
+            <div style="background:var(--sand);border:1px solid var(--border);border-radius:5px;padding:6px 10px;font-size:12px;color:var(--text-2);font-style:italic">"Welche Lösung ist langfristig attraktiver?"</div>
+            <div style="background:var(--sand);border:1px solid var(--border);border-radius:5px;padding:6px 10px;font-size:12px;color:var(--text-2);font-style:italic">"Erstelle eine Kunden-Zusammenfassung"</div>
+          </div>
+        </div>
+      </div>
+      <div class="fade-up d1">
+        <div class="demo-card">
+          <div class="dc-bar"><div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div><div class="dc-label">Offertvergleich — Muster AG</div></div>
+          <div class="dc-body">
+            <div class="upload-z"><div class="uz-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div><div class="uz-text"><strong>Offerten hochladen</strong></div><div class="uz-hint">PDF, Excel — bis 50 MB</div></div>
+            <div class="f-list">
+              <div class="f-row"><div class="fb fb-pdf">PDF</div><div class="fn">AXA_Vorsorgelösung_MusterAG.pdf</div><div class="fs">2.4 MB</div><div class="fst fst-ok">✓ Fertig</div></div>
+              <div class="f-row"><div class="fb fb-xlsx">XLS</div><div class="fn">Zurich_BVG_Offerte_2025.xlsx</div><div class="fs">830 KB</div><div class="fst fst-ok">✓ Fertig</div></div>
+              <div class="f-row"><div class="fb fb-pdf">PDF</div><div class="fn">SwissLife_Angebot_2025.pdf</div><div class="fs">1.1 MB</div><div class="fst fst-ld">⟳ Analyse...</div></div>
+            </div>
+            <div style="margin-top:10px;background:var(--blue-lt);border:1px solid rgba(27,79,216,.15);border-radius:8px;padding:10px">
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px"><div class="ai-chip">AI · EXTRAKTION</div><span style="font-size:9px;color:var(--text-4);font-family:'JetBrains Mono',monospace">9 Parameter gefunden</span></div>
+              <div class="prog-row">
+                <div class="prog-item"><div class="prog-lbl"><span>Anbieter & Kosten</span><span style="color:var(--teal)">✓</span></div><div class="prog-bar"><div class="prog-fill pf-green" style="width:100%"></div></div></div>
+                <div class="prog-item"><div class="prog-lbl"><span>Spar- & Risikobeiträge</span><span style="color:var(--teal)">✓</span></div><div class="prog-bar"><div class="prog-fill pf-blue" style="width:100%"></div></div></div>
+                <div class="prog-item"><div class="prog-lbl"><span>Leistungen & Zusatzdeckungen</span><span style="color:var(--gold)">68%</span></div><div class="prog-bar"><div class="prog-fill pf-amber" style="width:68%"></div></div></div>
+              </div>
+            </div>
+            <div style="margin-top:10px">
+              <table class="ctable">
+                <thead><tr><th>Anbieter</th><th>Verw.-K.</th><th>UWS</th><th>Verzins.</th><th>Score</th></tr></thead>
+                <tbody>
+                  <tr class="hg"><td><strong style="color:var(--text-1)">AXA</strong><span class="rec">★</span></td><td class="vg">0.42%</td><td>6.80%</td><td class="vg">1.50%</td><td style="color:var(--teal);font-weight:600">94</td></tr>
+                  <tr><td><strong style="color:var(--text-1)">Zurich</strong></td><td class="vw">0.61%</td><td class="vg">6.90%</td><td>1.25%</td><td style="color:var(--blue);font-weight:600">78</td></tr>
+                  <tr class="hr"><td><strong style="color:var(--text-1)">Swiss Life</strong></td><td class="vb">0.78%</td><td class="vw">6.60%</td><td>1.10%</td><td style="color:var(--danger);font-weight:600">61</td></tr>
+                </tbody>
+              </table>
+              <div style="margin-top:8px;background:var(--teal-lt);border:1px solid rgba(14,124,110,.14);border-radius:6px;padding:7px 10px;font-size:11px;color:var(--text-2)"><strong style="color:var(--teal)">AI:</strong> AXA spart CHF 10'700/Jahr vs. Swiss Life. Empfehle AXA.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ MODUL 2: PLANVERGLEICH & OPTIMIERUNG ══ -->
+<section class="feat-block" id="f-plan">
+  <div class="container">
+    <div class="feat-block-inner rev">
+      <div class="fade-up d1">
+        <div class="demo-card">
+          <div class="dc-bar"><div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div><div class="dc-label">Planoptimierung — Sommer AG, 45 MA</div></div>
+          <div class="dc-body" style="padding:13px">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px"><div class="ai-chip">AI · PLANANALYSE</div><span style="font-size:9px;color:var(--text-4);font-family:'JetBrains Mono',monospace">2 Planmodelle verglichen</span></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--border);border-radius:6px;overflow:hidden;font-family:'JetBrains Mono',monospace;font-size:10px;margin-bottom:10px">
+              <div style="background:var(--sand-2);padding:5px 8px;color:var(--text-4);font-size:9px">Parameter</div>
+              <div style="background:var(--sand-2);padding:5px 8px;color:var(--text-3);text-align:center;font-size:9px">Aktuell</div>
+              <div style="background:var(--sand-2);padding:5px 8px;color:var(--text-3);text-align:center;font-size:9px">Optimiert</div>
+              <div style="background:var(--white);padding:5px 8px;color:var(--text-3)">Verwaltungskosten</div>
+              <div style="background:var(--danger-lt);padding:5px 8px;color:var(--danger);text-align:center">0.78%</div>
+              <div style="background:var(--teal-lt);padding:5px 8px;color:var(--teal);text-align:center;font-weight:600">0.42%</div>
+              <div style="background:var(--white);padding:5px 8px;color:var(--text-3)">Verzinsung</div>
+              <div style="background:var(--white);padding:5px 8px;color:var(--text-2);text-align:center">1.10%</div>
+              <div style="background:var(--teal-lt);padding:5px 8px;color:var(--teal);text-align:center;font-weight:600">1.50%</div>
+              <div style="background:var(--white);padding:5px 8px;color:var(--text-3)">Risikoleistungen</div>
+              <div style="background:var(--warning-lt);padding:5px 8px;color:var(--warning);text-align:center">Basis</div>
+              <div style="background:var(--teal-lt);padding:5px 8px;color:var(--teal);text-align:center;font-weight:600">Erweitert</div>
+              <div style="background:var(--white);padding:5px 8px;color:var(--text-3)">AG-Beitrag</div>
+              <div style="background:var(--white);padding:5px 8px;color:var(--text-2);text-align:center">50%</div>
+              <div style="background:var(--teal-lt);padding:5px 8px;color:var(--teal);text-align:center;font-weight:600">60%</div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-bottom:10px">
+              <div class="kpi"><div class="kpi-v kpi-green" style="font-size:16px">−36%</div><div class="kpi-l">Kostenred.</div></div>
+              <div class="kpi"><div class="kpi-v kpi-blue" style="font-size:16px">+22k</div><div class="kpi-l">CHF/Jahr AN</div></div>
+              <div class="kpi"><div class="kpi-v kpi-amber" style="font-size:16px">A+</div><div class="kpi-l">Gesamtrating</div></div>
+            </div>
+            <div style="background:var(--teal-lt);border:1px solid rgba(14,124,110,.14);border-radius:6px;padding:8px 10px;font-size:11px;color:var(--text-2)"><strong style="color:var(--teal)">AI:</strong> Planwechsel empfohlen. Einsparung CHF 22'000/Jahr für Mitarbeitende.</div>
+          </div>
+        </div>
+      </div>
+      <div class="fade-up">
+        <div class="feat-label"><span class="feat-label-n">02</span>Planvergleich & Optimierung</div>
+        <h2 class="feat-block-title">Bestehende Pläne<br><em>optimieren und</em><br>Potenzial aufzeigen.</h2>
+        <p class="feat-block-desc">Broker können bestehende BVG-Pläne analysieren, Szenarien simulieren und Optimierungspotenzial für Arbeitgeber und Mitarbeitende transparent aufzeigen.</p>
+        <div style="margin-bottom:18px">
+          <div style="font-size:10px;font-weight:600;color:var(--text-4);letter-spacing:.08em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:10px">PensionIQ zeigt</div>
+          <ul class="feat-bullets">
+            <li><span class="bcheck">✓</span>Unterschiede zwischen bestehendem und neuem Plan</li>
+            <li><span class="bcheck">✓</span>Leistungsverbesserungen für AN und AG</li>
+            <li><span class="bcheck">✓</span>Kostenveränderungen und Einsparpotenziale</li>
+            <li><span class="bcheck">✓</span>Risiko- und Sparleistungsänderungen</li>
+            <li><span class="bcheck">✓</span>Ausbauvarianten und Optimierungsszenarien</li>
+          </ul>
+        </div>
+        <div class="feat-tags"><span class="feat-tag">Leistungsvergleich</span><span class="feat-tag">Simulationen</span><span class="feat-tag">AG/AN-Beiträge</span><span class="feat-tag">Kundenberichte</span><span class="feat-tag">PDF Export</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ MODUL 3: VERTRAGS- & ABLAUFMANAGEMENT ══ -->
+<section class="feat-block" id="f-vertrag">
+  <div class="container">
+    <div class="feat-block-inner">
+      <div class="fade-up">
+        <div class="feat-label"><span class="feat-label-n">03</span>Vertrags- & Ablaufmanagement</div>
+        <h2 class="feat-block-title">Kein Vertrag<br>geht mehr<br><em>vergessen.</em></h2>
+        <p class="feat-block-desc">Verträge hochladen, Ablaufdaten automatisch erkennen und Ausschreibungspotenziale identifizieren — bevor Kunden abwandern. PensionIQ ist die Infrastruktur für proaktive Brokerfirmen.</p>
+        <div style="margin-bottom:18px">
+          <div style="font-size:10px;font-weight:600;color:var(--text-4);letter-spacing:.08em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:10px">Automatisch erkannt</div>
+          <ul class="feat-bullets">
+            <li><span class="bcheck">✓</span>Vertragslaufzeiten und Kündigungsfristen</li>
+            <li><span class="bcheck">✓</span>Ablaufdaten und Ausschreibungszeitpunkte</li>
+            <li><span class="bcheck">✓</span>Anbieter, Vertragsarten und Konditionen</li>
+          </ul>
+        </div>
+        <div style="margin-bottom:18px">
+          <div style="font-size:10px;font-weight:600;color:var(--text-4);letter-spacing:.08em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:10px">Erstellt automatisch</div>
+          <ul class="feat-bullets">
+            <li><span class="bcheck">✓</span>Ablaufübersichten und Renewal-Listen</li>
+            <li><span class="bcheck">✓</span>Priorisierte Ausschreibungspotenziale</li>
+            <li><span class="bcheck">✓</span>Erinnerungen und Vertrags-Dashboard</li>
+            <li><span class="bcheck">✓</span>Exportierbare Reports (PDF, Excel)</li>
+          </ul>
+        </div>
+        <div class="feat-tags"><span class="feat-tag">Kündigungsfristen</span><span class="feat-tag">Renewal-Listen</span><span class="feat-tag">Ausschreibungen</span><span class="feat-tag">Dashboard</span><span class="feat-tag">Export</span></div>
+      </div>
+      <div class="fade-up d1">
+        <div class="demo-card">
+          <div class="dc-bar"><div class="dots"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div><div class="dc-label">Vertrags-Dashboard · 12 Kunden</div></div>
+          <div class="dc-body" style="padding:13px">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px"><div class="ai-chip">AI · VERTRAGSERKENNUNG</div><span style="font-size:9px;color:var(--text-4);font-family:'JetBrains Mono',monospace">12 Verträge analysiert</span></div>
+            <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:10px">
+              <div style="display:flex;align-items:center;justify-content:space-between;background:var(--danger-lt);border:1px solid rgba(184,50,50,.15);border-radius:6px;padding:7px 10px">
+                <div><div style="font-size:11px;font-weight:500;color:var(--text-1);font-family:'JetBrains Mono',monospace">Muster AG</div><div style="font-size:9px;color:var(--text-4)">AXA · Vollversicherung</div></div>
+                <div style="text-align:right"><div style="font-size:10px;color:var(--danger);font-weight:600;font-family:'JetBrains Mono',monospace">31.03.2025</div><div style="font-size:9px;color:var(--danger)">⚠ Läuft bald ab</div></div>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;background:var(--warning-lt);border:1px solid rgba(192,92,42,.15);border-radius:6px;padding:7px 10px">
+                <div><div style="font-size:11px;font-weight:500;color:var(--text-1);font-family:'JetBrains Mono',monospace">Sommer AG</div><div style="font-size:9px;color:var(--text-4)">Helvetia · Sammelstiftung</div></div>
+                <div style="text-align:right"><div style="font-size:10px;color:var(--warning);font-weight:600;font-family:'JetBrains Mono',monospace">30.06.2025</div><div style="font-size:9px;color:var(--warning)">↗ Ausschreibung prüfen</div></div>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;background:var(--teal-lt);border:1px solid rgba(14,124,110,.15);border-radius:6px;padding:7px 10px">
+                <div><div style="font-size:11px;font-weight:500;color:var(--text-1);font-family:'JetBrains Mono',monospace">Brügger AG</div><div style="font-size:9px;color:var(--text-4)">Swiss Life · Vollversicherung</div></div>
+                <div style="text-align:right"><div style="font-size:10px;color:var(--teal);font-weight:600;font-family:'JetBrains Mono',monospace">Offen</div><div style="font-size:9px;color:var(--teal)">★ Ausschreibung möglich</div></div>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;background:var(--sand);border:1px solid var(--border);border-radius:6px;padding:7px 10px">
+                <div><div style="font-size:11px;font-weight:500;color:var(--text-1);font-family:'JetBrains Mono',monospace">Alpen Logistics AG</div><div style="font-size:9px;color:var(--text-4)">Zurich · Vollversicherung</div></div>
+                <div style="text-align:right"><div style="font-size:10px;color:var(--text-3);font-weight:500;font-family:'JetBrains Mono',monospace">31.12.2025</div><div style="font-size:9px;color:var(--text-4)">Läuft noch</div></div>
+              </div>
+            </div>
+            <div style="display:flex;gap:5px">
+              <div style="flex:1;background:var(--danger-lt);border:1px solid rgba(184,50,50,.12);border-radius:5px;padding:8px;text-align:center"><div style="font-size:16px;font-weight:300;color:var(--danger);font-family:'Fraunces',serif">2</div><div style="font-size:9px;color:var(--text-4);font-family:'JetBrains Mono',monospace">Dringend</div></div>
+              <div style="flex:1;background:var(--warning-lt);border:1px solid rgba(192,92,42,.12);border-radius:5px;padding:8px;text-align:center"><div style="font-size:16px;font-weight:300;color:var(--warning);font-family:'Fraunces',serif">4</div><div style="font-size:9px;color:var(--text-4);font-family:'JetBrains Mono',monospace">Bald fällig</div></div>
+              <div style="flex:1;background:var(--teal-lt);border:1px solid rgba(14,124,110,.12);border-radius:5px;padding:8px;text-align:center"><div style="font-size:16px;font-weight:300;color:var(--teal);font-family:'Fraunces',serif">6</div><div style="font-size:9px;color:var(--text-4);font-family:'JetBrains Mono',monospace">Potenziale</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-sec">
+  <h2 class="cta-title fade-up">Bereit loszulegen?</h2>
+  <p class="cta-sub fade-up d1">Erste Analyse kostenlos. Keine Kreditkarte erforderlich.</p>
+  <div class="cta-actions fade-up d2">
+    <button class="btn-primary-inv" onclick="showPage('home')">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Jetzt kostenlos starten
+    </button>
+    <button class="btn-outline-inv" onclick="showPage('home');setTimeout(()=>scrollTo('pricing'),50)">Preise ansehen</button>
+  </div>
+  <p class="cta-note fade-up">Keine Kreditkarte · Schweizer Datenschutz · Kündigung jederzeit</p>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="footer-bottom">
+      <div class="footer-copy">© 2025 PensionIQ AG, Zürich. Alle Rechte vorbehalten.</div>
+      <div class="footer-legal"><a onclick="showPage('home')">← Zur Homepage</a><a>Datenschutz</a><a>AGB</a></div>
+    </div>
+  </div>
+</footer>
+
+</div><!-- end page-features -->
+
+
+<!-- ═══════════════════════════════════════
+     PAGE: PRICING
+═══════════════════════════════════════ -->
+<div id="page-pricing" class="page">
+
+<div class="page-hero">
+  <div class="page-hero-content">
+    <div class="badge fade-up"><span class="badge-dot"></span>Preise</div>
+    <h1 class="page-title fade-up d1">Transparent. Skalierbar.<br><em>Ohne Überraschungen.</em></h1>
+    <p class="page-sub fade-up d2">Alle Pläne inklusive Schweizer Datenschutz und persönlichem Onboarding. Jährliche Zahlung spart 2 Monate.</p>
+    <div class="fade-up d3" style="display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap">
+      <button class="back-link" onclick="showPage('home')">← Zur Homepage</button>
+    </div>
+  </div>
+</div>
+
+<div class="bg-sand" style="border-top:1px solid var(--border)">
+<section class="section">
+  <div class="container">
+
+    <!-- PLAN CARDS -->
+    <div class="pricing-grid fade-up">
+      <div class="price-card">
+        <div class="price-plan">Starter</div>
+        <div style="display:flex;align-items:baseline;gap:4px;margin-bottom:4px"><span class="price-currency">CHF</span><span class="price-amount">149</span></div>
+        <div class="price-period">pro Monat, jährliche Abrechnung</div>
+        <div class="price-desc">Für unabhängige Broker mit überschaubarem Analysevolumen.</div>
+        <div class="price-divider"></div>
+        <ul class="price-features">
+          <li><span class="pcheck">✓</span>30 Offertanalysen pro Monat</li>
+          <li><span class="pcheck">✓</span>Offertvergleich (PDF & Excel)</li>
+          <li><span class="pcheck">✓</span>AI Vergleichstabellen</li>
+          <li><span class="pcheck">✓</span>Executive Summaries</li>
+          <li><span class="pcheck">✓</span>PDF Export</li>
+          <li><span class="pcheck">✓</span>AI-Befehle (DE/FR/EN)</li>
+          <li><span class="poff">–</span><span style="color:var(--text-4)">Planvergleich & Optimierung</span></li>
+          <li><span class="poff">–</span><span style="color:var(--text-4)">Vertragsmanagement</span></li>
+          <li><span class="poff">–</span><span style="color:var(--text-4)">Team-Funktionen</span></li>
+        </ul>
+        <button class="price-cta">Kostenlos starten</button>
+      </div>
+      <div class="price-card featured">
+        <div class="price-popular">Beliebtester Plan</div>
+        <div class="price-plan">Pro</div>
+        <div style="display:flex;align-items:baseline;gap:4px;margin-bottom:4px"><span class="price-currency">CHF</span><span class="price-amount">349</span></div>
+        <div class="price-period">pro Monat, jährliche Abrechnung</div>
+        <div class="price-desc">Für Broker-Teams mit allen drei Modulen und regelmässigem Analysebedarf.</div>
+        <div class="price-divider"></div>
+        <ul class="price-features">
+          <li><span class="pcheck">✓</span>Unbegrenzte Offertanalysen</li>
+          <li><span class="pcheck">✓</span>Alle Dateiformate (PDF, Excel, Word)</li>
+          <li><span class="pcheck">✓</span>Offertvergleich — vollständig</li>
+          <li><span class="pcheck">✓</span>Planvergleich & Optimierung</li>
+          <li><span class="pcheck">✓</span>Vertrags- & Ablaufmanagement</li>
+          <li><span class="pcheck">✓</span>Team-Collaboration (5 Nutzer)</li>
+          <li><span class="pcheck">✓</span>PDF, Word & PPT Export</li>
+          <li><span class="pcheck">✓</span>Markenkonformes Branding</li>
+          <li><span class="pcheck">✓</span>Prioritäts-Support</li>
+        </ul>
+        <button class="price-cta p-primary">14 Tage kostenlos testen</button>
+      </div>
+      <div class="price-card">
+        <div class="price-plan">Enterprise</div>
+        <div style="margin-bottom:4px"><span class="price-amount" style="font-size:28px">Auf Anfrage</span></div>
+        <div style="height:18px"></div>
+        <div class="price-desc">Für grosse Broker-Netzwerke mit individuellen Anforderungen und Integrationen.</div>
+        <div class="price-divider"></div>
+        <ul class="price-features">
+          <li><span class="pcheck">✓</span>Alles in Pro, plus:</li>
+          <li><span class="pcheck">✓</span>Unbegrenzte Nutzer</li>
+          <li><span class="pcheck">✓</span>White Label (Logo, Farben, Domain)</li>
+          <li><span class="pcheck">✓</span>REST API Integration</li>
+          <li><span class="pcheck">✓</span>Dedicated Server Schweiz</li>
+          <li><span class="pcheck">✓</span>SLA 99.9% Uptime</li>
+          <li><span class="pcheck">✓</span>Persönlicher Account Manager</li>
+          <li><span class="pcheck">✓</span>Custom Onboarding & Schulung</li>
+          <li><span class="pcheck">✓</span>Individuelle Integrationen</li>
+        </ul>
+        <button class="price-cta">Kontakt aufnehmen</button>
+      </div>
+    </div>
+
+    <!-- COMPARISON TABLE -->
+    <div class="fade-up" style="margin-top:72px">
+      <div style="text-align:center;margin-bottom:36px">
+        <div class="section-eyebrow" style="justify-content:center;margin-bottom:12px"><span class="eyebrow-line"></span><span class="eyebrow-label">Detaillierter Vergleich</span></div>
+        <h3 style="font-family:'Fraunces',serif;font-weight:300;font-size:32px;color:var(--text-1)">Was ist in jedem Plan <em>enthalten?</em></h3>
+      </div>
+      <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden">
+        <!-- Header -->
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;background:var(--sand-2);border-bottom:1px solid var(--border)">
+          <div style="padding:14px 20px;font-size:11px;font-weight:600;color:var(--text-4);font-family:'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase">Feature</div>
+          <div style="padding:14px 12px;text-align:center;font-family:'Fraunces',serif;font-size:14px;font-weight:400;color:var(--text-2);border-left:1px solid var(--border)">Starter</div>
+          <div style="padding:14px 12px;text-align:center;font-family:'Fraunces',serif;font-size:14px;font-weight:400;color:var(--blue);border-left:1px solid var(--border)">Pro</div>
+          <div style="padding:14px 12px;text-align:center;font-family:'Fraunces',serif;font-size:14px;font-weight:400;color:var(--text-2);border-left:1px solid var(--border)">Enterprise</div>
+        </div>
+        <!-- 01 Offertvergleich -->
+        <div style="background:var(--sand);padding:10px 20px;border-bottom:1px solid var(--border);font-size:10px;font-weight:600;color:var(--text-3);font-family:'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase">01 — Offertvergleich</div>
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;border-bottom:1px solid var(--border);align-items:center"><div style="padding:12px 20px;font-size:13px;color:var(--text-2)">PDF & Excel Upload</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);color:var(--teal);font-size:14px">✓</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);color:var(--teal);font-size:14px">✓</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);color:var(--teal);font-size:14px">✓</div></div>
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;border-bottom:1px solid var(--border);align-items:center"><div style="padding:12px 20px;font-size:13px;color:var(--text-2)">Monatliche Analysen</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);font-size:12px;color:var(--text-3);font-family:'JetBrains Mono',monospace">30</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);font-size:12px;color:var(--blue);font-family:'JetBrains Mono',monospace;font-weight:600">∞ Unbegrenzt</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);font-size:12px;color:var(--text-3);font-family:'JetBrains Mono',monospace">∞ Unbegrenzt</div></div>
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;border-bottom:1px solid var(--border);align-items:center"><div style="padding:12px 20px;font-size:13px;color:var(--text-2)">AI Vergleichstabellen</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);color:var(--teal);font-size:14px">✓</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);color:var(--teal);font-size:14px">✓</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);color:var(--teal);font-size:14px">✓</div></div>
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;border-bottom:1px solid var(--border);align-items:center"><div style="padding:12px 20px;font-size:13px;color:var(--text-2)">Executive Summaries</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);color:var(--teal);font-size:14px">✓</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);color:var(--teal);font-size:14px">✓</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);color:var(--teal);font-size:14px">✓</div></div>
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;border-bottom:1px solid var(--border);align-items:center"><div style="padding:12px 20px;font-size:13px;color:var(--text-2)">AI-Befehle (DE/FR/IT/EN)</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);color:var(--teal);font-size:14px">✓</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);color:var(--teal);font-size:14px">✓</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);color:var(--teal);font-size:14px">✓</div></div>
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;border-bottom:1px solid var(--border);align-items:center"><div style="padding:12px 20px;font-size:13px;color:var(--text-2)">Export (PDF, Word, PPT)</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);font-size:12px;color:var(--text-3);font-family:'JetBrains Mono',monospace">PDF</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);font-size:12px;color:var(--blue);font-family:'JetBrains Mono',monospace;font-weight:600">PDF · Word · PPT</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);font-size:12px;color:var(--text-3);font-family:'JetBrains Mono',monospace">PDF · Word · PPT</div></div>
+        <!-- 02 Planvergleich -->
+        <div style="background:var(--sand);padding:10px 20px;border-bottom:1px solid var(--border);font-size:10px;font-weight:600;color:var(--text-3);font-family:'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase">02 — Planvergleich & Optimierung</div>
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;border-bottom:1px solid var(--border);align-items:center"><div style="padding:12px 20px;font-size:13px;color:var(--text-2)">Planvergleich (Aktuell vs. Neu)</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);color:var(--text-4);font-size:14px">–</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);color:var(--teal);font-size:14px">✓</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);color:var(--teal);font-size:14px">✓</div></div>
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;border-bottom:1px solid var(--border);align-items:center"><div style="padding:12px 20px;font-size:13px;color:var(--text-2)">Simulationen & Szenarien</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);color:var(--text-4);font-size:14px">–</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);color:var(--teal);font-size:14px">✓</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);color:var(--teal);font-size:14px">✓</div></div>
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;border-bottom:1px solid var(--border);align-items:center"><div style="padding:12px 20px;font-size:13px;color:var(--text-2)">AG/AN-Kostenanalyse</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);color:var(--text-4);font-size:14px">–</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);color:var(--teal);font-size:14px">✓</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);color:var(--teal);font-size:14px">✓</div></div>
+        <!-- 03 Vertragsmanagement -->
+        <div style="background:var(--sand);padding:10px 20px;border-bottom:1px solid var(--border);font-size:10px;font-weight:600;color:var(--text-3);font-family:'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase">03 — Vertrags- & Ablaufmanagement</div>
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;border-bottom:1px solid var(--border);align-items:center"><div style="padding:12px 20px;font-size:13px;color:var(--text-2)">Vertrags-Dashboard</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);color:var(--text-4);font-size:14px">–</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);color:var(--teal);font-size:14px">✓</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);color:var(--teal);font-size:14px">✓</div></div>
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;border-bottom:1px solid var(--border);align-items:center"><div style="padding:12px 20px;font-size:13px;color:var(--text-2)">Renewal-Listen & Erinnerungen</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);color:var(--text-4);font-size:14px">–</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);color:var(--teal);font-size:14px">✓</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);color:var(--teal);font-size:14px">✓</div></div>
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;border-bottom:1px solid var(--border);align-items:center"><div style="padding:12px 20px;font-size:13px;color:var(--text-2)">Ausschreibungspotenziale</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);color:var(--text-4);font-size:14px">–</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);color:var(--teal);font-size:14px">✓</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);color:var(--teal);font-size:14px">✓</div></div>
+        <!-- Team & Plattform -->
+        <div style="background:var(--sand);padding:10px 20px;border-bottom:1px solid var(--border);font-size:10px;font-weight:600;color:var(--text-3);font-family:'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase">Team & Plattform</div>
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;border-bottom:1px solid var(--border);align-items:center"><div style="padding:12px 20px;font-size:13px;color:var(--text-2)">Nutzer</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);font-size:12px;color:var(--text-3);font-family:'JetBrains Mono',monospace">1</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);font-size:12px;color:var(--blue);font-family:'JetBrains Mono',monospace;font-weight:600">bis 5</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);font-size:12px;color:var(--text-3);font-family:'JetBrains Mono',monospace">∞ Unbegrenzt</div></div>
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;border-bottom:1px solid var(--border);align-items:center"><div style="padding:12px 20px;font-size:13px;color:var(--text-2)">White Label</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);color:var(--text-4);font-size:14px">–</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);color:var(--text-4);font-size:14px">–</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);color:var(--teal);font-size:14px">✓</div></div>
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;border-bottom:1px solid var(--border);align-items:center"><div style="padding:12px 20px;font-size:13px;color:var(--text-2)">REST API</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);color:var(--text-4);font-size:14px">–</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);color:var(--text-4);font-size:14px">–</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);color:var(--teal);font-size:14px">✓</div></div>
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;border-bottom:1px solid var(--border);align-items:center"><div style="padding:12px 20px;font-size:13px;color:var(--text-2)">Dedicated Server Schweiz</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);color:var(--text-4);font-size:14px">–</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);color:var(--text-4);font-size:14px">–</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);color:var(--teal);font-size:14px">✓</div></div>
+        <!-- Support -->
+        <div style="background:var(--sand);padding:10px 20px;border-bottom:1px solid var(--border);font-size:10px;font-weight:600;color:var(--text-3);font-family:'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase">Support</div>
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;border-bottom:1px solid var(--border);align-items:center"><div style="padding:12px 20px;font-size:13px;color:var(--text-2)">Support-Kanal</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);font-size:11px;color:var(--text-3);font-family:'JetBrains Mono',monospace">E-Mail</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);font-size:11px;color:var(--blue);font-family:'JetBrains Mono',monospace;font-weight:600">Priorität</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);font-size:11px;color:var(--text-3);font-family:'JetBrains Mono',monospace">Account Manager</div></div>
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr;align-items:center"><div style="padding:12px 20px;font-size:13px;color:var(--text-2)">Onboarding</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);font-size:11px;color:var(--text-3);font-family:'JetBrains Mono',monospace">Self-Service</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);font-size:11px;color:var(--blue);font-family:'JetBrains Mono',monospace;font-weight:600">Persönlich</div><div style="padding:12px;text-align:center;border-left:1px solid var(--border);font-size:11px;color:var(--text-3);font-family:'JetBrains Mono',monospace">Custom</div></div>
+      </div>
+    </div>
+
+    <!-- Trust -->
+    <div class="fade-up" style="margin-top:48px;display:flex;align-items:center;justify-content:center;gap:28px;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-3)"><span style="color:var(--teal);font-size:16px">✓</span>Keine Kreditkarte für Testversion</div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-3)"><span style="color:var(--teal);font-size:16px">✓</span>Kündigung jederzeit möglich</div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-3)"><span style="color:var(--teal);font-size:16px">✓</span>Alle Daten auf Schweizer Servern</div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-3)"><span style="color:var(--teal);font-size:16px">✓</span>Persönliches Onboarding inklusive</div>
+    </div>
+
+  </div>
+</section>
+</div>
+
+<!-- CTA -->
+<section class="cta-sec">
+  <h2 class="cta-title fade-up">Bereit loszulegen?</h2>
+  <p class="cta-sub fade-up d1">Erste Analyse kostenlos. Keine Kreditkarte erforderlich.</p>
+  <div class="cta-actions fade-up d2">
+    <button class="btn-primary-inv" onclick="showPage('home')">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Jetzt kostenlos starten
+    </button>
+    <button class="btn-outline-inv" onclick="showPage('home')">← Zur Homepage</button>
+  </div>
+  <p class="cta-note fade-up">Keine Kreditkarte · Schweizer Datenschutz · Kündigung jederzeit</p>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="container">
+    <div class="footer-bottom">
+      <div class="footer-copy">© 2025 PensionIQ AG, Zürich. Alle Rechte vorbehalten.</div>
+      <div class="footer-legal"><a onclick="showPage('home')">← Zur Homepage</a><a>Datenschutz</a><a>AGB</a></div>
+    </div>
+  </div>
+</footer>
+
+</div><!-- end page-pricing -->
+
+
+<!-- ═══════════════════════════════════════
+     PAGE: FAQ
+═══════════════════════════════════════ -->
+<div id="page-faq" class="page">
+
+<div class="page-hero">
+  <div class="page-hero-content">
+    <div class="badge fade-up"><span class="badge-dot"></span>FAQ</div>
+    <h1 class="page-title fade-up d1"><em>Häufige Fragen</em></h1>
+    <p class="page-sub fade-up d2">Alles was Sie über PensionIQ wissen möchten — klar und direkt beantwortet.</p>
+    <div class="fade-up d3"><button class="back-link" onclick="showPage('home')">← Zur Homepage</button></div>
+  </div>
+</div>
+
+<div class="bg-sand" style="border-top:1px solid var(--border)">
+<section class="section">
+  <div class="container">
+    <div class="faq-list" style="max-width:720px">
+
+      <!-- Gruppe: Produkt -->
+      <div style="font-size:10px;font-weight:600;color:var(--text-4);letter-spacing:.1em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:10px;margin-top:8px">Produkt & Funktionen</div>
+
+      <div class="faq-item open fade-up"><button class="faq-q" onclick="toggleFaq(this)">Welche Dateiformate werden unterstützt?<span class="faq-chevron">⌄</span></button><div class="faq-a">PensionIQ unterstützt PDF, Excel (.xlsx, .xls), Word (.docx), CSV und Textdateien. Die AI erkennt automatisch das Format und extrahiert alle relevanten BVG-Parameter — ohne manuelle Konfiguration.</div></div>
+
+      <div class="faq-item fade-up"><button class="faq-q" onclick="toggleFaq(this)">Wie genau ist die AI-Analyse?<span class="faq-chevron">⌄</span></button><div class="faq-a">In internen Tests erreicht PensionIQ eine Genauigkeit von über 97% bei der Extraktion strukturierter BVG-Daten. Die AI wurde auf tausenden Schweizer BVG-Offerten trainiert und kennt alle gängigen Anbieter-Formate.</div></div>
+
+      <div class="faq-item fade-up"><button class="faq-q" onclick="toggleFaq(this)">Wie viele Anbieter kann ich gleichzeitig vergleichen?<span class="faq-chevron">⌄</span></button><div class="faq-a">Es gibt keine feste Obergrenze. In der Praxis empfehlen wir 2–6 Anbieter pro Vergleich für optimale Übersicht. Alle Offerten werden gleichzeitig analysiert und in einer strukturierten Vergleichstabelle dargestellt.</div></div>
+
+      <div class="faq-item fade-up"><button class="faq-q" onclick="toggleFaq(this)">Kann ich PensionIQ in bestehende Tools integrieren?<span class="faq-chevron">⌄</span></button><div class="faq-a">Im Enterprise-Plan steht eine vollständige REST-API zur Verfügung. Zudem bieten wir native Integrationen mit Microsoft 365, Google Workspace und gängigen Schweizer Dokumentenmanagement-Systemen.</div></div>
+
+      <div class="faq-item fade-up"><button class="faq-q" onclick="toggleFaq(this)">In welchen Sprachen kann ich Befehle eingeben?<span class="faq-chevron">⌄</span></button><div class="faq-a">PensionIQ versteht Befehle auf Deutsch, Französisch, Italienisch und Englisch — vollständig und ohne Einschränkungen. Die AI antwortet in der Sprache, in der Sie die Frage stellen.</div></div>
+
+      <!-- Gruppe: Datenschutz -->
+      <div style="font-size:10px;font-weight:600;color:var(--text-4);letter-spacing:.1em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:10px;margin-top:32px">Datenschutz & Sicherheit</div>
+
+      <div class="faq-item fade-up"><button class="faq-q" onclick="toggleFaq(this)">Wo werden meine Dokumente gespeichert?<span class="faq-chevron">⌄</span></button><div class="faq-a">Alle Dokumente werden ausschliesslich auf Servern in der Schweiz (Zürich, Bern) gespeichert. Kein Datentransfer ins Ausland. Automatische Löschung nach 30/60/90 Tagen konfigurierbar.</div></div>
+
+      <div class="faq-item fade-up"><button class="faq-q" onclick="toggleFaq(this)">Werden meine Daten für AI-Training genutzt?<span class="faq-chevron">⌄</span></button><div class="faq-a">Nein. Ihre Dokumente und Daten werden niemals für das Training unserer AI-Modelle verwendet. Was Sie hochladen, bleibt vollständig Ihres — vertraglich garantiert.</div></div>
+
+      <div class="faq-item fade-up"><button class="faq-q" onclick="toggleFaq(this)">Ist PensionIQ DSG- und DSGVO-konform?<span class="faq-chevron">⌄</span></button><div class="faq-a">Ja. PensionIQ erfüllt die Anforderungen des Schweizer Datenschutzgesetzes (DSG) sowie der europäischen DSGVO. Zudem sind wir SOC 2 Type II zertifiziert und arbeiten nach ISO 27001-Standards.</div></div>
+
+      <!-- Gruppe: Preise & Abonnement -->
+      <div style="font-size:10px;font-weight:600;color:var(--text-4);letter-spacing:.1em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:10px;margin-top:32px">Preise & Abonnement</div>
+
+      <div class="faq-item fade-up"><button class="faq-q" onclick="toggleFaq(this)">Gibt es eine kostenlose Testversion?<span class="faq-chevron">⌄</span></button><div class="faq-a">Ja — die erste Offertanalyse ist vollkommen kostenlos, ohne Kreditkarte. Beim Pro-Plan gibt es zusätzlich eine 14-tägige Testphase mit vollem Funktionsumfang.</div></div>
+
+      <div class="faq-item fade-up"><button class="faq-q" onclick="toggleFaq(this)">Kann ich jederzeit kündigen?<span class="faq-chevron">⌄</span></button><div class="faq-a">Ja, jederzeit. Beim Monatsabo endet das Abonnement am Ende des laufenden Monats. Beim Jahresabo wird nicht automatisch verlängert — Sie erhalten 30 Tage vor Ablauf eine Erinnerung.</div></div>
+
+      <div class="faq-item fade-up"><button class="faq-q" onclick="toggleFaq(this)">Was kostet das Enterprise-Paket?<span class="faq-chevron">⌄</span></button><div class="faq-a">Der Enterprise-Preis wird individuell basierend auf Teamgrösse, Nutzungsvolumen und gewünschten Integrationen festgelegt. Kontaktieren Sie uns für ein persönliches Angebot — wir antworten innerhalb von 24 Stunden.</div></div>
+
+    </div>
+
+    <!-- CTA -->
+    <div class="fade-up" style="text-align:center;margin-top:56px;padding-top:48px;border-top:1px solid var(--border)">
+      <h3 style="font-family:'Fraunces',serif;font-weight:300;font-size:26px;margin-bottom:10px;color:var(--text-1)">Noch eine <em>offene Frage?</em></h3>
+      <p style="font-size:14px;color:var(--text-3);margin-bottom:24px">Unser Team antwortet innerhalb von 24 Stunden.</p>
+      <div style="display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-primary lg">Kontakt aufnehmen</button>
+        <button class="back-link" onclick="showPage('home')">← Zur Homepage</button>
+      </div>
+    </div>
+
+  </div>
+</section>
+</div>
+
+<footer>
+  <div class="container">
+    <div class="footer-bottom">
+      <div class="footer-copy">© 2025 PensionIQ AG, Zürich. Alle Rechte vorbehalten.</div>
+      <div class="footer-legal"><a onclick="showPage('home')">← Zur Homepage</a><a>Datenschutz</a><a>AGB</a></div>
+    </div>
+  </div>
+</footer>
+
+</div><!-- end page-faq -->
+
+
+<!-- ═══════════════════════════════════════
+     PAGE: ÜBER UNS
+═══════════════════════════════════════ -->
+<div id="page-about" class="page">
+
+<div class="page-hero">
+  <div class="page-hero-content">
+    <div class="badge fade-up"><span class="badge-dot"></span>Über uns</div>
+    <h1 class="page-title fade-up d1">Wir denken BVG-Beratung<br><em>neu.</em></h1>
+    <p class="page-sub fade-up d2">PensionIQ ist eine moderne Schweizer Plattform für BVG-Broker und Vorsorgeberater — gebaut aus der Praxis, für die Praxis.</p>
+    <div class="fade-up d3"><button class="back-link" onclick="showPage('home')">← Zur Homepage</button></div>
+  </div>
+</div>
+
+<!-- STORY -->
+<div class="bg-white" style="border-top:1px solid var(--border)">
+<section class="section">
+  <div class="container">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:start">
+      <div class="fade-up">
+        <div class="section-eyebrow" style="margin-bottom:18px"><span class="eyebrow-num">01</span><span class="eyebrow-line"></span><span class="eyebrow-label">Die Geschichte</span></div>
+        <h2 class="section-title" style="text-align:left;margin-bottom:20px">Entstanden aus der<br><em>täglichen Praxis.</em></h2>
+        <p style="font-size:15px;color:var(--text-3);line-height:1.8;font-weight:300;margin-bottom:18px">Die Idee zu PensionIQ entstand aus der täglichen Praxis der beruflichen Vorsorge. Viele Prozesse im BVG-Bereich sind bis heute stark manuell geprägt: Offertvergleiche werden in Excel erstellt, Vertragsinformationen aus PDFs herausgesucht und Kundenanalysen mit hohem Zeitaufwand aufbereitet.</p>
+        <p style="font-size:15px;color:var(--text-3);line-height:1.8;font-weight:300;margin-bottom:18px">Gleichzeitig steigen die Anforderungen an Geschwindigkeit, Transparenz und Beratungsqualität.</p>
+        <p style="font-size:15px;color:var(--text-3);line-height:1.8;font-weight:300"><strong style="color:var(--text-1);font-weight:400">PensionIQ wurde gegründet, um diese Prozesse neu zu denken.</strong> Unsere Plattform kombiniert moderne Technologie mit den Anforderungen professioneller Brokerfirmen — mit dem Ziel, administrative Arbeiten zu reduzieren und mehr Zeit für Kundenberatung und strategische Betreuung zu schaffen.</p>
+      </div>
+      <div class="fade-up d1">
+        <!-- Was uns antreibt -->
+        <div style="background:var(--sand);border:1px solid var(--border);border-radius:var(--rl);padding:32px;margin-bottom:16px">
+          <div style="font-size:10px;font-weight:600;color:var(--text-4);letter-spacing:.1em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:16px">Was uns antreibt</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;align-items:flex-start;gap:10px">
+              <div style="width:28px;height:28px;border-radius:7px;background:var(--blue-lt);border:1px solid rgba(27,79,216,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;color:var(--blue)">✓</div>
+              <div><div style="font-size:13px;font-weight:500;color:var(--text-1);margin-bottom:2px">Effizientere Abläufe</div><div style="font-size:12px;color:var(--text-3);font-weight:300">Weniger manuelle Arbeit, mehr Zeit für das Wesentliche.</div></div>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:10px">
+              <div style="width:28px;height:28px;border-radius:7px;background:var(--teal-lt);border:1px solid rgba(14,124,110,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;color:var(--teal)">✓</div>
+              <div><div style="font-size:13px;font-weight:500;color:var(--text-1);margin-bottom:2px">Professionelle Analysen</div><div style="font-size:12px;color:var(--text-3);font-weight:300">Strukturierte Vergleiche statt mühsamer Excel-Tabellen.</div></div>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:10px">
+              <div style="width:28px;height:28px;border-radius:7px;background:var(--gold-lt);border:1px solid rgba(184,150,90,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;color:var(--gold)">✓</div>
+              <div><div style="font-size:13px;font-weight:500;color:var(--text-1);margin-bottom:2px">Bessere Entscheidungsgrundlagen</div><div style="font-size:12px;color:var(--text-3);font-weight:300">Klare Daten statt Bauchgefühl.</div></div>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:10px">
+              <div style="width:28px;height:28px;border-radius:7px;background:var(--blue-lt);border:1px solid rgba(27,79,216,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;color:var(--blue)">✓</div>
+              <div><div style="font-size:13px;font-weight:500;color:var(--text-1);margin-bottom:2px">Moderne Kundenkommunikation</div><div style="font-size:12px;color:var(--text-3);font-weight:300">Professionelle Berichte in Sekunden statt Stunden.</div></div>
+            </div>
+          </div>
+        </div>
+        <!-- Herkunft -->
+        <div style="background:var(--sand);border:1px solid var(--border);border-radius:var(--rl);padding:20px;display:flex;align-items:center;gap:14px">
+          <div style="font-size:28px">🇨🇭</div>
+          <div>
+            <div style="font-size:13px;font-weight:500;color:var(--text-1);margin-bottom:2px">Entwickelt & gehostet in der Schweiz</div>
+            <div style="font-size:12px;color:var(--text-3);font-weight:300">Schweizer Recht, Schweizer Server, Schweizer Qualität.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+</div>
+
+<!-- MISSION -->
+<div class="bg-sand" style="border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
+<section class="section">
+  <div class="container">
+    <div style="max-width:760px;margin:0 auto;text-align:center">
+      <div class="section-eyebrow fade-up" style="justify-content:center;margin-bottom:18px"><span class="eyebrow-num">02</span><span class="eyebrow-line"></span><span class="eyebrow-label">Unsere Mission</span></div>
+      <h2 class="section-title fade-up" style="margin-bottom:28px">Die BVG-Beratung in der Schweiz<br><em>effizienter, moderner, transparenter.</em></h2>
+      <p style="font-size:16px;color:var(--text-3);line-height:1.8;font-weight:300;margin-bottom:20px" class="fade-up">Wir möchten Brokerfirmen dabei unterstützen, repetitive und administrative Arbeiten zu reduzieren, damit der Fokus wieder stärker auf Beratung, Kundenbeziehungen und strategischer Betreuung liegt.</p>
+      <p style="font-size:16px;color:var(--text-2);line-height:1.8;font-weight:300" class="fade-up d1">PensionIQ soll zur <strong style="color:var(--text-1);font-weight:400">modernen digitalen Infrastruktur für die nächste Generation der BVG-Beratung</strong> werden — professionell, intelligent und konsequent auf die Bedürfnisse von Brokerfirmen ausgerichtet.</p>
+    </div>
+
+    <!-- 3 Werte -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;margin-top:56px" class="fade-up">
+      <div style="background:var(--white);padding:36px 28px;text-align:center">
+        <div style="font-family:'Fraunces',serif;font-size:40px;font-weight:300;color:var(--blue);margin-bottom:10px;letter-spacing:-.03em">94%</div>
+        <div style="font-size:14px;font-weight:400;color:var(--text-1);margin-bottom:6px">Zeitersparnis</div>
+        <div style="font-size:12px;color:var(--text-3);font-weight:300">bei der Erstellung von Offertvergleichen</div>
+      </div>
+      <div style="background:var(--white);padding:36px 28px;text-align:center">
+        <div style="font-family:'Fraunces',serif;font-size:40px;font-weight:300;color:var(--teal);margin-bottom:10px;letter-spacing:-.03em">180+</div>
+        <div style="font-size:14px;font-weight:400;color:var(--text-1);margin-bottom:6px">Broker-Teams</div>
+        <div style="font-size:12px;color:var(--text-3);font-weight:300">vertrauen bereits auf PensionIQ</div>
+      </div>
+      <div style="background:var(--white);padding:36px 28px;text-align:center">
+        <div style="font-family:'Fraunces',serif;font-size:40px;font-weight:300;color:var(--gold);margin-bottom:10px;letter-spacing:-.03em">12k+</div>
+        <div style="font-size:14px;font-weight:400;color:var(--text-1);margin-bottom:6px">Analysen/Monat</div>
+        <div style="font-size:12px;color:var(--text-3);font-weight:300">werden monatlich auf der Plattform durchgeführt</div>
+      </div>
+    </div>
+  </div>
+</section>
+</div>
+
+<!-- NICHT KI IM VORDERGRUND -->
+<div class="bg-white" style="border-bottom:1px solid var(--border)">
+<section class="section">
+  <div class="container">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center">
+      <div class="fade-up">
+        <div class="section-eyebrow" style="margin-bottom:18px"><span class="eyebrow-num">03</span><span class="eyebrow-line"></span><span class="eyebrow-label">Unser Ansatz</span></div>
+        <h2 class="section-title" style="text-align:left;margin-bottom:20px">Nicht AI im Vordergrund —<br><em>sondern Ihr Mehrwert.</em></h2>
+        <p style="font-size:15px;color:var(--text-3);line-height:1.8;font-weight:300;margin-bottom:24px">Dabei steht nicht die künstliche Intelligenz im Vordergrund, sondern der konkrete Mehrwert für Broker. Technologie ist für uns Mittel zum Zweck — nicht das Ziel.</p>
+        <p style="font-size:15px;color:var(--text-3);line-height:1.8;font-weight:300">PensionIQ ist gebaut für Menschen, die täglich mit BVG-Dokumenten arbeiten — und die wissen, wie viel Zeit und Energie in repetitiven Prozessen verloren geht. Wir lösen genau dieses Problem.</p>
+      </div>
+      <div class="fade-up d1" style="display:flex;flex-direction:column;gap:12px">
+        <div style="background:var(--sand);border:1px solid var(--border);border-radius:var(--rl);padding:20px 24px;display:flex;align-items:center;gap:16px">
+          <div style="width:40px;height:40px;border-radius:10px;background:var(--blue-lt);border:1px solid rgba(27,79,216,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+          <div><div style="font-size:13px;font-weight:500;color:var(--text-1);margin-bottom:2px">Gebaut für BVG-Profis</div><div style="font-size:12px;color:var(--text-3);font-weight:300">Keine generische Software — sondern eine Lösung für die spezifischen Anforderungen der beruflichen Vorsorge.</div></div>
+        </div>
+        <div style="background:var(--sand);border:1px solid var(--border);border-radius:var(--rl);padding:20px 24px;display:flex;align-items:center;gap:16px">
+          <div style="width:40px;height:40px;border-radius:10px;background:var(--teal-lt);border:1px solid rgba(14,124,110,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10z"/></svg></div>
+          <div><div style="font-size:13px;font-weight:500;color:var(--text-1);margin-bottom:2px">100% Schweizer Infrastruktur</div><div style="font-size:12px;color:var(--text-3);font-weight:300">Alle Daten bleiben in der Schweiz — sicher, konform, vertrauenswürdig.</div></div>
+        </div>
+        <div style="background:var(--sand);border:1px solid var(--border);border-radius:var(--rl);padding:20px 24px;display:flex;align-items:center;gap:16px">
+          <div style="width:40px;height:40px;border-radius:10px;background:var(--gold-lt);border:1px solid rgba(184,150,90,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+          <div><div style="font-size:13px;font-weight:500;color:var(--text-1);margin-bottom:2px">Konkreter Mehrwert — sofort</div><div style="font-size:12px;color:var(--text-3);font-weight:300">Erste Offerte kostenlos analysieren — in weniger als 3 Sekunden.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+</div>
+
+<!-- CTA -->
+<section class="cta-sec">
+  <h2 class="cta-title fade-up">Bereit, PensionIQ<br><em>kennenzulernen?</em></h2>
+  <p class="cta-sub fade-up d1">Erste Analyse kostenlos. Keine Kreditkarte erforderlich.</p>
+  <div class="cta-actions fade-up d2">
+    <button class="btn-primary-inv" onclick="showPage('pricing')">Pläne ansehen</button>
+    <button class="btn-outline-inv" onclick="showPage('home')">← Zur Homepage</button>
+  </div>
+  <p class="cta-note fade-up">Keine Kreditkarte · Schweizer Datenschutz · Kündigung jederzeit</p>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="footer-bottom">
+      <div class="footer-copy">© 2025 PensionIQ AG, Zürich. Alle Rechte vorbehalten.</div>
+      <div class="footer-legal"><a onclick="showPage('home')">← Zur Homepage</a><a>Datenschutz</a><a>AGB</a></div>
+    </div>
+  </div>
+</footer>
+
+</div><!-- end page-about -->
+
+
+<!-- ═══════════════════════════════════════
+     PAGE: OFFERTVERGLEICH TOOL
+═══════════════════════════════════════ -->
+<div id="page-tool" class="page">
+<style>
+/* ── TOOL-SPECIFIC STYLES ── */
+.tool-wrap{min-height:100vh;background:var(--sand);padding-top:72px}
+.tool-header{background:var(--white);border-bottom:1px solid var(--border);padding:16px 0}
+.tool-header-inner{max-width:1200px;margin:0 auto;padding:0 32px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.tool-title{font-family:'Fraunces',serif;font-size:18px;font-weight:400;color:var(--text-1)}
+.tool-subtitle{font-size:12px;color:var(--text-3);margin-top:1px;font-family:'JetBrains Mono',monospace}
+
+/* API KEY GATE */
+.api-gate{max-width:520px;margin:80px auto;background:var(--white);border:1px solid var(--border);border-radius:var(--rxl);padding:40px;text-align:center}
+.api-gate h2{font-family:'Fraunces',serif;font-weight:300;font-size:24px;margin-bottom:8px;color:var(--text-1)}
+.api-gate p{font-size:13px;color:var(--text-3);margin-bottom:24px;line-height:1.6}
+.api-input-row{display:flex;gap:8px;margin-bottom:10px}
+.api-input{flex:1;border:1px solid var(--border-2);border-radius:8px;padding:10px 14px;font-size:13px;font-family:'JetBrains Mono',monospace;color:var(--text-1);background:var(--sand);outline:none}
+.api-input:focus{border-color:var(--blue);background:var(--white)}
+.api-hint{font-size:11px;color:var(--text-4);font-family:'JetBrains Mono',monospace}
+.api-hint a{color:var(--blue);text-decoration:none}
+
+/* TOOL LAYOUT */
+.tool-body{max-width:1200px;margin:0 auto;padding:28px 32px;display:grid;grid-template-columns:340px 1fr;gap:20px;align-items:start}
+.tool-sidebar{display:flex;flex-direction:column;gap:14px}
+.tool-panel{background:var(--white);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden}
+.panel-hdr{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--sand)}
+.panel-hdr-title{font-size:12px;font-weight:600;color:var(--text-2);font-family:'JetBrains Mono',monospace;letter-spacing:.04em;text-transform:uppercase}
+.panel-body{padding:14px}
+
+/* UPLOAD */
+.upload-area{border:2px dashed var(--border-2);border-radius:10px;padding:24px 16px;text-align:center;cursor:pointer;transition:all .2s;position:relative}
+.upload-area:hover,.upload-area.drag{border-color:var(--blue);background:var(--blue-lt)}
+.upload-area input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upload-icon{width:40px;height:40px;background:var(--blue-lt);border:1px solid rgba(27,79,216,.15);border-radius:10px;display:flex;align-items:center;justify-content:center;margin:0 auto 10px}
+.upload-label{font-size:13px;font-weight:500;color:var(--text-1);margin-bottom:3px}
+.upload-hint{font-size:11px;color:var(--text-4);font-family:'JetBrains Mono',monospace}
+
+/* FILE LIST */
+.file-list-tool{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.file-row{display:flex;align-items:center;gap:8px;background:var(--sand);border:1px solid var(--border);border-radius:8px;padding:8px 10px}
+.file-badge{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;flex-shrink:0;font-family:'JetBrains Mono',monospace}
+.fb-pdf{background:var(--danger-lt);color:var(--danger)}
+.fb-xlsx{background:var(--teal-lt);color:var(--teal)}
+.fb-docx{background:var(--blue-lt);color:var(--blue)}
+.file-name{font-size:11px;color:var(--text-2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.file-status{font-size:9px;font-weight:600;padding:2px 7px;border-radius:100px;white-space:nowrap;font-family:'JetBrains Mono',monospace}
+.fs-wait{background:var(--sand-2);color:var(--text-4)}
+.fs-loading{background:var(--warning-lt);color:var(--warning)}
+.fs-done{background:var(--teal-lt);color:var(--teal)}
+.fs-error{background:var(--danger-lt);color:var(--danger)}
+.file-remove{width:18px;height:18px;border-radius:4px;background:transparent;border:none;cursor:pointer;color:var(--text-4);display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;transition:all .15s}
+.file-remove:hover{background:var(--danger-lt);color:var(--danger)}
+
+/* ANALYSE BUTTON */
+.btn-analyse{width:100%;padding:12px;background:var(--ink);color:var(--white);border:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-analyse:hover:not(:disabled){background:var(--ink-2);transform:translateY(-1px)}
+.btn-analyse:disabled{opacity:.4;cursor:not-allowed;transform:none}
+
+/* STATUS BAR */
+.status-bar{background:var(--blue-lt);border:1px solid rgba(27,79,216,.15);border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:10px;font-size:12px;color:var(--text-2)}
+.status-bar.success{background:var(--teal-lt);border-color:rgba(14,124,110,.2)}
+.status-bar.error{background:var(--danger-lt);border-color:rgba(184,50,50,.2);color:var(--danger)}
+.spinner{width:14px;height:14px;border:2px solid rgba(27,79,216,.2);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* RESULTS */
+.result-wrap{background:var(--white);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden}
+.result-tabs{display:flex;border-bottom:1px solid var(--border);background:var(--sand);padding:0 16px}
+.rtab{padding:11px 14px;font-size:12px;color:var(--text-4);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;font-family:'JetBrains Mono',monospace;background:none;border-top:none;border-left:none;border-right:none}
+.rtab.active{color:var(--text-1);border-bottom-color:var(--blue)}
+.rtab:hover:not(.active){color:var(--text-2)}
+.result-content{padding:20px;display:none}
+.result-content.active{display:block}
+
+/* COMPARISON TABLE */
+.comp-table{width:100%;border-collapse:collapse;font-size:12px}
+.comp-table th{padding:9px 12px;text-align:left;color:var(--text-4);font-weight:500;font-size:10px;border-bottom:1px solid var(--border);background:var(--sand-2);font-family:'JetBrains Mono',monospace;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.comp-table td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text-2);font-family:'JetBrains Mono',monospace;font-size:11px;vertical-align:middle}
+.comp-table tr:last-child td{border:none}
+.comp-table tr:hover td{background:var(--sand)}
+.comp-table tr.best-row td{background:rgba(14,124,110,.03)}
+.val-good{color:var(--teal);font-weight:600}
+.val-mid{color:var(--warning)}
+.val-bad{color:var(--danger)}
+.anbieter-name{font-weight:500;color:var(--text-1);font-family:'DM Sans',sans-serif;font-size:12px}
+.top-badge{background:var(--teal-lt);color:var(--teal);font-size:8px;font-weight:700;padding:2px 6px;border-radius:100px;margin-left:5px;font-family:'JetBrains Mono',monospace}
+.score-pill{display:inline-flex;align-items:center;justify-content:center;width:36px;height:20px;border-radius:100px;font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace}
+.score-a{background:var(--teal-lt);color:var(--teal)}
+.score-b{background:var(--blue-lt);color:var(--blue)}
+.score-c{background:var(--warning-lt);color:var(--warning)}
+.score-d{background:var(--danger-lt);color:var(--danger)}
+
+/* AI SUMMARY BOX */
+.ai-summary{background:var(--sand);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px}
+.ai-summary-hdr{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.ai-tag{background:var(--blue-lt);border:1px solid rgba(27,79,216,.2);color:var(--blue);font-size:9px;font-weight:700;padding:2px 8px;border-radius:4px;font-family:'JetBrains Mono',monospace;letter-spacing:.06em}
+.ai-summary p{font-size:13px;color:var(--text-2);line-height:1.65}
+.ai-summary strong{color:var(--teal)}
+
+/* RECOMMENDATION CARD */
+.rec-card{background:var(--teal-lt);border:1px solid rgba(14,124,110,.2);border-radius:10px;padding:16px;display:flex;align-items:flex-start;gap:12px;margin-bottom:16px}
+.rec-icon{width:36px;height:36px;background:var(--teal);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.rec-title{font-family:'Fraunces',serif;font-size:15px;font-weight:400;color:var(--text-1);margin-bottom:3px}
+.rec-desc{font-size:12px;color:var(--text-3);line-height:1.5}
+
+/* PARAMETER CARDS */
+.param-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.param-card{background:var(--sand);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center}
+.param-val{font-family:'Fraunces',serif;font-size:20px;font-weight:300;letter-spacing:-.03em;margin-bottom:2px}
+.param-lbl{font-size:9px;color:var(--text-4);font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.06em}
+
+/* EMPTY STATE */
+.empty-state{text-align:center;padding:60px 20px;color:var(--text-3)}
+.empty-state h3{font-family:'Fraunces',serif;font-size:20px;font-weight:300;margin-bottom:8px;color:var(--text-2)}
+.empty-state p{font-size:13px;line-height:1.6}
+
+/* KEY BAR */
+.key-bar{display:flex;align-items:center;gap:6px;background:var(--teal-lt);border:1px solid rgba(14,124,110,.2);border-radius:8px;padding:7px 12px;font-size:11px;color:var(--teal);font-family:'JetBrains Mono',monospace;cursor:pointer}
+.key-bar:hover{background:var(--teal-lt)}
+
+@media(max-width:900px){.tool-body{grid-template-columns:1fr}.param-grid{grid-template-columns:1fr 1fr}}
+</style>
+
+<div class="tool-wrap">
+  <!-- Tool Header -->
+  <div class="tool-header">
+    <div class="tool-header-inner">
+      <div style="display:flex;align-items:center;gap:16px">
+        <div class="logo" onclick="showPage('home')" style="cursor:pointer">
+          <div class="logo-mark">PIQ</div>
+          <span class="logo-text">PensionIQ</span>
+        </div>
+        <div style="width:1px;height:24px;background:var(--border)"></div>
+        <div>
+          <div class="tool-title">Offertvergleich</div>
+          <div class="tool-subtitle">AI-gestützte BVG-Analyse</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div id="key-status" style="display:none">
+          <button class="key-bar" onclick="resetApiKey()">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            API Key aktiv · Ändern
+          </button>
+        </div>
+        <button class="btn-ghost" onclick="showPage('home')">← Zurück</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- API KEY GATE -->
+  <div id="api-gate-view" style="padding:0 32px">
+    <div class="api-gate">
+      <div style="width:52px;height:52px;background:var(--ink);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </div>
+      <h2>API Key eingeben</h2>
+      <p>Um den Offertvergleich zu nutzen, benötigst du einen Anthropic API Key.<br>Erstelle ihn kostenlos auf <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a>.</p>
+      <div class="api-input-row">
+        <input class="api-input" id="api-key-input" type="password" placeholder="sk-ant-api03-..." autocomplete="off">
+        <button class="btn btn-primary" onclick="saveApiKey()">Speichern</button>
+      </div>
+      <div class="api-hint">Der Key wird nur lokal in deinem Browser gespeichert und nie übertragen.</div>
+      <div id="api-error" style="display:none;margin-top:12px;font-size:12px;color:var(--danger)"></div>
+    </div>
+  </div>
+
+  <!-- MAIN TOOL -->
+  <div id="tool-main" style="display:none">
+    <div class="tool-body">
+
+      <!-- LEFT: Upload + Controls -->
+      <div class="tool-sidebar">
+
+        <!-- Upload Panel -->
+        <div class="tool-panel">
+          <div class="panel-hdr">
+            <span class="panel-hdr-title">Offerten hochladen</span>
+            <span id="file-count" style="font-size:10px;color:var(--text-4);font-family:'JetBrains Mono',monospace">0 / 10</span>
+          </div>
+          <div class="panel-body">
+            <div class="upload-area" id="upload-area">
+              <input type="file" id="file-input" multiple accept=".pdf,.xlsx,.xls,.docx,.doc" onchange="handleFiles(this.files)">
+              <div class="upload-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              </div>
+              <div class="upload-label">Hierher ziehen oder klicken</div>
+              <div class="upload-hint">PDF, Excel, Word · bis zu 10 Offerten</div>
+            </div>
+            <div class="file-list-tool" id="file-list"></div>
+          </div>
+        </div>
+
+        <!-- Analyse Button -->
+        <button class="btn-analyse" id="btn-analyse" onclick="startAnalysis()" disabled>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+          Offerten analysieren
+        </button>
+
+        <!-- Status -->
+        <div id="status-bar" style="display:none"></div>
+
+        <!-- Settings Panel -->
+        <div class="tool-panel">
+          <div class="panel-hdr"><span class="panel-hdr-title">Einstellungen</span></div>
+          <div class="panel-body" style="display:flex;flex-direction:column;gap:10px">
+            <div>
+              <div style="font-size:11px;color:var(--text-3);margin-bottom:5px;font-family:'JetBrains Mono',monospace">Firma / Kundenname</div>
+              <input id="kunde-name" type="text" placeholder="z.B. Muster AG" style="width:100%;border:1px solid var(--border-2);border-radius:7px;padding:8px 11px;font-size:12px;background:var(--sand);color:var(--text-1);outline:none;font-family:'DM Sans',sans-serif">
+            </div>
+            <div>
+              <div style="font-size:11px;color:var(--text-3);margin-bottom:5px;font-family:'JetBrains Mono',monospace">Anzahl Mitarbeitende</div>
+              <input id="mitarbeitende" type="number" placeholder="z.B. 45" style="width:100%;border:1px solid var(--border-2);border-radius:7px;padding:8px 11px;font-size:12px;background:var(--sand);color:var(--text-1);outline:none;font-family:'DM Sans',sans-serif">
+            </div>
+          </div>
+        </div>
+
+        <!-- Parameter Panel -->
+        <div class="tool-panel">
+          <div class="panel-hdr">
+            <span class="panel-hdr-title">Parameter auswählen</span>
+            <button onclick="toggleAllParams(true)" style="font-size:9px;color:var(--blue);background:none;border:none;cursor:pointer;font-family:'JetBrains Mono',monospace">Alle</button>
+            <button onclick="toggleAllParams(false)" style="font-size:9px;color:var(--text-4);background:none;border:none;cursor:pointer;font-family:'JetBrains Mono',monospace">Keine</button>
+          </div>
+          <div class="panel-body" style="display:flex;flex-direction:column;gap:6px" id="param-checkboxes">
+            <!-- rendered by JS -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT: Results -->
+      <div>
+        <div id="empty-state" class="result-wrap" style="display:block">
+          <div class="empty-state">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--border-2)" stroke-width="1" style="margin:0 auto 16px;display:block"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+            <h3>Noch keine Analyse</h3>
+            <p>Lade mindestens 2 BVG-Offerten hoch<br>und klicke auf «Offerten analysieren».</p>
+          </div>
+        </div>
+
+        <div id="result-view" class="result-wrap" style="display:none">
+          <div class="result-tabs">
+            <button class="rtab active" onclick="switchTab('vergleich',this)">Vergleichstabelle</button>
+            <button class="rtab" onclick="switchTab('empfehlung',this)">Empfehlung</button>
+            <button class="rtab" onclick="switchTab('detail',this)">Details</button>
+          </div>
+
+          <!-- Download Bar -->
+          <div style="padding:10px 16px;border-bottom:1px solid var(--border);background:var(--sand);display:flex;align-items:center;gap:8px">
+            <span style="font-size:11px;color:var(--text-4);font-family:'JetBrains Mono',monospace;margin-right:4px">Export:</span>
+            <button onclick="downloadExcel()" style="display:flex;align-items:center;gap:5px;background:var(--teal-lt);border:1px solid rgba(14,124,110,.2);color:var(--teal);font-size:11px;font-weight:600;padding:5px 12px;border-radius:6px;cursor:pointer;font-family:'JetBrains Mono',monospace;transition:all .15s">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Excel
+            </button>
+            <button onclick="downloadPDF()" style="display:flex;align-items:center;gap:5px;background:var(--blue-lt);border:1px solid rgba(27,79,216,.2);color:var(--blue);font-size:11px;font-weight:600;padding:5px 12px;border-radius:6px;cursor:pointer;font-family:'JetBrains Mono',monospace;transition:all .15s">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              PDF
+            </button>
+          </div>
+
+          <!-- Tab: Vergleich -->
+          <div id="tab-vergleich" class="result-content active">
+            <div id="ai-chip-row" style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+              <div class="ai-tag">AI · ANALYSE</div>
+              <span id="result-meta" style="font-size:11px;color:var(--text-4);font-family:'JetBrains Mono',monospace"></span>
+            </div>
+            <div style="overflow-x:auto">
+              <table class="comp-table" id="comp-table">
+                <thead id="comp-thead"></thead>
+                <tbody id="comp-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Tab: Empfehlung -->
+          <div id="tab-empfehlung" class="result-content">
+            <div id="rec-content"></div>
+          </div>
+
+          <!-- Tab: Detail -->
+          <div id="tab-detail" class="result-content">
+            <div id="detail-content"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+</div><!-- end page-tool -->
+
+
+<!-- ══════ JAVASCRIPT ══════ -->
+<script>
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+  if (name === 'features') document.getElementById('nav-features').classList.add('active');
+  if (name === 'pricing') document.getElementById('nav-pricing').classList.add('active');
+  if (name === 'faq') document.getElementById('nav-faq').classList.add('active');
+  if (name === 'about') document.getElementById('nav-about').classList.add('active');
+  if (name === 'tool') { document.getElementById('nav-tool').classList.add('active'); checkApiKey(); }
+  setTimeout(() => {
+    document.querySelectorAll('#page-' + name + ' .fade-up').forEach(el => {
+      const rect = el.getBoundingClientRect();
+      if (rect.top < window.innerHeight) el.classList.add('visible');
+    });
+  }, 50);
+}
+
+function scrollTo(id) {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+window.addEventListener('scroll', () => {
+  document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 20);
+});
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.08 });
+document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+window.addEventListener('load', () => {
+  document.querySelectorAll('.fade-up').forEach(el => {
+    if (el.getBoundingClientRect().top < window.innerHeight)
+      setTimeout(() => el.classList.add('visible'), 80);
+  });
+});
+
+function toggleFaq(btn) {
+  const item = btn.closest('.faq-item');
+  const isOpen = item.classList.contains('open');
+  document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+  if (!isOpen) item.classList.add('open');
+}
+
+document.addEventListener('scroll', () => {
+  const activePage = document.querySelector('.page.active');
+  if (!activePage || activePage.id !== 'page-features') return;
+  const ids = ['f-offert','f-plan','f-vertrag'];
+  const pills = document.querySelectorAll('#page-features .feat-pill');
+  let current = '';
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && window.scrollY >= el.offsetTop - 200) current = id;
+  });
+  pills.forEach(p => {
+    p.classList.toggle('active', p.getAttribute('href') === '#' + current);
+  });
+}, { passive: true });
+
+// ══════ TOOL FUNCTIONS ══════
+
+// ── STATE ──
+let uploadedFiles = [];
+let analysisResults = null;
+
+// ── API KEY ──
+function saveApiKey() {
+  const key = document.getElementById('api-key-input').value.trim();
+  if (!key.startsWith('sk-ant-')) {
+    document.getElementById('api-error').style.display = 'block';
+    document.getElementById('api-error').textContent = 'Ungültiger API Key. Er muss mit sk-ant- beginnen.';
+    return;
+  }
+  localStorage.setItem('piq_api_key', key);
+  document.getElementById('api-gate-view').style.display = 'none';
+  document.getElementById('tool-main').style.display = 'block';
+  document.getElementById('key-status').style.display = 'flex';
+}
+
+function resetApiKey() {
+  localStorage.removeItem('piq_api_key');
+  document.getElementById('api-gate-view').style.display = 'block';
+  document.getElementById('tool-main').style.display = 'none';
+  document.getElementById('key-status').style.display = 'none';
+  uploadedFiles = [];
+  if (document.getElementById('file-list')) renderFileList();
+}
+
+function checkApiKey() {
+  const key = localStorage.getItem('piq_api_key');
+  const gate = document.getElementById('api-gate-view');
+  const main = document.getElementById('tool-main');
+  const ks = document.getElementById('key-status');
+  if (!gate) return;
+  if (key) {
+    gate.style.display = 'none';
+    main.style.display = 'block';
+    if (ks) ks.style.display = 'flex';
+  } else {
+    gate.style.display = 'block';
+    main.style.display = 'none';
+  }
+}
+
+// ── FILE HANDLING ──
+function handleFiles(files) {
+  for (const file of files) {
+    if (uploadedFiles.length >= 10) break;
+    if (!uploadedFiles.find(f => f.name === file.name)) uploadedFiles.push(file);
+  }
+  renderFileList();
+  updateAnalyseButton();
+}
+
+function removeFile(idx) {
+  uploadedFiles.splice(idx, 1);
+  renderFileList();
+  updateAnalyseButton();
+}
+
+function renderFileList() {
+  const list = document.getElementById('file-list');
+  if (!list) return;
+  document.getElementById('file-count').textContent = uploadedFiles.length + ' / 10';
+  list.innerHTML = uploadedFiles.map((f, i) => {
+    const ext = f.name.split('.').pop().toUpperCase();
+    const cls = ext === 'PDF' ? 'fb-pdf' : ext.startsWith('XL') || ext === 'CSV' ? 'fb-xlsx' : 'fb-docx';
+    return `<div class="file-row" id="frow-${i}">
+      <div class="file-badge ${cls}">${ext}</div>
+      <div class="file-name">${f.name}</div>
+      <div class="file-status fs-wait" id="fstatus-${i}">Bereit</div>
+      <button class="file-remove" onclick="removeFile(${i})">✕</button>
+    </div>`;
+  }).join('');
+  // Re-init drag drop
+  initDragDrop();
+}
+
+function updateAnalyseButton() {
+  const btn = document.getElementById('btn-analyse');
+  if (btn) btn.disabled = uploadedFiles.length < 2;
+}
+
+function setFileStatus(idx, status, label) {
+  const el = document.getElementById('fstatus-' + idx);
+  if (!el) return;
+  el.className = 'file-status fs-' + status;
+  el.textContent = label;
+}
+
+// ── DRAG & DROP ──
+function initDragDrop() {
+  const ua = document.getElementById('upload-area');
+  if (!ua || ua._dragInit) return;
+  ua._dragInit = true;
+  ua.addEventListener('dragover', e => { e.preventDefault(); ua.classList.add('drag'); });
+  ua.addEventListener('dragleave', () => ua.classList.remove('drag'));
+  ua.addEventListener('drop', e => { e.preventDefault(); ua.classList.remove('drag'); handleFiles(e.dataTransfer.files); });
+}
+
+// ── FILE PARSERS ──
+function toBase64(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result.split(',')[1]);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+
+function parseExcel(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const wb = XLSX.read(data, { type: 'array' });
+
+        const TARGET_COLS = [
+          'Gemeldeter Jahreslohn',
+          'Versicherter Lohn Sparteil',
+          'Versicherter Lohn Risikoteil',
+          'Endaltersguthaben ohne Zins',
+          'Endaltersguthaben mit Zins',
+          'Altersrente',
+          'Invalidenrente Krankheit',
+          'Invalidenkinderrente Krankheit',
+          'Ehegatten/Partnerrente Krankheit',
+          'Waisenrente Krankheit',
+          'Todesfallleistungen',
+          'Arbeitgeberbeiträge Gesamtbeiträge',
+          'AG Sparbeitrag',
+          'AG Risikobeitrag',
+          'AG Kostenbeitrag',
+          'Arbeitnehmerbeiträge Gesamtbeiträge',
+          'AN Sparbeitrag',
+          'AN Risikobeitrag',
+          'AN Kostenbeitrag'
+        ];
+
+        const norm = s => String(s == null ? '' : s).toLowerCase()
+          .replace(/ä/g, 'a').replace(/ö/g, 'o').replace(/ü/g, 'u').replace(/ß/g, 'ss')
+          .replace(/[^a-z0-9]/g, '');
+
+        const parseNum = v => {
+          if (v == null || v === '') return 0;
+          if (typeof v === 'number') return v;
+          const s = String(v).replace(/['']/g, '').replace(/\s/g, '').replace(/CHF/gi, '').replace(/,/g, '.');
+          const n = parseFloat(s);
+          return isNaN(n) ? 0 : n;
+        };
+
+        const totals = Object.fromEntries(TARGET_COLS.map(c => [c, 0]));
+        const seen = Object.fromEntries(TARGET_COLS.map(c => [c, false]));
+        let personCount = 0;
+        const sheetSummaries = [];
+
+        wb.SheetNames.forEach(sheetName => {
+          const ws = wb.Sheets[sheetName];
+          const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '', blankrows: false });
+          if (!rows.length) return;
+
+          let headerIdx = -1, bestScore = 0;
+          const scanLimit = Math.min(rows.length, 25);
+          for (let i = 0; i < scanLimit; i++) {
+            const cells = (rows[i] || []).map(norm);
+            const score = TARGET_COLS.filter(c => cells.includes(norm(c))).length;
+            if (score > bestScore) { bestScore = score; headerIdx = i; }
+          }
+          if (headerIdx === -1 || bestScore === 0) return;
+
+          const headerCells = rows[headerIdx].map(norm);
+          const colMap = {};
+          TARGET_COLS.forEach(c => {
+            const idx = headerCells.indexOf(norm(c));
+            if (idx !== -1) { colMap[c] = idx; seen[c] = true; }
+          });
+
+          let sheetPersons = 0;
+          for (let i = headerIdx + 1; i < rows.length; i++) {
+            const row = rows[i];
+            if (!row || row.every(c => c === '' || c == null)) continue;
+            const firstCell = String(row[0] == null ? '' : row[0]).toLowerCase().trim();
+            if (/^(total|summe|gesamt|durchschnitt|mittel)/.test(firstCell)) continue;
+            sheetPersons++;
+            for (const col in colMap) totals[col] += parseNum(row[colMap[col]]);
+          }
+          personCount += sheetPersons;
+          sheetSummaries.push(`Tabellenblatt "${sheetName}": ${sheetPersons} Personen, ${Object.keys(colMap).length}/${TARGET_COLS.length} Zielspalten erkannt`);
+        });
+
+        const fmt = n => n.toLocaleString('de-CH', { maximumFractionDigits: 2 });
+        const missing = TARGET_COLS.filter(c => !seen[c]);
+        const totalsText = TARGET_COLS.map(c => `${c}: ${seen[c] ? fmt(totals[c]) + ' CHF' : 'nicht gefunden'}`).join('\n');
+
+        const summary = `BVG-Offerte — Aggregierte Gesamtwerte über ${personCount} Personen:
+
+${totalsText}
+
+${sheetSummaries.join('\n')}${missing.length ? '\n\nNicht erkannte Spalten: ' + missing.join(', ') : ''}`;
+
+        res(summary);
+      } catch(err) { rej(err); }
+    };
+    r.onerror = rej;
+    r.readAsArrayBuffer(file);
+  });
+}
+
+function parseDocx(file) {
+  return new Promise((res) => {
+    const r = new FileReader();
+    r.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const wb = XLSX.read(data, { type: 'array' });
+        let text = '';
+        wb.SheetNames.forEach(name => { text += XLSX.utils.sheet_to_csv(wb.Sheets[name]) + '\n'; });
+        res(text.trim() || 'Inhalt nicht lesbar — bitte als PDF hochladen.');
+      } catch { res('Word-Inhalt nicht lesbar — bitte als PDF hochladen.'); }
+    };
+    r.readAsArrayBuffer(file);
+  });
+}
+
+// ── STATUS ──
+function showStatus(msg, type = 'loading') {
+  const bar = document.getElementById('status-bar');
+  if (!bar) return;
+  bar.style.display = 'flex';
+  bar.className = 'status-bar' + (type === 'success' ? ' success' : type === 'error' ? ' error' : '');
+  bar.innerHTML = type === 'loading' ? `<div class="spinner"></div><span>${msg}</span>` : `<span>${msg}</span>`;
+}
+
+// ── SAFE JSON PARSER ──
+function safeParseJSON(text, filename) {
+  let clean = text.replace(/```json|```/g, '').trim();
+  try { return JSON.parse(clean); } catch(e) {}
+  const start = clean.indexOf('{');
+  const end = clean.lastIndexOf('}');
+  if (start !== -1 && end !== -1) { try { return JSON.parse(clean.slice(start, end + 1)); } catch(e) {} }
+  if (start !== -1) {
+    let frag = clean.slice(start);
+    const qc = (frag.match(/(?<!\\)"/g) || []).length;
+    if (qc % 2 !== 0) frag += '"';
+    const opens = (frag.match(/{/g) || []).length;
+    const closes = (frag.match(/}/g) || []).length;
+    frag = frag.replace(/,\s*$/, '') + '}'.repeat(Math.max(0, opens - closes));
+    try { return JSON.parse(frag); } catch(e) {}
+  }
+  return { anbieter: (filename || 'Unbekannt').replace(/\.[^.]+$/, ''), produkt: null, jahrespraemie: null, verwaltungskosten: null, umwandlungssatz: null, verzinsung: null, sparbeitraege: null, risikobeitraege: null, zusatzdeckungen: null, kuendigungsfrist: null, besonderheiten: 'Analyse fehlgeschlagen.', datenqualitaet: 'niedrig' };
+}
+
+// ── PARAMETERS ──
+const ALL_PARAMS = [
+  { key: 'jahrespraemie',     label: 'Jahresprämie (CHF)',    default: true  },
+  { key: 'verwaltungskosten', label: 'Verwaltungskosten',     default: true  },
+  { key: 'umwandlungssatz',   label: 'Umwandlungssatz (UWS)', default: true  },
+  { key: 'verzinsung',        label: 'Verzinsung',            default: true  },
+  { key: 'sparbeitraege',     label: 'Sparbeiträge',          default: true  },
+  { key: 'risikobeitraege',   label: 'Risikobeiträge',        default: false },
+  { key: 'zusatzdeckungen',   label: 'Zusatzdeckungen',       default: false },
+  { key: 'kuendigungsfrist',  label: 'Kündigungsfrist',       default: false },
+  { key: 'besonderheiten',    label: 'Besonderheiten',        default: false },
+];
+
+function renderParamCheckboxes() {
+  const el = document.getElementById('param-checkboxes');
+  if (!el) return;
+  el.innerHTML = ALL_PARAMS.map(p => `
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:5px 0;border-bottom:1px solid var(--border)">
+      <input type="checkbox" id="param-${p.key}" ${p.default ? 'checked' : ''} style="width:14px;height:14px;accent-color:var(--blue);cursor:pointer">
+      <span style="font-size:12px;color:var(--text-2)">${p.label}</span>
+    </label>`).join('');
+}
+
+function toggleAllParams(on) {
+  ALL_PARAMS.forEach(p => { const el = document.getElementById('param-' + p.key); if (el) el.checked = on; });
+}
+
+function getActiveParams() {
+  return ALL_PARAMS.filter(p => document.getElementById('param-' + p.key)?.checked);
+}
+
+// ── MAIN ANALYSIS ──
+async function startAnalysis() {
+  const apiKey = localStorage.getItem('piq_api_key');
+  if (!apiKey) return;
+  const btn = document.getElementById('btn-analyse');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner" style="border-color:rgba(255,255,255,.2);border-top-color:#fff"></div> Analysiere...';
+
+  const activeParams = getActiveParams();
+  const paramKeys = activeParams.map(p => `  "${p.key}": "${p.label} oder null"`).join(',\n');
+  const paramPrompt = `Analysiere diese BVG-Offerte und extrahiere die folgenden Parameter. WICHTIG: Wenn die Offerte Werte pro Person enthält (z.B. Löhne, Beiträge, Renten, Altersguthaben), summiere diese über ALLE Personen zu Gesamttotalen für das Kollektiv und arbeite ausschließlich mit diesen Summen — niemals mit Einzelwerten oder Durchschnitten. Falls die Daten bereits als aggregierte Totale vorliegen, verwende sie direkt. Antworte NUR mit JSON ohne Backticks:\n{\n  "anbieter": "Name des Versicherers",\n  "produkt": "Produktname oder null",\n${paramKeys},\n  "datenqualitaet": "hoch/mittel/niedrig"\n}`;
+  const kunde = document.getElementById('kunde-name').value || 'Unbekannter Kunde';
+  const ma = document.getElementById('mitarbeitende').value || 'k.A.';
+  const startTime = Date.now();
+  const results = [];
+
+  for (let i = 0; i < uploadedFiles.length; i++) {
+    const file = uploadedFiles[i];
+    setFileStatus(i, 'loading', '⟳ Analysiere...');
+    showStatus(`Analysiere ${i + 1}/${uploadedFiles.length}: ${file.name}`);
+    try {
+      const ext = file.name.split('.').pop().toLowerCase();
+      let messages;
+      if (ext === 'pdf') {
+        const b64 = await toBase64(file);
+        messages = [{ role: 'user', content: [{ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: b64 } }, { type: 'text', text: paramPrompt }] }];
+      } else if (['xlsx','xls','csv'].includes(ext)) {
+        showStatus(`Excel lesen: ${file.name}`);
+        const txt = await parseExcel(file);
+        messages = [{ role: 'user', content: `BVG-Offerte (${file.name}):\n\n${txt.substring(0,15000)}\n\n${paramPrompt}` }];
+      } else if (['docx','doc'].includes(ext)) {
+        showStatus(`Word lesen: ${file.name}`);
+        const txt = await parseDocx(file);
+        messages = [{ role: 'user', content: `BVG-Offerte (${file.name}):\n\n${txt.substring(0,15000)}\n\n${paramPrompt}` }];
+      } else throw new Error('Nicht unterstütztes Format');
+
+      const res = await fetch('/api/claude', { method:'POST', headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01'}, body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:2048, messages }) });
+      if (!res.ok) { const e = await res.json(); throw new Error(e.error?.message || 'API Fehler'); }
+      const data = await res.json();
+      const parsed = safeParseJSON(data.content.map(c=>c.text||'').join(''), file.name);
+      parsed._filename = file.name;
+      results.push(parsed);
+      setFileStatus(i, 'done', '✓ Fertig');
+    } catch(e) { setFileStatus(i, 'error', '✕ Fehler'); console.error(e); }
+  }
+
+  const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+  showStatus('Erstelle Empfehlung...');
+  let recommendation = null;
+  try {
+    const recRes = await fetch('/api/claude', { method:'POST', headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01'}, body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:1000, messages:[{ role:'user', content:`BVG-Experte: Analysiere für ${kunde} (${ma} MA). JSON ohne Backticks:\n${JSON.stringify(results)}\n\nFormat:\n{"empfehlung_anbieter":"...","begruendung":"...","hauptvorteil":"...","risiken":"...","einsparung_pro_jahr":"... CHF oder null","gesamtbewertung":"..."}` }] }) });
+    const recData = await recRes.json();
+    recommendation = safeParseJSON(recData.content.map(c=>c.text||'').join(''), 'rec');
+  } catch(e) { console.error(e); }
+
+  analysisResults = { results, recommendation, elapsed, kunde, ma };
+  renderResults();
+  showStatus(`✓ ${results.length} Offerten analysiert in ${elapsed}s`, 'success');
+  btn.disabled = false;
+  btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg> Erneut analysieren';
+}
+
+// ── RENDER RESULTS ──
+function renderResults() {
+  const { results, recommendation, elapsed, kunde } = analysisResults;
+  const activeParams = getActiveParams();
+  const bestAnbieter = recommendation?.empfehlung_anbieter;
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('result-view').style.display = 'block';
+  document.getElementById('result-meta').textContent = `${results.length} Anbieter · ${elapsed}s · ${kunde}`;
+
+  document.getElementById('comp-thead').innerHTML = `<tr><th>Parameter</th>${results.map(r=>`<th>${r.anbieter}${r.anbieter===bestAnbieter?'<span class="top-badge">★ TOP</span>':''}</th>`).join('')}</tr>`;
+  document.getElementById('comp-tbody').innerHTML = activeParams.map(p=>`<tr class="${results.some(r=>r.anbieter===bestAnbieter&&r[p.key])?'best-row':''}"><td style="color:var(--text-3);font-size:10px;text-transform:uppercase;letter-spacing:.04em">${p.label}</td>${results.map(r=>`<td class="${r.anbieter===bestAnbieter?'val-good':''}">${r[p.key]||'—'}</td>`).join('')}</tr>`).join('');
+
+  if (recommendation) {
+    document.getElementById('rec-content').innerHTML = `
+      <div class="rec-card"><div class="rec-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div><div><div class="rec-title">Empfehlung: ${recommendation.empfehlung_anbieter}</div><div class="rec-desc">${recommendation.hauptvorteil}</div></div></div>
+      ${recommendation.einsparung_pro_jahr?`<div class="param-grid"><div class="param-card"><div class="param-val" style="color:var(--teal)">${recommendation.einsparung_pro_jahr}</div><div class="param-lbl">Einsparung/Jahr</div></div><div class="param-card"><div class="param-val" style="color:var(--blue)">${results.length}</div><div class="param-lbl">Anbieter</div></div><div class="param-card"><div class="param-val" style="color:var(--gold)">${elapsed}s</div><div class="param-lbl">Analysezeit</div></div></div>`:''}
+      <div class="ai-summary"><div class="ai-summary-hdr"><div class="ai-tag">AI · BEGRÜNDUNG</div></div><p>${recommendation.begruendung}</p></div>
+      <div class="ai-summary" style="background:var(--warning-lt);border-color:rgba(192,92,42,.2)"><div class="ai-summary-hdr"><div class="ai-tag" style="background:var(--warning-lt);color:var(--warning);border-color:rgba(192,92,42,.3)">RISIKEN</div></div><p style="color:var(--text-2)">${recommendation.risiken}</p></div>
+      <div class="ai-summary"><div class="ai-summary-hdr"><div class="ai-tag">GESAMTBEWERTUNG</div></div><p>${recommendation.gesamtbewertung}</p></div>`;
+  }
+
+  document.getElementById('detail-content').innerHTML = results.map(r=>`<div style="margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border)"><div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><div style="font-family:'Fraunces',serif;font-size:16px;font-weight:400;color:var(--text-1)">${r.anbieter}</div>${r.anbieter===bestAnbieter?'<span class="top-badge" style="font-size:10px;padding:3px 8px">★ Empfohlen</span>':''}<div style="margin-left:auto;font-size:9px;color:var(--text-4);font-family:\'JetBrains Mono\',monospace">Datenqualität: ${r.datenqualitaet||'k.A.'}</div></div>${r.zusatzdeckungen?`<div style="margin-bottom:8px;font-size:12px;color:var(--text-2)">${r.zusatzdeckungen}</div>`:''} ${r.besonderheiten?`<div style="background:var(--sand);border-radius:6px;padding:8px 10px;font-size:12px;color:var(--text-3)">${r.besonderheiten}</div>`:''}</div>`).join('');
+}
+
+// ── DOWNLOAD EXCEL ──
+function downloadExcel() {
+  if (!analysisResults) return;
+  const { results, kunde } = analysisResults;
+  const activeParams = getActiveParams();
+  const rows = [['Parameter', ...results.map(r=>r.anbieter)]];
+  activeParams.forEach(p => rows.push([p.label, ...results.map(r=>r[p.key]||'—')]));
+  if (analysisResults.recommendation) {
+    rows.push([]); rows.push(['Empfehlung', analysisResults.recommendation.empfehlung_anbieter]);
+    rows.push(['Begründung', analysisResults.recommendation.begruendung]);
+    if (analysisResults.recommendation.einsparung_pro_jahr) rows.push(['Einsparung/Jahr', analysisResults.recommendation.einsparung_pro_jahr]);
+  }
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{ wch:22 }, ...results.map(()=>({ wch:20 }))];
+  XLSX.utils.book_append_sheet(wb, ws, 'BVG-Offertvergleich');
+  XLSX.writeFile(wb, `PensionIQ_${kunde.replace(/\s/g,'_')}.xlsx`);
+}
+
+// ── DOWNLOAD PDF ──
+function downloadPDF() {
+  if (!analysisResults) return;
+  const { results, recommendation, kunde, ma, elapsed } = analysisResults;
+  const activeParams = getActiveParams();
+  const date = new Date().toLocaleDateString('de-CH');
+  const rows = activeParams.map(p=>`<tr><td style="padding:8px 12px;border-bottom:1px solid #eee;font-size:12px;color:#6B7194;font-weight:500">${p.label}</td>${results.map(r=>`<td style="padding:8px 12px;border-bottom:1px solid #eee;font-size:12px;text-align:center;color:${r.anbieter===recommendation?.empfehlung_anbieter?'#0E7C6E':'#0F1117'}">${r[p.key]||'—'}</td>`).join('')}</tr>`).join('');
+  const html = `<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><style>body{font-family:'Helvetica Neue',Arial,sans-serif;margin:0;padding:40px;color:#0F1117}.header{display:flex;justify-content:space-between;margin-bottom:32px;padding-bottom:20px;border-bottom:2px solid #0F1117}.logo{font-size:20px;font-weight:300}.logo b{font-weight:700}h2{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:#9EA4BE;margin:24px 0 12px}table{width:100%;border-collapse:collapse}th{padding:9px 12px;text-align:center;font-size:11px;font-weight:600;color:#fff;background:#0F1117}th:first-child{text-align:left}.rec{background:#E8F5F3;border-left:4px solid #0E7C6E;padding:14px 18px;border-radius:4px;margin-bottom:12px}.rec h3{font-size:13px;font-weight:600;color:#0E7C6E;margin:0 0 5px}.rec p{font-size:12px;color:#3A3F52;margin:0;line-height:1.6}.footer{margin-top:40px;padding-top:14px;border-top:1px solid #eee;font-size:10px;color:#9EA4BE;display:flex;justify-content:space-between}</style></head><body>
+  <div class="header"><div><div class="logo">Pension<b>IQ</b></div><div style="font-size:22px;font-weight:300;letter-spacing:-.5px;margin:6px 0 4px">BVG-Offertvergleich</div><div style="font-size:13px;color:#6B7194">${kunde} · ${ma} Mitarbeitende</div></div><div style="font-size:11px;color:#9EA4BE;text-align:right;line-height:1.8">Erstellt: ${date}<br>Anbieter: ${results.length}<br>Analysezeit: ${elapsed}s</div></div>
+  <h2>Vergleichstabelle</h2><table><thead><tr><th style="text-align:left">Parameter</th>${results.map(r=>`<th>${r.anbieter}${r.anbieter===recommendation?.empfehlung_anbieter?' ★':''}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>
+  ${recommendation?`<h2>Empfehlung</h2><div class="rec"><h3>★ ${recommendation.empfehlung_anbieter}</h3><p>${recommendation.begruendung}</p>${recommendation.einsparung_pro_jahr?`<p style="margin-top:8px"><b>Einsparung:</b> ${recommendation.einsparung_pro_jahr}/Jahr</p>`:''}</div>${recommendation.risiken?`<div style="background:#FDF0E8;border-left:4px solid #C05C2A;padding:10px 14px;border-radius:4px;font-size:12px;color:#3A3F52"><b style="color:#C05C2A">Hinweise:</b> ${recommendation.risiken}</div>`:''}`:''}
+  <div class="footer"><span>PensionIQ AG · Zürich</span><span>Vertraulich</span></div></body></html>`;
+  const win = window.open('', '_blank');
+  win.document.write(html);
+  win.document.close();
+  setTimeout(() => win.print(), 400);
+}
+
+// ── TABS ──
+function switchTab(name, btn) {
+  document.querySelectorAll('#page-tool .result-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('#page-tool .rtab').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── INIT ──
+window.addEventListener('load', () => {
+  renderParamCheckboxes();
+  initDragDrop();
+  checkApiKey();
+});
+</script>
+</body>
+</html>
