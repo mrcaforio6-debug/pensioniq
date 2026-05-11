@@ -2051,13 +2051,91 @@ function parseExcel(file) {
       try {
         const data = new Uint8Array(e.target.result);
         const wb = XLSX.read(data, { type: 'array' });
-        let text = '';
-        wb.SheetNames.forEach(name => {
-          const ws = wb.Sheets[name];
-          const csv = XLSX.utils.sheet_to_csv(ws, { skipHidden: true });
-          if (csv.trim()) text += `\n\n=== Tabellenblatt: ${name} ===\n${csv}`;
+
+        const TARGET_COLS = [
+          'Gemeldeter Jahreslohn',
+          'Versicherter Lohn Sparteil',
+          'Versicherter Lohn Risikoteil',
+          'Endaltersguthaben ohne Zins',
+          'Endaltersguthaben mit Zins',
+          'Altersrente',
+          'Invalidenrente Krankheit',
+          'Invalidenkinderrente Krankheit',
+          'Ehegatten/Partnerrente Krankheit',
+          'Waisenrente Krankheit',
+          'Todesfallleistungen',
+          'Arbeitgeberbeiträge Gesamtbeiträge',
+          'AG Sparbeitrag',
+          'AG Risikobeitrag',
+          'AG Kostenbeitrag',
+          'Arbeitnehmerbeiträge Gesamtbeiträge',
+          'AN Sparbeitrag',
+          'AN Risikobeitrag',
+          'AN Kostenbeitrag'
+        ];
+
+        const norm = s => String(s == null ? '' : s).toLowerCase()
+          .replace(/ä/g, 'a').replace(/ö/g, 'o').replace(/ü/g, 'u').replace(/ß/g, 'ss')
+          .replace(/[^a-z0-9]/g, '');
+
+        const parseNum = v => {
+          if (v == null || v === '') return 0;
+          if (typeof v === 'number') return v;
+          const s = String(v).replace(/['']/g, '').replace(/\s/g, '').replace(/CHF/gi, '').replace(/,/g, '.');
+          const n = parseFloat(s);
+          return isNaN(n) ? 0 : n;
+        };
+
+        const totals = Object.fromEntries(TARGET_COLS.map(c => [c, 0]));
+        const seen = Object.fromEntries(TARGET_COLS.map(c => [c, false]));
+        let personCount = 0;
+        const sheetSummaries = [];
+
+        wb.SheetNames.forEach(sheetName => {
+          const ws = wb.Sheets[sheetName];
+          const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '', blankrows: false });
+          if (!rows.length) return;
+
+          let headerIdx = -1, bestScore = 0;
+          const scanLimit = Math.min(rows.length, 25);
+          for (let i = 0; i < scanLimit; i++) {
+            const cells = (rows[i] || []).map(norm);
+            const score = TARGET_COLS.filter(c => cells.includes(norm(c))).length;
+            if (score > bestScore) { bestScore = score; headerIdx = i; }
+          }
+          if (headerIdx === -1 || bestScore === 0) return;
+
+          const headerCells = rows[headerIdx].map(norm);
+          const colMap = {};
+          TARGET_COLS.forEach(c => {
+            const idx = headerCells.indexOf(norm(c));
+            if (idx !== -1) { colMap[c] = idx; seen[c] = true; }
+          });
+
+          let sheetPersons = 0;
+          for (let i = headerIdx + 1; i < rows.length; i++) {
+            const row = rows[i];
+            if (!row || row.every(c => c === '' || c == null)) continue;
+            const firstCell = String(row[0] == null ? '' : row[0]).toLowerCase().trim();
+            if (/^(total|summe|gesamt|durchschnitt|mittel)/.test(firstCell)) continue;
+            sheetPersons++;
+            for (const col in colMap) totals[col] += parseNum(row[colMap[col]]);
+          }
+          personCount += sheetPersons;
+          sheetSummaries.push(`Tabellenblatt "${sheetName}": ${sheetPersons} Personen, ${Object.keys(colMap).length}/${TARGET_COLS.length} Zielspalten erkannt`);
         });
-        res(text.trim());
+
+        const fmt = n => n.toLocaleString('de-CH', { maximumFractionDigits: 2 });
+        const missing = TARGET_COLS.filter(c => !seen[c]);
+        const totalsText = TARGET_COLS.map(c => `${c}: ${seen[c] ? fmt(totals[c]) + ' CHF' : 'nicht gefunden'}`).join('\n');
+
+        const summary = `BVG-Offerte — Aggregierte Gesamtwerte über ${personCount} Personen:
+
+${totalsText}
+
+${sheetSummaries.join('\n')}${missing.length ? '\n\nNicht erkannte Spalten: ' + missing.join(', ') : ''}`;
+
+        res(summary);
       } catch(err) { rej(err); }
     };
     r.onerror = rej;
@@ -2109,52 +2187,27 @@ function safeParseJSON(text, filename) {
   return { anbieter: (filename || 'Unbekannt').replace(/\.[^.]+$/, ''), produkt: null, jahrespraemie: null, verwaltungskosten: null, umwandlungssatz: null, verzinsung: null, sparbeitraege: null, risikobeitraege: null, zusatzdeckungen: null, kuendigungsfrist: null, besonderheiten: 'Analyse fehlgeschlagen.', datenqualitaet: 'niedrig' };
 }
 
-// ── PARAMETER GROUPS ──
-const PARAM_GROUPS = [
-  {
-    group: 'Leistungen',
-    color: 'var(--blue)',
-    params: [
-      { key: 'leistung_alter',         label: 'Altersleistung (Rente/Kapital)', default: true },
-      { key: 'leistung_tod',           label: 'Todesfallkapital',               default: true },
-      { key: 'leistung_invaliditaet',  label: 'Invalidenrente',                 default: true },
-      { key: 'leistung_ks_invalide',   label: 'Kinderrente bei Invalidität',    default: true },
-      { key: 'leistung_ks_tod',        label: 'Kinderrente bei Tod',            default: true },
-      { key: 'umwandlungssatz',        label: 'Umwandlungssatz (UWS)',          default: true },
-      { key: 'verzinsung',             label: 'Verzinsung Altersguthaben',      default: true },
-      { key: 'zusatzdeckungen',        label: 'Zusatzdeckungen',                default: false },
-    ]
-  },
-  {
-    group: 'Beiträge',
-    color: 'var(--teal)',
-    params: [
-      { key: 'beitrag_total_an',       label: 'Total Beitrag Arbeitnehmer',     default: true },
-      { key: 'beitrag_total_ag',       label: 'Total Beitrag Arbeitgeber',      default: true },
-      { key: 'beitrag_total_gesamt',   label: 'Totalbeitrag (AN + AG)',         default: true },
-      { key: 'beitrag_spar_an',        label: 'Sparbeitrag Arbeitnehmer',       default: false },
-      { key: 'beitrag_spar_ag',        label: 'Sparbeitrag Arbeitgeber',        default: false },
-      { key: 'beitrag_risiko_an',      label: 'Risikobeitrag Arbeitnehmer',     default: false },
-      { key: 'beitrag_risiko_ag',      label: 'Risikobeitrag Arbeitgeber',      default: false },
-      { key: 'verwaltungskosten',      label: 'Verwaltungskosten',              default: true },
-    ]
-  }
+// ── PARAMETERS ──
+const ALL_PARAMS = [
+  { key: 'jahrespraemie',     label: 'Jahresprämie (CHF)',    default: true  },
+  { key: 'verwaltungskosten', label: 'Verwaltungskosten',     default: true  },
+  { key: 'umwandlungssatz',   label: 'Umwandlungssatz (UWS)', default: true  },
+  { key: 'verzinsung',        label: 'Verzinsung',            default: true  },
+  { key: 'sparbeitraege',     label: 'Sparbeiträge',          default: true  },
+  { key: 'risikobeitraege',   label: 'Risikobeiträge',        default: false },
+  { key: 'zusatzdeckungen',   label: 'Zusatzdeckungen',       default: false },
+  { key: 'kuendigungsfrist',  label: 'Kündigungsfrist',       default: false },
+  { key: 'besonderheiten',    label: 'Besonderheiten',        default: false },
 ];
-
-const ALL_PARAMS = PARAM_GROUPS.flatMap(g => g.params);
 
 function renderParamCheckboxes() {
   const el = document.getElementById('param-checkboxes');
   if (!el) return;
-  el.innerHTML = PARAM_GROUPS.map(g => `
-    <div style="margin-bottom:8px">
-      <div style="font-size:9px;font-weight:700;color:${g.color};letter-spacing:.08em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;padding:5px 0 4px;border-bottom:2px solid ${g.color}22;margin-bottom:4px">${g.group}</div>
-      ${g.params.map(p => `
-        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:4px 0;border-bottom:1px solid var(--border)">
-          <input type="checkbox" id="param-${p.key}" ${p.default ? 'checked' : ''} style="width:13px;height:13px;accent-color:var(--blue);cursor:pointer">
-          <span style="font-size:11px;color:var(--text-2)">${p.label}</span>
-        </label>`).join('')}
-    </div>`).join('');
+  el.innerHTML = ALL_PARAMS.map(p => `
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:5px 0;border-bottom:1px solid var(--border)">
+      <input type="checkbox" id="param-${p.key}" ${p.default ? 'checked' : ''} style="width:14px;height:14px;accent-color:var(--blue);cursor:pointer">
+      <span style="font-size:12px;color:var(--text-2)">${p.label}</span>
+    </label>`).join('');
 }
 
 function toggleAllParams(on) {
@@ -2165,13 +2218,6 @@ function getActiveParams() {
   return ALL_PARAMS.filter(p => document.getElementById('param-' + p.key)?.checked);
 }
 
-function getActiveGroups() {
-  return PARAM_GROUPS.map(g => ({
-    ...g,
-    params: g.params.filter(p => document.getElementById('param-' + p.key)?.checked)
-  })).filter(g => g.params.length > 0);
-}
-
 // ── MAIN ANALYSIS ──
 async function startAnalysis() {
   const apiKey = localStorage.getItem('piq_api_key');
@@ -2180,29 +2226,9 @@ async function startAnalysis() {
   btn.disabled = true;
   btn.innerHTML = '<div class="spinner" style="border-color:rgba(255,255,255,.2);border-top-color:#fff"></div> Analysiere...';
 
-  const paramPrompt = `Du analysierst eine BVG-Offerte. Extrahiere NUR die TOTALEN Jahreswerte für alle Versicherten zusammen — KEINE Auflistung pro Person, KEINE Erklärungen. Wenn mehrere Wahlpläne vorhanden sind, nimm den Standardplan. Antworte NUR mit JSON ohne Backticks:
-{
-  "anbieter": "Name des Versicherers",
-  "produkt": "Produktname oder Planbezeichnung oder null",
-  "leistung_alter": "Totales Alterskapital oder Altersrente in CHF (nur eine Zahl) oder null",
-  "leistung_tod": "Totales Todesfallkapital in CHF (nur eine Zahl) oder null",
-  "leistung_invaliditaet": "Totale Invalidenrente pro Jahr in CHF (nur eine Zahl) oder null",
-  "leistung_ks_invalide": "Totale Kinderrente bei Invalidität in CHF (nur eine Zahl) oder null",
-  "leistung_ks_tod": "Totale Kinderrente bei Tod in CHF (nur eine Zahl) oder null",
-  "umwandlungssatz": "Umwandlungssatz in % (nur eine Zahl) oder null",
-  "verzinsung": "Verzinsung in % (nur eine Zahl) oder null",
-  "zusatzdeckungen": "Kurze Aufzählung der Zusatzdeckungen oder null",
-  "beitrag_total_an": "TOTAL Arbeitnehmer-Beitrag pro Jahr in CHF (nur eine Zahl, alle Personen summiert) oder null",
-  "beitrag_total_ag": "TOTAL Arbeitgeber-Beitrag pro Jahr in CHF (nur eine Zahl, alle Personen summiert) oder null",
-  "beitrag_total_gesamt": "TOTAL Gesamtbeitrag AN+AG pro Jahr in CHF (nur eine Zahl) oder null",
-  "beitrag_spar_an": "TOTAL Sparbeitrag AN in CHF (nur eine Zahl) oder null",
-  "beitrag_spar_ag": "TOTAL Sparbeitrag AG in CHF (nur eine Zahl) oder null",
-  "beitrag_risiko_an": "TOTAL Risikobeitrag AN in CHF (nur eine Zahl) oder null",
-  "beitrag_risiko_ag": "TOTAL Risikobeitrag AG in CHF (nur eine Zahl) oder null",
-  "verwaltungskosten": "TOTAL Verwaltungskosten in CHF (nur eine Zahl) oder null",
-  "besonderheiten": "Max. 1 Satz zu wichtigen Besonderheiten oder null",
-  "datenqualitaet": "hoch/mittel/niedrig"
-}`;
+  const activeParams = getActiveParams();
+  const paramKeys = activeParams.map(p => `  "${p.key}": "${p.label} oder null"`).join(',\n');
+  const paramPrompt = `Analysiere diese BVG-Offerte und extrahiere die folgenden Parameter. WICHTIG: Wenn die Offerte Werte pro Person enthält (z.B. Löhne, Beiträge, Renten, Altersguthaben), summiere diese über ALLE Personen zu Gesamttotalen für das Kollektiv und arbeite ausschließlich mit diesen Summen — niemals mit Einzelwerten oder Durchschnitten. Falls die Daten bereits als aggregierte Totale vorliegen, verwende sie direkt. Antworte NUR mit JSON ohne Backticks:\n{\n  "anbieter": "Name des Versicherers",\n  "produkt": "Produktname oder null",\n${paramKeys},\n  "datenqualitaet": "hoch/mittel/niedrig"\n}`;
   const kunde = document.getElementById('kunde-name').value || 'Unbekannter Kunde';
   const ma = document.getElementById('mitarbeitende').value || 'k.A.';
   const startTime = Date.now();
@@ -2228,7 +2254,7 @@ async function startAnalysis() {
         messages = [{ role: 'user', content: `BVG-Offerte (${file.name}):\n\n${txt.substring(0,15000)}\n\n${paramPrompt}` }];
       } else throw new Error('Nicht unterstütztes Format');
 
-      const res = await fetch('https://api.anthropic.com/v1/messages', { method:'POST', headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-allow-browser':'true'}, body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:2048, messages }) });
+      const res = await fetch('/api/claude', { method:'POST', headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01'}, body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:2048, messages }) });
       if (!res.ok) { const e = await res.json(); throw new Error(e.error?.message || 'API Fehler'); }
       const data = await res.json();
       const parsed = safeParseJSON(data.content.map(c=>c.text||'').join(''), file.name);
@@ -2242,7 +2268,7 @@ async function startAnalysis() {
   showStatus('Erstelle Empfehlung...');
   let recommendation = null;
   try {
-    const recRes = await fetch('https://api.anthropic.com/v1/messages', { method:'POST', headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-allow-browser':'true'}, body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:1000, messages:[{ role:'user', content:`BVG-Experte: Analysiere für ${kunde} (${ma} MA). JSON ohne Backticks:\n${JSON.stringify(results)}\n\nFormat:\n{"empfehlung_anbieter":"...","begruendung":"...","hauptvorteil":"...","risiken":"...","einsparung_pro_jahr":"... CHF oder null","gesamtbewertung":"..."}` }] }) });
+    const recRes = await fetch('/api/claude', { method:'POST', headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01'}, body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:1000, messages:[{ role:'user', content:`BVG-Experte: Analysiere für ${kunde} (${ma} MA). JSON ohne Backticks:\n${JSON.stringify(results)}\n\nFormat:\n{"empfehlung_anbieter":"...","begruendung":"...","hauptvorteil":"...","risiken":"...","einsparung_pro_jahr":"... CHF oder null","gesamtbewertung":"..."}` }] }) });
     const recData = await recRes.json();
     recommendation = safeParseJSON(recData.content.map(c=>c.text||'').join(''), 'rec');
   } catch(e) { console.error(e); }
@@ -2257,260 +2283,62 @@ async function startAnalysis() {
 // ── RENDER RESULTS ──
 function renderResults() {
   const { results, recommendation, elapsed, kunde } = analysisResults;
+  const activeParams = getActiveParams();
   const bestAnbieter = recommendation?.empfehlung_anbieter;
-  const activeGroups = getActiveGroups();
-
   document.getElementById('empty-state').style.display = 'none';
   document.getElementById('result-view').style.display = 'block';
   document.getElementById('result-meta').textContent = `${results.length} Anbieter · ${elapsed}s · ${kunde}`;
 
-  // ── Vergleichstabelle ──
-  const thead = `<tr>
-    <th style="text-align:left;min-width:200px">Leistung / Beitrag</th>
-    ${results.map(r => `<th style="text-align:center;min-width:140px">
-      ${r.anbieter}
-      ${r.anbieter === bestAnbieter ? '<br><span class="top-badge">★ Empfohlen</span>' : ''}
-    </th>`).join('')}
-  </tr>`;
+  document.getElementById('comp-thead').innerHTML = `<tr><th>Parameter</th>${results.map(r=>`<th>${r.anbieter}${r.anbieter===bestAnbieter?'<span class="top-badge">★ TOP</span>':''}</th>`).join('')}</tr>`;
+  document.getElementById('comp-tbody').innerHTML = activeParams.map(p=>`<tr class="${results.some(r=>r.anbieter===bestAnbieter&&r[p.key])?'best-row':''}"><td style="color:var(--text-3);font-size:10px;text-transform:uppercase;letter-spacing:.04em">${p.label}</td>${results.map(r=>`<td class="${r.anbieter===bestAnbieter?'val-good':''}">${r[p.key]||'—'}</td>`).join('')}</tr>`).join('');
 
-  const tbody = activeGroups.map(g => {
-    const groupHeader = `<tr>
-      <td colspan="${results.length + 1}" style="background:var(--sand-2);padding:8px 12px;font-size:10px;font-weight:700;color:${g.color};letter-spacing:.1em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;border-bottom:1px solid var(--border)">${g.group}</td>
-    </tr>`;
-
-    const paramRows = g.params.map(p => {
-      // Find best value for this param (lowest for costs, highest for benefits)
-      const vals = results.map(r => r[p.key]);
-      const hasVals = vals.some(v => v && v !== '—' && v !== null);
-
-      return `<tr>
-        <td style="padding:9px 12px;font-size:12px;color:var(--text-3);border-bottom:1px solid var(--border);font-weight:400">${p.label}</td>
-        ${results.map(r => {
-          const val = r[p.key] || '—';
-          const isBest = r.anbieter === bestAnbieter;
-          const isTotal = p.key.includes('total') || p.key.includes('gesamt');
-          return `<td style="padding:9px 12px;text-align:center;border-bottom:1px solid var(--border);font-family:'JetBrains Mono',monospace;font-size:11px;${isBest && val !== '—' ? 'color:var(--teal);font-weight:600;background:rgba(14,124,110,.04)' : 'color:var(--text-2)'}${isTotal ? ';font-weight:700;font-size:12px' : ''}">${val}</td>`;
-        }).join('')}
-      </tr>`;
-    }).join('');
-
-    return groupHeader + paramRows;
-  }).join('');
-
-  // Total summary row
-  const totalRow = `<tr style="background:var(--sand)">
-    <td style="padding:11px 12px;font-size:12px;font-weight:700;color:var(--text-1);font-family:'Fraunces',serif">Gesamtbeitrag (AN + AG)</td>
-    ${results.map(r => {
-      const val = r.beitrag_total_gesamt || r.beitrag_total_an || '—';
-      const isBest = r.anbieter === bestAnbieter;
-      return `<td style="padding:11px 12px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;${isBest ? 'color:var(--teal)' : 'color:var(--text-1)'}">${val}</td>`;
-    }).join('')}
-  </tr>`;
-
-  document.getElementById('comp-thead').innerHTML = thead;
-  document.getElementById('comp-tbody').innerHTML = tbody + totalRow;
-
-  // ── Besonderheiten row ──
-  if (results.some(r => r.besonderheiten)) {
-    document.getElementById('comp-tbody').innerHTML += `<tr>
-      <td style="padding:9px 12px;font-size:12px;color:var(--text-3);border-top:2px solid var(--border-2)">Besonderheiten</td>
-      ${results.map(r => `<td style="padding:9px 12px;font-size:11px;color:var(--text-3);font-family:'DM Sans',sans-serif;border-top:2px solid var(--border-2);text-align:center">${r.besonderheiten || '—'}</td>`).join('')}
-    </tr>`;
-  }
-
-  // ── Empfehlung Tab ──
   if (recommendation) {
     document.getElementById('rec-content').innerHTML = `
       <div class="rec-card"><div class="rec-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div><div><div class="rec-title">Empfehlung: ${recommendation.empfehlung_anbieter}</div><div class="rec-desc">${recommendation.hauptvorteil}</div></div></div>
-      ${recommendation.einsparung_pro_jahr ? `<div class="param-grid"><div class="param-card"><div class="param-val" style="color:var(--teal)">${recommendation.einsparung_pro_jahr}</div><div class="param-lbl">Einsparung/Jahr</div></div><div class="param-card"><div class="param-val" style="color:var(--blue)">${results.length}</div><div class="param-lbl">Anbieter</div></div><div class="param-card"><div class="param-val" style="color:var(--gold)">${elapsed}s</div><div class="param-lbl">Analysezeit</div></div></div>` : ''}
+      ${recommendation.einsparung_pro_jahr?`<div class="param-grid"><div class="param-card"><div class="param-val" style="color:var(--teal)">${recommendation.einsparung_pro_jahr}</div><div class="param-lbl">Einsparung/Jahr</div></div><div class="param-card"><div class="param-val" style="color:var(--blue)">${results.length}</div><div class="param-lbl">Anbieter</div></div><div class="param-card"><div class="param-val" style="color:var(--gold)">${elapsed}s</div><div class="param-lbl">Analysezeit</div></div></div>`:''}
       <div class="ai-summary"><div class="ai-summary-hdr"><div class="ai-tag">AI · BEGRÜNDUNG</div></div><p>${recommendation.begruendung}</p></div>
       <div class="ai-summary" style="background:var(--warning-lt);border-color:rgba(192,92,42,.2)"><div class="ai-summary-hdr"><div class="ai-tag" style="background:var(--warning-lt);color:var(--warning);border-color:rgba(192,92,42,.3)">RISIKEN</div></div><p style="color:var(--text-2)">${recommendation.risiken}</p></div>
       <div class="ai-summary"><div class="ai-summary-hdr"><div class="ai-tag">GESAMTBEWERTUNG</div></div><p>${recommendation.gesamtbewertung}</p></div>`;
   }
 
-  // ── Detail Tab ──
-  document.getElementById('detail-content').innerHTML = results.map(r => `
-    <div style="margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid var(--border)">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
-        <div style="font-family:'Fraunces',serif;font-size:18px;font-weight:400;color:var(--text-1)">${r.anbieter}</div>
-        ${r.produkt ? `<span style="font-size:12px;color:var(--text-3)">${r.produkt}</span>` : ''}
-        ${r.anbieter === bestAnbieter ? '<span class="top-badge" style="font-size:10px;padding:3px 8px">★ Empfohlen</span>' : ''}
-        <div style="margin-left:auto;font-size:9px;color:var(--text-4);font-family:\'JetBrains Mono\',monospace">Datenqualität: ${r.datenqualitaet || 'k.A.'}</div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
-        <div style="background:var(--blue-lt);border:1px solid rgba(27,79,216,.15);border-radius:8px;padding:10px 14px">
-          <div style="font-size:9px;color:var(--blue);font-family:\'JetBrains Mono\',monospace;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Beitrag Arbeitnehmer</div>
-          <div style="font-size:14px;font-weight:600;color:var(--text-1);font-family:\'JetBrains Mono\',monospace">${r.beitrag_total_an || '—'}</div>
-        </div>
-        <div style="background:var(--teal-lt);border:1px solid rgba(14,124,110,.15);border-radius:8px;padding:10px 14px">
-          <div style="font-size:9px;color:var(--teal);font-family:\'JetBrains Mono\',monospace;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Beitrag Arbeitgeber</div>
-          <div style="font-size:14px;font-weight:600;color:var(--text-1);font-family:\'JetBrains Mono\',monospace">${r.beitrag_total_ag || '—'}</div>
-        </div>
-      </div>
-      ${r.besonderheiten ? `<div style="background:var(--sand);border-radius:6px;padding:8px 12px;font-size:12px;color:var(--text-3);line-height:1.6">${r.besonderheiten}</div>` : ''}
-    </div>`).join('');
+  document.getElementById('detail-content').innerHTML = results.map(r=>`<div style="margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid var(--border)"><div style="display:flex;align-items:center;gap:8px;margin-bottom:12px"><div style="font-family:'Fraunces',serif;font-size:16px;font-weight:400;color:var(--text-1)">${r.anbieter}</div>${r.anbieter===bestAnbieter?'<span class="top-badge" style="font-size:10px;padding:3px 8px">★ Empfohlen</span>':''}<div style="margin-left:auto;font-size:9px;color:var(--text-4);font-family:\'JetBrains Mono\',monospace">Datenqualität: ${r.datenqualitaet||'k.A.'}</div></div>${r.zusatzdeckungen?`<div style="margin-bottom:8px;font-size:12px;color:var(--text-2)">${r.zusatzdeckungen}</div>`:''} ${r.besonderheiten?`<div style="background:var(--sand);border-radius:6px;padding:8px 10px;font-size:12px;color:var(--text-3)">${r.besonderheiten}</div>`:''}</div>`).join('');
 }
 
 // ── DOWNLOAD EXCEL ──
 function downloadExcel() {
   if (!analysisResults) return;
   const { results, kunde } = analysisResults;
-  const activeGroups = getActiveGroups();
-  const rows = [['', ...results.map(r => r.anbieter)]];
-
-  activeGroups.forEach(g => {
-    rows.push([g.group.toUpperCase()]);
-    g.params.forEach(p => rows.push([p.label, ...results.map(r => r[p.key] || '—')]));
-    rows.push([]);
-  });
-
-  // Total row
-  rows.push(['GESAMTBEITRAG (AN + AG)', ...results.map(r => r.beitrag_total_gesamt || '—')]);
-
+  const activeParams = getActiveParams();
+  const rows = [['Parameter', ...results.map(r=>r.anbieter)]];
+  activeParams.forEach(p => rows.push([p.label, ...results.map(r=>r[p.key]||'—')]));
   if (analysisResults.recommendation) {
-    rows.push([]);
-    rows.push(['EMPFEHLUNG', analysisResults.recommendation.empfehlung_anbieter]);
+    rows.push([]); rows.push(['Empfehlung', analysisResults.recommendation.empfehlung_anbieter]);
     rows.push(['Begründung', analysisResults.recommendation.begruendung]);
     if (analysisResults.recommendation.einsparung_pro_jahr) rows.push(['Einsparung/Jahr', analysisResults.recommendation.einsparung_pro_jahr]);
   }
-
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet(rows);
-  ws['!cols'] = [{ wch: 28 }, ...results.map(() => ({ wch: 22 }))];
+  ws['!cols'] = [{ wch:22 }, ...results.map(()=>({ wch:20 }))];
   XLSX.utils.book_append_sheet(wb, ws, 'BVG-Offertvergleich');
-  XLSX.writeFile(wb, `PensionIQ_${kunde.replace(/\s/g, '_')}.xlsx`);
-}
-
-// ── FORMAT NUMBER ──
-function fmt(val) {
-  if (!val || val === '—' || val === null) return '—';
-  const str = String(val).replace(/['\s]/g, '').replace(',', '.');
-  const num = parseFloat(str);
-  if (!isNaN(num) && String(val).match(/\d{3,}/)) {
-    return num.toLocaleString('de-CH', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-  }
-  return val;
+  XLSX.writeFile(wb, `PensionIQ_${kunde.replace(/\s/g,'_')}.xlsx`);
 }
 
 // ── DOWNLOAD PDF ──
 function downloadPDF() {
   if (!analysisResults) return;
-  const { results, recommendation, kunde, ma } = analysisResults;
+  const { results, recommendation, kunde, ma, elapsed } = analysisResults;
+  const activeParams = getActiveParams();
   const date = new Date().toLocaleDateString('de-CH');
-  const best = recommendation?.empfehlung_anbieter;
-
-  function cell(r, key) {
-    const val = typeof key === 'function' ? key(r) : r[key];
-    const isBest = r.anbieter === best;
-    return `<td style="padding:6px 10px;text-align:right;font-size:10px;color:${isBest&&val&&val!=='—'?'#0E7C6E':'#0F1117'};border-bottom:1px solid #f0f0f0">${fmt(val)}</td>`;
-  }
-
-  function boldCell(r, key) {
-    const val = typeof key === 'function' ? key(r) : r[key];
-    const isBest = r.anbieter === best;
-    return `<td style="padding:7px 10px;text-align:right;font-size:11px;font-weight:700;color:${isBest?'#0E7C6E':'#0F1117'};border-bottom:1px solid #ddd;background:#F5F3EE">${fmt(val)}</td>`;
-  }
-
-  function groupRow(label) {
-    return `<tr><td colspan="${results.length+1}" style="background:#EEF3FD;padding:7px 10px;font-size:9px;font-weight:700;color:#1B4FD8;letter-spacing:.1em;text-transform:uppercase;border-top:2px solid #1B4FD8">${label}</td></tr>`;
-  }
-
-  function dataRow(label, key, bold=false) {
-    return `<tr>${bold
-      ? `<td style="padding:7px 10px;font-size:11px;font-weight:700;color:#0F1117;border-bottom:1px solid #ddd;background:#F5F3EE">${label}</td>${results.map(r=>boldCell(r,key)).join('')}`
-      : `<td style="padding:6px 10px;font-size:10px;color:#6B7194;border-bottom:1px solid #f0f0f0">${label}</td>${results.map(r=>cell(r,key)).join('')}`
-    }</tr>`;
-  }
-
-  const html = `<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8">
-  <style>
-    @page{size:A4 landscape;margin:12mm 10mm}
-    *{box-sizing:border-box}
-    body{font-family:'Helvetica Neue',Arial,sans-serif;margin:0;color:#0F1117;font-size:10px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-    .hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid #0F1117}
-    .logo{font-size:15px;font-weight:300;letter-spacing:-.3px}.logo b{font-weight:700}
-    .title{font-size:17px;font-weight:300;letter-spacing:-.3px;margin:3px 0;color:#0F1117}
-    .sub{font-size:9px;color:#6B7194}
-    .logo-box{width:110px;height:45px;border:1.5px dashed #D0D0D0;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:8px;color:#C0C0C0;letter-spacing:.06em;text-transform:uppercase}
-    table{width:100%;border-collapse:collapse}
-    th{padding:7px 10px;font-size:9px;font-weight:700;color:#fff;background:#0F1117;letter-spacing:.04em;text-transform:uppercase}
-    th:first-child{text-align:left;width:42%}
-    th:not(:first-child){text-align:right;background:#1A1D27}
-    .best-th{background:#0E7C6E !important}
-    .footer{margin-top:14px;padding-top:8px;border-top:1px solid #eee;font-size:8px;color:#9EA4BE;display:flex;justify-content:space-between}
-    .rec{background:#E8F5F3;border-left:3px solid #0E7C6E;padding:7px 10px;margin-top:10px;font-size:9px}
-    .rec b{color:#0E7C6E}
-  </style>
-  </head><body>
-  <div class="hdr">
-    <div>
-      <div class="logo">Pension<b>IQ</b></div>
-      <div class="title">BVG-Offertvergleich</div>
-      <div class="sub">${kunde} · ${ma} Mitarbeitende · ${date}</div>
-    </div>
-    <div class="logo-box">Kundenlogo</div>
-  </div>
-
-  <table>
-    <thead><tr>
-      <th style="text-align:left"></th>
-      ${results.map(r=>`<th class="${r.anbieter===best?'best-th':''}">${r.anbieter}${r.anbieter===best?' ★':''}</th>`).join('')}
-    </tr></thead>
-    <tbody>
-      ${groupRow('Versicherte Personen')}
-      ${dataRow('Anzahl Mitarbeitende', ()=>ma)}
-      ${dataRow('Versicherter Lohn Sparen', 'leistung_alter')}
-      ${dataRow('Versicherter Lohn Risiko', 'leistung_invaliditaet')}
-
-      ${groupRow('Altersleistungen')}
-      ${dataRow('Freizügigkeitsleistungen / Alterskapital', 'leistung_alter')}
-      ${dataRow('Hochgerechnetes Altersguthaben', 'leistung_alter')}
-      ${dataRow('Altersrente', 'leistung_alter')}
-      ${dataRow('Umwandlungssatz (UWS)', 'umwandlungssatz')}
-      ${dataRow('Verzinsung Altersguthaben', 'verzinsung')}
-
-      ${groupRow('Risikoeleistungen')}
-      ${dataRow('Invalidenrente', 'leistung_invaliditaet')}
-      ${dataRow('Invalidenkinderrente', 'leistung_ks_invalide')}
-      ${dataRow('Ehegattenrente / Todesfallkapital', 'leistung_tod')}
-      ${dataRow('Waisenrente', 'leistung_ks_tod')}
-      ${dataRow('Zusatzdeckungen', 'zusatzdeckungen')}
-
-      ${groupRow('Kostenvergleich')}
-      ${dataRow('Sparbeiträge', r=>{
-        const an=parseFloat(String(r.beitrag_spar_an||'0').replace(/['\s]/g,''));
-        const ag=parseFloat(String(r.beitrag_spar_ag||'0').replace(/['\s]/g,''));
-        const t=an+ag; return t>0?t.toLocaleString('de-CH'):r.beitrag_spar_an||'—';
-      })}
-      ${dataRow('Risikoprämie', r=>{
-        const an=parseFloat(String(r.beitrag_risiko_an||'0').replace(/['\s]/g,''));
-        const ag=parseFloat(String(r.beitrag_risiko_ag||'0').replace(/['\s]/g,''));
-        const t=an+ag; return t>0?t.toLocaleString('de-CH'):r.beitrag_risiko_an||'—';
-      })}
-      ${dataRow('Verwaltungskosten', 'verwaltungskosten')}
-      ${dataRow('Total Jahresbeitrag (AN + AG)', 'beitrag_total_gesamt', true)}
-      ${dataRow('Arbeitnehmerbeitrag', 'beitrag_total_an', true)}
-      ${dataRow('Arbeitgeberbeitrag', 'beitrag_total_ag', true)}
-      ${dataRow('Total Risiko- & Verwaltungskosten', r=>{
-        const ri=parseFloat(String(r.beitrag_risiko_an||'0').replace(/['\s]/g,''))+parseFloat(String(r.beitrag_risiko_ag||'0').replace(/['\s]/g,''));
-        const vw=parseFloat(String(r.verwaltungskosten||'0').replace(/['\s]/g,''));
-        const t=ri+vw; return t>0?t.toLocaleString('de-CH'):'—';
-      }, true)}
-    </tbody>
-  </table>
-
-  ${recommendation?`<div class="rec"><b>★ Empfehlung: ${recommendation.empfehlung_anbieter}</b> — ${recommendation.begruendung}${recommendation.einsparung_pro_jahr?` Einsparung: <b>${recommendation.einsparung_pro_jahr}/Jahr</b>.`:''}</div>`:''}
-
-  <div class="footer">
-    <span>PensionIQ AG · Zürich · pensioniq.ch</span>
-    <span>Vertraulich · Nur für interne Verwendung</span>
-  </div>
-  </body></html>`;
-
+  const rows = activeParams.map(p=>`<tr><td style="padding:8px 12px;border-bottom:1px solid #eee;font-size:12px;color:#6B7194;font-weight:500">${p.label}</td>${results.map(r=>`<td style="padding:8px 12px;border-bottom:1px solid #eee;font-size:12px;text-align:center;color:${r.anbieter===recommendation?.empfehlung_anbieter?'#0E7C6E':'#0F1117'}">${r[p.key]||'—'}</td>`).join('')}</tr>`).join('');
+  const html = `<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><style>body{font-family:'Helvetica Neue',Arial,sans-serif;margin:0;padding:40px;color:#0F1117}.header{display:flex;justify-content:space-between;margin-bottom:32px;padding-bottom:20px;border-bottom:2px solid #0F1117}.logo{font-size:20px;font-weight:300}.logo b{font-weight:700}h2{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:#9EA4BE;margin:24px 0 12px}table{width:100%;border-collapse:collapse}th{padding:9px 12px;text-align:center;font-size:11px;font-weight:600;color:#fff;background:#0F1117}th:first-child{text-align:left}.rec{background:#E8F5F3;border-left:4px solid #0E7C6E;padding:14px 18px;border-radius:4px;margin-bottom:12px}.rec h3{font-size:13px;font-weight:600;color:#0E7C6E;margin:0 0 5px}.rec p{font-size:12px;color:#3A3F52;margin:0;line-height:1.6}.footer{margin-top:40px;padding-top:14px;border-top:1px solid #eee;font-size:10px;color:#9EA4BE;display:flex;justify-content:space-between}</style></head><body>
+  <div class="header"><div><div class="logo">Pension<b>IQ</b></div><div style="font-size:22px;font-weight:300;letter-spacing:-.5px;margin:6px 0 4px">BVG-Offertvergleich</div><div style="font-size:13px;color:#6B7194">${kunde} · ${ma} Mitarbeitende</div></div><div style="font-size:11px;color:#9EA4BE;text-align:right;line-height:1.8">Erstellt: ${date}<br>Anbieter: ${results.length}<br>Analysezeit: ${elapsed}s</div></div>
+  <h2>Vergleichstabelle</h2><table><thead><tr><th style="text-align:left">Parameter</th>${results.map(r=>`<th>${r.anbieter}${r.anbieter===recommendation?.empfehlung_anbieter?' ★':''}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>
+  ${recommendation?`<h2>Empfehlung</h2><div class="rec"><h3>★ ${recommendation.empfehlung_anbieter}</h3><p>${recommendation.begruendung}</p>${recommendation.einsparung_pro_jahr?`<p style="margin-top:8px"><b>Einsparung:</b> ${recommendation.einsparung_pro_jahr}/Jahr</p>`:''}</div>${recommendation.risiken?`<div style="background:#FDF0E8;border-left:4px solid #C05C2A;padding:10px 14px;border-radius:4px;font-size:12px;color:#3A3F52"><b style="color:#C05C2A">Hinweise:</b> ${recommendation.risiken}</div>`:''}`:''}
+  <div class="footer"><span>PensionIQ AG · Zürich</span><span>Vertraulich</span></div></body></html>`;
   const win = window.open('', '_blank');
   win.document.write(html);
   win.document.close();
-  setTimeout(() => win.print(), 500);
+  setTimeout(() => win.print(), 400);
 }
 
 // ── TABS ──
