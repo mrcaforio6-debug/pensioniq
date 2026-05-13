@@ -2276,7 +2276,7 @@ async function startAnalysis() {
   showStatus('Erstelle Empfehlung...');
   let recommendation = null;
   try {
-    const recRes = await fetch('https://pensioniq-proxy.mr-caforio6.workers.dev', { method:'POST', headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01'}, body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:1000, messages:[{ role:'user', content:`BVG-Experte: Analysiere für ${kunde} (${ma} MA). JSON ohne Backticks:\n${JSON.stringify(results)}\n\nFormat:\n{"empfehlung_anbieter":"...","begruendung":"...","hauptvorteil":"...","risiken":"...","einsparung_pro_jahr":"... CHF oder null","gesamtbewertung":"..."}` }] }) });
+    const recRes = await fetch('/.netlify/functions/claude', { method:'POST', headers:{'Content-Type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01'}, body: JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:1000, messages:[{ role:'user', content:`BVG-Experte: Analysiere für ${kunde} (${ma} MA). JSON ohne Backticks:\n${JSON.stringify(results)}\n\nFormat:\n{"empfehlung_anbieter":"...","begruendung":"...","hauptvorteil":"...","risiken":"...","einsparung_pro_jahr":"... CHF oder null","gesamtbewertung":"..."}` }] }) });
     const recData = await recRes.json();
     recommendation = safeParseJSON(recData.content.map(c=>c.text||'').join(''), 'rec');
   } catch(e) { console.error(e); }
