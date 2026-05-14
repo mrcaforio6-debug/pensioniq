@@ -1945,6 +1945,13 @@ function showPage(name) {
   document.getElementById('page-' + name).classList.add('active');
   window.scrollTo({ top: 0, behavior: 'smooth' });
   document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+  // Hide global navbar on tool pages that have their own header
+  const navbar = document.getElementById('navbar');
+  if (name === 'vergleich') {
+    navbar.style.display = 'none';
+  } else {
+    navbar.style.display = '';
+  }
   if (name === 'features') document.getElementById('nav-features').classList.add('active');
   if (name === 'pricing') document.getElementById('nav-pricing').classList.add('active');
   if (name === 'faq') document.getElementById('nav-faq').classList.add('active');
