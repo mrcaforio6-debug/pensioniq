@@ -2172,46 +2172,49 @@ footer{border-top:1px solid var(--border);padding:52px 0 32px;background:var(--w
             <div><label class="av-label">Kürzel</label><input class="av-input" id="av-f-kuerzel" type="text" placeholder="z.B. AXA" maxlength="6"></div>
           </div>
           <div class="av-form-row full">
-            <div><label class="av-label">Notizen / Besonderheiten</label><input class="av-input" id="av-f-notizen" type="text" placeholder="z.B. Rabatt möglich, Ansprechperson..."></div>
-          </div>
-
-          <div class="av-section-title">Kosten</div>
-          <div class="av-form-row">
-            <div><label class="av-label">Verwaltungskosten %</label><input class="av-input" id="av-f-verw" type="number" step="0.01" placeholder="z.B. 0.42"></div>
-            <div><label class="av-label">Risikoprämie (% des Lohns)</label><input class="av-input" id="av-f-risiko" type="number" step="0.01" placeholder="z.B. 0.80"></div>
-          </div>
-          <div class="av-form-row">
-            <div><label class="av-label">Mindestbeitrag AN (CHF/J.)</label><input class="av-input" id="av-f-min-an" type="number" placeholder="z.B. 1200"></div>
-            <div><label class="av-label">AG-Beitrag Anteil %</label><input class="av-input" id="av-f-ag-anteil" type="number" step="1" placeholder="z.B. 60 (= 60% übernimmt AG)"></div>
-          </div>
-
-          <div class="av-section-title">Altersleistungen</div>
-          <div class="av-form-row">
-            <div><label class="av-label">Umwandlungssatz (UWS) %</label><input class="av-input" id="av-f-uws" type="number" step="0.01" placeholder="z.B. 6.80"></div>
-            <div><label class="av-label">Verzinsung Altersguthaben %</label><input class="av-input" id="av-f-verzinsung" type="number" step="0.01" placeholder="z.B. 1.50"></div>
-          </div>
-          <div class="av-form-row">
-            <div><label class="av-label">Sparbeitrag AN % (Basis)</label><input class="av-input" id="av-f-spar-an" type="number" step="0.1" placeholder="z.B. 7.0"></div>
-            <div><label class="av-label">Sparbeitrag AG % (Basis)</label><input class="av-input" id="av-f-spar-ag" type="number" step="0.1" placeholder="z.B. 9.0"></div>
-          </div>
-
-          <div class="av-section-title">Risikoleistungen</div>
-          <div class="av-form-row">
-            <div><label class="av-label">Invalidenrente (% des Lohns)</label><input class="av-input" id="av-f-iv-rente" type="number" step="0.1" placeholder="z.B. 60"></div>
-            <div><label class="av-label">Todesfallkapital (% Guthaben)</label><input class="av-input" id="av-f-tod-kap" type="number" step="1" placeholder="z.B. 100"></div>
-          </div>
-          <div class="av-form-row">
-            <div><label class="av-label">Ehegattenrente (% des Lohns)</label><input class="av-input" id="av-f-ehe-rente" type="number" step="0.1" placeholder="z.B. 36"></div>
-            <div><label class="av-label">Waisenrente (% des Lohns)</label><input class="av-input" id="av-f-waisenrente" type="number" step="0.1" placeholder="z.B. 9"></div>
-          </div>
-
-          <div class="av-section-title">Konditionen</div>
-          <div class="av-form-row">
-            <div><label class="av-label">Kündigungsfrist</label><input class="av-input" id="av-f-kuend" type="text" placeholder="z.B. 6 Monate"></div>
-            <div><label class="av-label">Mindestlohnsumme (CHF)</label><input class="av-input" id="av-f-mindest-lohn" type="number" placeholder="z.B. 500000"></div>
+            <div>
+              <label class="av-label">Typ</label>
+              <select class="av-input" id="av-f-typ">
+                <option value="">— bitte wählen —</option>
+                <option value="Vollversicherung">Vollversicherung</option>
+                <option value="Sammelstiftung (teilautonom)">Sammelstiftung (teilautonom)</option>
+              </select>
+            </div>
           </div>
           <div class="av-form-row full">
-            <div><label class="av-label">Zusatzdeckungen (Komma-getrennt)</label><input class="av-input" id="av-f-zusatz" type="text" placeholder="z.B. Überbrückungsrente, Lohnfortzahlung, UVG-Zusatz"></div>
+            <div><label class="av-label">Notizen / Besonderheiten</label><textarea class="av-input" id="av-f-notizen" rows="2" placeholder="z.B. Ansprechperson, persönliche Einschätzung, Besonderheiten..." style="resize:vertical"></textarea></div>
+          </div>
+
+          <div class="av-section-title">Verwaltungskosten</div>
+          <div class="av-form-row">
+            <div><label class="av-label">Fixbetrag pro Person (CHF/Jahr)</label><input class="av-input" id="av-f-verw-fix" type="number" step="1" placeholder="z.B. 300"></div>
+            <div><label class="av-label">Bemerkung / Individuell</label><input class="av-input" id="av-f-verw-info" type="text" placeholder="z.B. ab 50 Personen verhandelbar"></div>
+          </div>
+
+          <div class="av-section-title">Verzinsung &amp; Anlageperformance</div>
+          <div class="av-form-row">
+            <div><label class="av-label">Verzinsung Ø 5 Jahre (%)</label><input class="av-input" id="av-f-verz-5" type="number" step="0.01" placeholder="z.B. 1.80"></div>
+            <div><label class="av-label">Verzinsung Ø 10 Jahre (%)</label><input class="av-input" id="av-f-verz-10" type="number" step="0.01" placeholder="z.B. 1.50"></div>
+          </div>
+          <div class="av-form-row">
+            <div><label class="av-label">Anlageperformance Ø 5 Jahre (%)</label><input class="av-input" id="av-f-perf-5" type="number" step="0.01" placeholder="z.B. 4.20"></div>
+            <div><label class="av-label">Anlageperformance Ø 10 Jahre (%)</label><input class="av-input" id="av-f-perf-10" type="number" step="0.01" placeholder="z.B. 3.90"></div>
+          </div>
+
+          <div class="av-section-title">Umwandlungssatz</div>
+          <div class="av-form-row">
+            <div><label class="av-label">UWS aktuelles Jahr — Obligatorium (%)</label><input class="av-input" id="av-f-uws" type="number" step="0.01" placeholder="z.B. 6.80"></div>
+            <div><label class="av-label">UWS aktuelles Jahr — Überobligatorium (%)</label><input class="av-input" id="av-f-uws-ueob" type="number" step="0.01" placeholder="z.B. 5.40"></div>
+          </div>
+
+          <div class="av-section-title">Deckungsgrad</div>
+          <div class="av-form-row">
+            <div><label class="av-label">Deckungsgrad per 31.12. akt. Jahr (%)</label><input class="av-input" id="av-f-dg-aktuell" type="number" step="0.1" placeholder="z.B. 108.5"></div>
+            <div></div>
+          </div>
+          <div class="av-form-row">
+            <div><label class="av-label">Deckungsgrad Ø 5 Jahre (%)</label><input class="av-input" id="av-f-dg-5" type="number" step="0.1" placeholder="z.B. 107.2"></div>
+            <div><label class="av-label">Deckungsgrad Ø 10 Jahre (%)</label><input class="av-input" id="av-f-dg-10" type="number" step="0.1" placeholder="z.B. 105.8"></div>
           </div>
 
         </div>
@@ -4104,21 +4107,17 @@ let avCompareIds = [];     // selected for comparison
 let avCompareData = null;  // last comparison result
 
 const AV_FIELDS = [
-  { group: 'Kosten', key: 'verw',         label: 'Verwaltungskosten',          unit: '%',    higherIsBetter: false },
-  { group: 'Kosten', key: 'risiko',        label: 'Risikoprämie',               unit: '%',    higherIsBetter: false },
-  { group: 'Kosten', key: 'ag_anteil',     label: 'AG-Beitragsanteil',          unit: '%',    higherIsBetter: true  },
-  { group: 'Kosten', key: 'min_an',        label: 'Mindestbeitrag AN',          unit: 'CHF',  higherIsBetter: false },
-  { group: 'Altersleistungen', key: 'uws',          label: 'Umwandlungssatz (UWS)',      unit: '%',    higherIsBetter: true  },
-  { group: 'Altersleistungen', key: 'verzinsung',   label: 'Verzinsung Altersguthaben',  unit: '%',    higherIsBetter: true  },
-  { group: 'Altersleistungen', key: 'spar_an',      label: 'Sparbeitrag AN (Basis)',     unit: '%',    higherIsBetter: false },
-  { group: 'Altersleistungen', key: 'spar_ag',      label: 'Sparbeitrag AG (Basis)',     unit: '%',    higherIsBetter: true  },
-  { group: 'Risikoleistungen', key: 'iv_rente',     label: 'Invalidenrente',             unit: '%',    higherIsBetter: true  },
-  { group: 'Risikoleistungen', key: 'tod_kap',      label: 'Todesfallkapital',           unit: '%',    higherIsBetter: true  },
-  { group: 'Risikoleistungen', key: 'ehe_rente',    label: 'Ehegattenrente',             unit: '%',    higherIsBetter: true  },
-  { group: 'Risikoleistungen', key: 'waisenrente',  label: 'Waisenrente',                unit: '%',    higherIsBetter: true  },
-  { group: 'Konditionen',      key: 'kuend',        label: 'Kündigungsfrist',            unit: 'text', higherIsBetter: null  },
-  { group: 'Konditionen',      key: 'mindest_lohn', label: 'Mindestlohnsumme',           unit: 'CHF',  higherIsBetter: false },
-  { group: 'Konditionen',      key: 'zusatz',       label: 'Zusatzdeckungen',            unit: 'text', higherIsBetter: null  },
+  { group: 'Verwaltungskosten', key: 'verw_fix',    label: 'Fixbetrag pro Person (CHF/J.)', unit: 'CHF',  higherIsBetter: false },
+  { group: 'Verwaltungskosten', key: 'verw_info',   label: 'Bemerkung',                    unit: 'text', higherIsBetter: null  },
+  { group: 'Verzinsung',        key: 'verz_5',      label: 'Verzinsung Ø 5 Jahre',         unit: '%',    higherIsBetter: true  },
+  { group: 'Verzinsung',        key: 'verz_10',     label: 'Verzinsung Ø 10 Jahre',        unit: '%',    higherIsBetter: true  },
+  { group: 'Verzinsung',        key: 'perf_5',      label: 'Anlageperformance Ø 5 Jahre',  unit: '%',    higherIsBetter: true  },
+  { group: 'Verzinsung',        key: 'perf_10',     label: 'Anlageperformance Ø 10 Jahre', unit: '%',    higherIsBetter: true  },
+  { group: 'Umwandlungssatz',   key: 'uws',         label: 'UWS Obligatorium',             unit: '%',    higherIsBetter: true  },
+  { group: 'Umwandlungssatz',   key: 'uws_ueob',    label: 'UWS Überobligatorium',         unit: '%',    higherIsBetter: true  },
+  { group: 'Deckungsgrad',      key: 'dg_aktuell',  label: 'Deckungsgrad 31.12. akt. Jahr',unit: '%',    higherIsBetter: true  },
+  { group: 'Deckungsgrad',      key: 'dg_5',        label: 'Deckungsgrad Ø 5 Jahre',       unit: '%',    higherIsBetter: true  },
+  { group: 'Deckungsgrad',      key: 'dg_10',       label: 'Deckungsgrad Ø 10 Jahre',      unit: '%',    higherIsBetter: true  },
 ];
 
 // ── STORAGE ──
@@ -4153,14 +4152,15 @@ function renderAvList() {
   }
   list.innerHTML = avAnbieter.map(a => {
     const isActive = a.id === avCurrentId;
-    const filledCount = AV_FIELDS.filter(f => a[f.key] && String(a[f.key]).trim()).length;
-    const pct = Math.round(filledCount / AV_FIELDS.length * 100);
+    const filledCount = AV_FORM_KEYS.filter(k => !['name','kuerzel','typ','notizen'].includes(k) && a[k] && String(a[k]).trim()).length;
+    const totalFields = AV_FORM_KEYS.filter(k => !['name','kuerzel','typ','notizen'].includes(k)).length;
+    const pct = Math.round(filledCount / totalFields * 100);
     const dotColor = pct >= 70 ? 'var(--teal)' : pct >= 30 ? 'var(--warning)' : 'var(--danger)';
     return `<div class="av-list-item${isActive?' active':''}" onclick="avSelectAnbieter('${a.id}')">
       <div class="av-item-dot" style="background:${dotColor}"></div>
       <div style="flex:1;min-width:0">
         <div class="av-item-name">${a.name || 'Unbenannt'}</div>
-        <div class="av-item-meta">${pct}% ausgefüllt · ${a.kuend || '—'} Kündigungsfrist</div>
+        <div class="av-item-meta">${a.typ || 'Typ nicht gesetzt'} · ${pct}% ausgefüllt</div>
       </div>
       <div style="font-size:10px;color:var(--text-4);font-family:'JetBrains Mono',monospace">${a.kuerzel || ''}</div>
     </div>`;
@@ -4197,27 +4197,27 @@ function updateAvCompareBtn() {
 }
 
 // ── FORM ──
+const AV_FORM_KEYS = ['name','kuerzel','typ','notizen','verw_fix','verw_info','verz_5','verz_10','perf_5','perf_10','uws','uws_ueob','dg_aktuell','dg_5','dg_10'];
+
 function avClearForm() {
-  ['name','kuerzel','notizen','verw','risiko','min_an','ag_anteil','uws','verzinsung','spar_an','spar_ag','iv_rente','tod_kap','ehe_rente','waisenrente','kuend','mindest_lohn','zusatz'].forEach(k => {
-    const el = document.getElementById('av-f-' + k.replace('_','-'));
+  AV_FORM_KEYS.forEach(k => {
+    const el = document.getElementById('av-f-' + k.replace(/_/g,'-'));
     if (el) el.value = '';
   });
 }
 
 function avFillForm(a) {
-  const map = { name:'name', kuerzel:'kuerzel', notizen:'notizen', verw:'verw', risiko:'risiko', min_an:'min-an', ag_anteil:'ag-anteil', uws:'uws', verzinsung:'verzinsung', spar_an:'spar-an', spar_ag:'spar-ag', iv_rente:'iv-rente', tod_kap:'tod-kap', ehe_rente:'ehe-rente', waisenrente:'waisenrente', kuend:'kuend', mindest_lohn:'mindest-lohn', zusatz:'zusatz' };
-  Object.entries(map).forEach(([dataKey, inputKey]) => {
-    const el = document.getElementById('av-f-' + inputKey);
-    if (el) el.value = a[dataKey] || '';
+  AV_FORM_KEYS.forEach(k => {
+    const el = document.getElementById('av-f-' + k.replace(/_/g,'-'));
+    if (el) el.value = a[k] || '';
   });
 }
 
 function avReadForm() {
-  const map = { name:'name', kuerzel:'kuerzel', notizen:'notizen', verw:'verw', risiko:'risiko', min_an:'min-an', ag_anteil:'ag-anteil', uws:'uws', verzinsung:'verzinsung', spar_an:'spar-an', spar_ag:'spar-ag', iv_rente:'iv-rente', tod_kap:'tod-kap', ehe_rente:'ehe-rente', waisenrente:'waisenrente', kuend:'kuend', mindest_lohn:'mindest-lohn', zusatz:'zusatz' };
   const obj = {};
-  Object.entries(map).forEach(([dataKey, inputKey]) => {
-    const el = document.getElementById('av-f-' + inputKey);
-    obj[dataKey] = el ? el.value.trim() : '';
+  AV_FORM_KEYS.forEach(k => {
+    const el = document.getElementById('av-f-' + k.replace(/_/g,'-'));
+    obj[k] = el ? el.value.trim() : '';
   });
   return obj;
 }
