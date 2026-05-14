@@ -2022,9 +2022,9 @@ footer{border-top:1px solid var(--border);padding:52px 0 32px;background:var(--w
         </div>
         <div style="padding:10px 16px;border-top:1px solid var(--border);display:flex;align-items:center;gap:20px;flex-wrap:wrap;background:var(--sand)">
           <span style="font-size:10px;color:var(--text-4);font-family:'JetBrains Mono',monospace">Legende:</span>
-          <span style="font-size:10px;color:var(--teal);font-family:'JetBrains Mono',monospace">● B höher / besser</span>
-          <span style="font-size:10px;color:var(--danger);font-family:'JetBrains Mono',monospace">● A höher / besser</span>
-          <span style="font-size:10px;color:var(--text-3);font-family:'JetBrains Mono',monospace">— gleich / nicht vorhanden</span>
+          <span style="font-size:10px;color:var(--blue);font-family:'JetBrains Mono',monospace">● fett blau = A besser</span>
+          <span style="font-size:10px;color:var(--teal);font-family:'JetBrains Mono',monospace">● fett grün = B besser</span>
+          <span style="font-size:10px;color:var(--text-3);font-family:'JetBrains Mono',monospace">Δ = Differenz B minus A</span>
           <span style="font-size:10px;color:var(--gold);font-family:'JetBrains Mono',monospace">⚠ Pensionierung ≤5 Jahre</span>
         </div>
       </div>
@@ -3723,52 +3723,98 @@ function renderLvResults() {
     alertEl.style.display = 'none';
   }
 
-  // Group fields
-  const groups = [...new Set(LV_FIELDS.map(f=>f.group))];
+  // ── NEW LAYOUT: Person-Selector + Field rows (analog VV) ──
+  // Thead: Leistung | Person 1 A | Person 1 B | Diff | Person 2 A | ...
+  // Actually: rows = Leistungsfelder, columns = Persons split by A/B/Diff
 
-  // Build thead
+  // thead: row1 = group headers spanning fields, row2 = person names spanning A/B/Diff
+  // tbody: one row per LV field, cells = value per person
+
+  // Build person headers
+  const personHeaders = matched.map((p, i) => {
+    const pensionBadge = p.pensionSoon
+      ? `<span style="display:block;font-size:8px;background:var(--gold-lt);color:var(--gold);border:1px solid rgba(184,150,90,.3);padding:1px 5px;border-radius:4px;margin-top:3px;font-family:'JetBrains Mono',monospace">⚠ ${p.ytr===0?'dieses Jahr':'in '+p.ytr+' J.'}</span>`
+      : '';
+    return `<th colspan="3" style="padding:10px 14px;text-align:center;font-size:12px;font-weight:600;color:var(--text-1);background:var(--sand-2);border-bottom:1px solid var(--border);border-left:2px solid var(--border-2);white-space:nowrap">
+      ${p.name}${pensionBadge}
+      <div style="font-size:9px;color:var(--text-4);font-weight:400;margin-top:2px;font-family:'JetBrains Mono',monospace">${p.lohn ? 'CHF '+parseFloat(p.lohn).toLocaleString('de-CH') : ''}</div>
+    </th>`;
+  }).join('');
+
+  // Sub-headers: A / B / Δ per person
+  const subHeaders = matched.map(() => `
+    <th style="padding:7px 12px;text-align:right;font-size:10px;font-weight:700;color:var(--blue);background:var(--blue-lt);border-bottom:2px solid var(--border-2);border-left:2px solid rgba(27,79,216,.15);white-space:nowrap">${nameA}</th>
+    <th style="padding:7px 12px;text-align:right;font-size:10px;font-weight:700;color:var(--teal);background:var(--teal-lt);border-bottom:2px solid var(--border-2);white-space:nowrap">${nameB}</th>
+    <th style="padding:7px 12px;text-align:right;font-size:10px;font-weight:600;color:var(--text-3);background:var(--sand-2);border-bottom:2px solid var(--border-2);white-space:nowrap">Δ B−A</th>
+  `).join('');
+
   document.getElementById('lv-thead').innerHTML = `
     <tr>
-      <th style="padding:9px 14px;text-align:left;font-size:9px;font-weight:600;color:var(--text-4);font-family:'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;background:var(--sand-2);border-bottom:1px solid var(--border);min-width:160px">Person</th>
-      <th style="padding:9px 14px;text-align:right;font-size:9px;font-weight:600;color:var(--text-4);font-family:'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;background:var(--sand-2);border-bottom:1px solid var(--border)">Lohn</th>
-      ${LV_FIELDS.map(f => `<th style="padding:9px 10px;text-align:right;font-size:9px;font-weight:600;color:var(--text-3);font-family:'JetBrains Mono',monospace;letter-spacing:.04em;text-transform:uppercase;background:var(--sand-2);border-bottom:1px solid var(--border);border-left:1px solid var(--border);white-space:nowrap">${f.label}</th>`).join('')}
+      <th style="padding:10px 16px;text-align:left;font-size:9px;font-weight:600;color:var(--text-4);font-family:'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;background:var(--sand-2);border-bottom:1px solid var(--border);min-width:200px">Leistung</th>
+      ${personHeaders}
     </tr>
     <tr>
       <th style="background:var(--sand-2);border-bottom:2px solid var(--border-2)"></th>
-      <th style="background:var(--sand-2);border-bottom:2px solid var(--border-2)"></th>
-      ${LV_FIELDS.map(f => `<th style="padding:4px 10px;text-align:center;font-size:9px;font-weight:600;background:var(--sand-2);border-bottom:2px solid var(--border-2);border-left:1px solid var(--border)">
-        <span style="color:var(--blue)">${nameA}</span> <span style="color:var(--text-4)">/</span> <span style="color:var(--teal)">${nameB}</span>
-      </th>`).join('')}
+      ${subHeaders}
     </tr>`;
 
-  // Build tbody
-  document.getElementById('lv-tbody').innerHTML = matched.map((p, i) => {
-    const rowBg = p.pensionSoon ? 'background:rgba(184,150,90,.06)' : i % 2 === 0 ? '' : 'background:var(--sand)';
-    const pensionBadge = p.pensionSoon
-      ? `<span style="font-size:8px;background:var(--gold-lt);color:var(--gold);border:1px solid rgba(184,150,90,.3);padding:1px 6px;border-radius:4px;margin-left:5px;font-family:'JetBrains Mono',monospace">⚠ ${p.ytr===0?'dieses Jahr':'in '+p.ytr+' J.'}</span>`
-      : '';
-    const matchBadge = !p.matched ? `<span style="font-size:8px;background:var(--warning-lt);color:var(--warning);padding:1px 5px;border-radius:4px;margin-left:5px;font-family:'JetBrains Mono',monospace">kein Match</span>` : '';
+  // Group rows
+  const groups = [...new Set(LV_FIELDS.map(f=>f.group))];
 
-    const fieldCells = LV_FIELDS.map(f => {
-      const { va, vb, winner } = p.fields[f.key];
-      const dispA = lvFmt(va, f.isPct);
-      const dispB = lvFmt(vb, f.isPct);
-      const colorA = winner === 'A' ? 'var(--blue)' : winner === 'B' ? 'var(--danger)' : 'var(--text-3)';
-      const colorB = winner === 'B' ? 'var(--teal)' : winner === 'A' ? 'var(--warning)' : 'var(--text-3)';
-      return `<td style="padding:8px 10px;border-bottom:1px solid var(--border);border-left:1px solid var(--border);font-family:'JetBrains Mono',monospace;font-size:10px;white-space:nowrap;vertical-align:middle">
-        <div style="display:flex;flex-direction:column;gap:2px;text-align:right">
-          <span style="color:${colorA};font-weight:${winner==='A'?'700':'400'}">${dispA}</span>
-          <span style="color:${colorB};font-weight:${winner==='B'?'700':'400'}">${dispB}</span>
-        </div>
-      </td>`;
-    }).join('');
+  let tbodyHtml = '';
+  groups.forEach(group => {
+    const groupFields = LV_FIELDS.filter(f => f.group === group);
+    // Group header row
+    tbodyHtml += `<tr><td colspan="${1 + matched.length * 3}" style="padding:8px 16px;background:var(--sand);font-size:9px;font-weight:700;color:var(--blue);letter-spacing:.1em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;border-top:2px solid var(--blue);border-bottom:1px solid var(--border)">${group}</td></tr>`;
 
-    return `<tr style="${rowBg}">
-      <td style="padding:9px 14px;font-size:12px;color:var(--text-1);font-weight:500;border-bottom:1px solid var(--border);white-space:nowrap">${p.name}${pensionBadge}${matchBadge}</td>
-      <td style="padding:9px 14px;font-size:11px;color:var(--text-3);border-bottom:1px solid var(--border);font-family:'JetBrains Mono',monospace;text-align:right;white-space:nowrap">${p.lohn ? 'CHF '+parseFloat(p.lohn).toLocaleString('de-CH') : '—'}</td>
-      ${fieldCells}
-    </tr>`;
-  }).join('');
+    groupFields.forEach((f, fi) => {
+      const rowBg = fi % 2 === 0 ? '' : 'background:rgba(0,0,0,.015)';
+      const personCells = matched.map(p => {
+        const { va, vb, winner } = p.fields[f.key];
+        const dispA = lvFmt(va, f.isPct);
+        const dispB = lvFmt(vb, f.isPct);
+
+        // Diff
+        let diffDisp = '—', diffColor = 'var(--text-4)';
+        if (va !== null && vb !== null && !f.isPct) {
+          const na = parseFloat(String(va).replace(/[^0-9.-]/g,''));
+          const nb = parseFloat(String(vb).replace(/[^0-9.-]/g,''));
+          if (!isNaN(na) && !isNaN(nb)) {
+            const diff = nb - na;
+            const sign = diff > 0 ? '+' : '';
+            diffDisp = sign + 'CHF ' + Math.abs(diff).toLocaleString('de-CH', {minimumFractionDigits:0, maximumFractionDigits:0});
+            if (diff !== 0) diffDisp = (diff > 0 ? '+' : '') + 'CHF ' + diff.toLocaleString('de-CH', {minimumFractionDigits:0, maximumFractionDigits:0});
+            diffColor = diff > 0 ? (f.higherIsBetter ? 'var(--teal)' : 'var(--danger)') : diff < 0 ? (f.higherIsBetter ? 'var(--danger)' : 'var(--teal)') : 'var(--text-4)';
+          }
+        } else if (f.isPct && va !== null && vb !== null) {
+          const na = parseFloat(String(va).replace(/[^0-9.-]/g,'')) * (parseFloat(va) < 1 ? 100 : 1);
+          const nb = parseFloat(String(vb).replace(/[^0-9.-]/g,'')) * (parseFloat(vb) < 1 ? 100 : 1);
+          if (!isNaN(na) && !isNaN(nb)) {
+            const diff = nb - na;
+            diffDisp = (diff >= 0 ? '+' : '') + diff.toFixed(2) + '%';
+            diffColor = diff > 0 ? (f.higherIsBetter ? 'var(--teal)' : 'var(--danger)') : diff < 0 ? (f.higherIsBetter ? 'var(--danger)' : 'var(--teal)') : 'var(--text-4)';
+          }
+        }
+
+        const colorA = winner === 'A' ? 'var(--blue)' : 'var(--text-2)';
+        const colorB = winner === 'B' ? 'var(--teal)' : 'var(--text-2)';
+        const boldA = winner === 'A' ? '700' : '400';
+        const boldB = winner === 'B' ? '700' : '400';
+
+        return `
+          <td style="padding:9px 12px;text-align:right;font-size:11px;color:${colorA};font-weight:${boldA};border-bottom:1px solid var(--border);border-left:2px solid rgba(27,79,216,.12);font-family:'JetBrains Mono',monospace;background:rgba(27,79,216,.02)">${dispA}</td>
+          <td style="padding:9px 12px;text-align:right;font-size:11px;color:${colorB};font-weight:${boldB};border-bottom:1px solid var(--border);font-family:'JetBrains Mono',monospace;background:rgba(14,124,110,.02)">${dispB}</td>
+          <td style="padding:9px 12px;text-align:right;font-size:11px;color:${diffColor};font-weight:600;border-bottom:1px solid var(--border);border-right:2px solid var(--border-2);font-family:'JetBrains Mono',monospace">${diffDisp}</td>`;
+      }).join('');
+
+      tbodyHtml += `<tr style="${rowBg}">
+        <td style="padding:9px 16px;font-size:12px;color:var(--text-2);border-bottom:1px solid var(--border);font-weight:400">${f.label}</td>
+        ${personCells}
+      </tr>`;
+    });
+  });
+
+  document.getElementById('lv-tbody').innerHTML = tbodyHtml;
 }
 
 // ── LV: DOWNLOAD EXCEL ──
