@@ -1753,6 +1753,10 @@ footer{border-top:1px solid var(--border);padding:52px 0 32px;background:var(--w
     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
     Versichertenvergleich
   </button>
+  <button class="vergleich-subtab" id="subtab-btn-leistungsvergleich" onclick="switchSubtab('leistungsvergleich')">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+    Leistungsvergleich
+  </button>
 </div>
 
 <!-- Shared API key gate (covers both subtabs) -->
@@ -1934,6 +1938,100 @@ footer{border-top:1px solid var(--border);padding:52px 0 32px;background:var(--w
     </div>
   </div>
   </div><!-- end panel-versichertenvergleich -->
+
+  <!-- ── PANEL: LEISTUNGSVERGLEICH ── -->
+  <div class="vergleich-panel" id="panel-leistungsvergleich">
+  <div class="vv-wrap">
+
+    <div style="background:var(--gold-lt);border:1px solid rgba(184,150,90,.2);border-radius:var(--rl);padding:14px 20px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
+      <div style="width:36px;height:36px;background:var(--gold);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      </div>
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--text-1);margin-bottom:2px">Leistungsvergleich — Personenebene</div>
+        <div style="font-size:12px;color:var(--text-3)">Vergleich der Alters- und Risikoleistungen pro versicherte Person. Personen die in den nächsten 5 Jahren pensionierbar sind, werden speziell markiert.</div>
+      </div>
+    </div>
+
+    <div class="vv-upload-grid">
+      <div class="vv-slot-card">
+        <div class="vv-slot-header">
+          <span class="vv-slot-title" style="color:var(--blue)">▌ Offerte A</span>
+          <span style="font-size:9px;color:var(--text-4);font-family:'JetBrains Mono',monospace">Referenz-Anbieter</span>
+        </div>
+        <div class="vv-slot-body">
+          <div class="vv-name-label">Anbietername</div>
+          <input class="vv-name-input" id="lv-name-a" type="text" placeholder="z.B. AXA, Zurich, Swiss Life...">
+          <div id="lv-zone-a"></div>
+        </div>
+      </div>
+      <div class="vv-slot-card">
+        <div class="vv-slot-header">
+          <span class="vv-slot-title" style="color:var(--teal)">▌ Offerte B</span>
+          <span style="font-size:9px;color:var(--text-4);font-family:'JetBrains Mono',monospace">Vergleichs-Anbieter</span>
+        </div>
+        <div class="vv-slot-body">
+          <div class="vv-name-label">Anbietername</div>
+          <input class="vv-name-input" id="lv-name-b" type="text" placeholder="z.B. AXA, Zurich, Swiss Life...">
+          <div id="lv-zone-b"></div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-analyse" id="lv-btn-analyse" onclick="startLvAnalysis()" disabled style="margin-bottom:12px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      Leistungsvergleich starten
+    </button>
+    <div id="lv-status" style="display:none;margin-bottom:12px"></div>
+
+    <div id="lv-empty" class="result-wrap">
+      <div class="empty-state">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--border-2)" stroke-width="1" style="margin:0 auto 16px;display:block"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        <h3>Noch kein Vergleich</h3>
+        <p>Lade Offerte A und Offerte B hoch und klicke<br>auf «Leistungsvergleich starten».</p>
+      </div>
+    </div>
+
+    <div id="lv-result-view" style="display:none">
+      <div id="lv-kpi-bar" style="margin-bottom:12px"></div>
+
+      <div id="lv-pension-alert" style="display:none;margin-bottom:12px;background:var(--gold-lt);border:1px solid rgba(184,150,90,.3);border-radius:var(--rl);padding:14px 18px;display:flex;align-items:flex-start;gap:10px">
+        <div style="font-size:20px;flex-shrink:0;line-height:1">⚠️</div>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--gold);margin-bottom:5px;font-family:'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase">Bald pensionierbar — Handlungsbedarf prüfen</div>
+          <div id="lv-pension-text" style="font-size:12px;color:var(--text-2);line-height:1.7"></div>
+        </div>
+      </div>
+
+      <div class="vv-result-wrap">
+        <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--sand)">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div class="ai-tag">LEISTUNGEN</div>
+            <span style="font-size:11px;color:var(--text-4);font-family:'JetBrains Mono',monospace">Alters- &amp; Risikoleistungen pro Person</span>
+          </div>
+          <div style="display:flex;gap:6px">
+            <button class="btn-ghost" onclick="lvDownloadExcel()" style="font-size:11px;padding:5px 10px">↓ Excel</button>
+            <button class="btn-ghost" onclick="lvDownloadPDF()" style="font-size:11px;padding:5px 10px">↓ PDF</button>
+          </div>
+        </div>
+        <div class="vv-table-scroll">
+          <table class="vv-table">
+            <thead id="lv-thead"></thead>
+            <tbody id="lv-tbody"></tbody>
+          </table>
+        </div>
+        <div style="padding:10px 16px;border-top:1px solid var(--border);display:flex;align-items:center;gap:20px;flex-wrap:wrap;background:var(--sand)">
+          <span style="font-size:10px;color:var(--text-4);font-family:'JetBrains Mono',monospace">Legende:</span>
+          <span style="font-size:10px;color:var(--teal);font-family:'JetBrains Mono',monospace">● B höher / besser</span>
+          <span style="font-size:10px;color:var(--danger);font-family:'JetBrains Mono',monospace">● A höher / besser</span>
+          <span style="font-size:10px;color:var(--text-3);font-family:'JetBrains Mono',monospace">— gleich / nicht vorhanden</span>
+          <span style="font-size:10px;color:var(--gold);font-family:'JetBrains Mono',monospace">⚠ Pensionierung ≤5 Jahre</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  </div><!-- end panel-leistungsvergleich -->
 
 </div><!-- end vergleich-main -->
 
@@ -2721,7 +2819,7 @@ window.addEventListener('load', () => {
   initDragDrop();
   checkApiKey();
   renderVvFileList();
-  // Show VV key status if key exists
+  renderLvFileList();
   const key = localStorage.getItem('piq_api_key');
   const vvks = document.getElementById('vv-key-status');
   if (vvks && key) vvks.style.display = 'flex';
@@ -3301,6 +3399,446 @@ function vvDownloadPDF() {
   win.document.close();
   setTimeout(() => win.print(), 500);
 }
+
+// ════════════════════════════════════════
+// LEISTUNGSVERGLEICH — STATE & LOGIC
+// ════════════════════════════════════════
+
+let lvFiles = [];
+let lvResults = null;
+const CURRENT_YEAR = 2026;
+const PENSION_AGE_M = 65;
+const PENSION_AGE_F = 64;
+
+// ── LV: FILE HANDLING ──
+function lvHandleFiles(files, slot) {
+  const file = files[0];
+  if (!file) return;
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (!['pdf','xlsx','xls','csv','docx','doc'].includes(ext)) return;
+  const idx = lvFiles.findIndex(f => f.slot === slot);
+  const obj = { file, slot, anbieterName: file.name.replace(/\.[^.]+$/, ''), parsedPersons: [], status: 'ready' };
+  if (idx >= 0) lvFiles[idx] = obj;
+  else lvFiles.push(obj);
+  renderLvFileList();
+  updateLvButton();
+}
+
+function renderLvFileList() {
+  ['a','b'].forEach(slot => {
+    const label = slot === 'a' ? 'Offerte A' : 'Offerte B';
+    const f = lvFiles.find(f => f.slot === slot);
+    const zone = document.getElementById('lv-zone-' + slot);
+    const nameInput = document.getElementById('lv-name-' + slot);
+    if (!zone) return;
+    if (f) {
+      const ext = f.file.name.split('.').pop().toUpperCase();
+      const cls = ext === 'PDF' ? 'fb-pdf' : 'fb-xlsx';
+      zone.innerHTML = `<div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--teal-lt);border:1px solid rgba(14,124,110,.2);border-radius:9px">
+        <div class="file-badge ${cls}" style="width:32px;height:32px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;font-family:'JetBrains Mono',monospace">${ext}</div>
+        <div style="flex:1;min-width:0"><div style="font-size:12px;color:var(--text-1);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f.file.name}</div><div style="font-size:10px;color:var(--teal);margin-top:1px">✓ Bereit</div></div>
+        <button onclick="lvRemoveFile('${slot}')" style="background:none;border:none;cursor:pointer;color:var(--text-4);font-size:16px;padding:2px 6px;border-radius:4px">✕</button>
+      </div>`;
+      if (nameInput) nameInput.value = f.anbieterName;
+    } else {
+      zone.innerHTML = `<label style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:24px 16px;border:2px dashed var(--border-2);border-radius:10px;cursor:pointer;transition:all .2s;background:var(--sand)"
+        ondragover="event.preventDefault();this.style.borderColor='var(--blue)'"
+        ondragleave="this.style.borderColor=''"
+        ondrop="event.preventDefault();lvHandleFiles(event.dataTransfer.files,'${slot}')">
+        <input type="file" accept=".pdf,.xlsx,.xls,.csv,.docx,.doc" style="display:none" onchange="lvHandleFiles(this.files,'${slot}')">
+        <div style="width:36px;height:36px;background:var(--blue-lt);border-radius:9px;display:flex;align-items:center;justify-content:center">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        </div>
+        <div style="font-size:12px;color:var(--text-2);font-weight:500">${label} hochladen</div>
+        <div style="font-size:10px;color:var(--text-4)">PDF, Excel, Word</div>
+      </label>`;
+      if (nameInput) nameInput.value = '';
+    }
+  });
+}
+
+function lvRemoveFile(slot) {
+  lvFiles = lvFiles.filter(f => f.slot !== slot);
+  renderLvFileList();
+  updateLvButton();
+}
+
+function updateLvButton() {
+  const btn = document.getElementById('lv-btn-analyse');
+  if (btn) btn.disabled = lvFiles.length < 2;
+}
+
+// ── LV: PARSE FILE — extract per-person LEISTUNGEN ──
+async function lvParseFile(fileObj) {
+  const { file } = fileObj;
+  const ext = file.name.split('.').pop().toLowerCase();
+  const apiKey = localStorage.getItem('piq_api_key');
+
+  const prompt = `Du analysierst eine BVG-Offerte mit Leistungsdaten pro versicherte Person.
+
+Extrahiere für JEDE Person folgende Felder. Antworte NUR mit JSON-Array, keine Erklaerungen.
+
+Matching-Schluessel:
+- geburtsjahr: Jahreszahl (aus Geburtsdatum oder: ${CURRENT_YEAR} minus Alter)
+- geschlecht: "M", "F" oder null
+- lohn: versicherter Jahreslohn als Zahl
+
+Altersleistungen:
+- altersguthaben_aktuell: aktuelles Altersguthaben / Freizuegigkeit als Zahl oder null
+- altersguthaben_rente: projiziertes Altersguthaben bei Pensionierung oder null
+- altersrente: jaehrliche Altersrente als Zahl oder null
+- umwandlungssatz: UWS als Dezimalzahl z.B. 0.068 oder null
+- verzinsung: Verzinsung als Dezimalzahl z.B. 0.015 oder null
+
+Risikoleistungen (jaehrlich):
+- invalidenrente: Invalidenrente (100% IV) als Zahl oder null
+- invalidenkinderrente: Kinderrente bei Invaliditaet als Zahl oder null
+- ehegattenrente: Ehegatten- oder Partnerrente bei Tod als Zahl oder null
+- waisenrente: Waisenrente als Zahl oder null
+- todesfallkapital: einmaliges Todesfallkapital als Zahl oder null
+- ueberbrueckungsrente: Ueberbrueckungsrente falls vorhanden oder null
+
+Identifikation:
+- name: Name wenn vorhanden, sonst "Person 1", "Person 2" etc.
+
+Beispiel: [{"name":"Anonym 1","geburtsjahr":1972,"geschlecht":"M","lohn":95000,"altersguthaben_aktuell":180000,"altersguthaben_rente":320000,"altersrente":21760,"umwandlungssatz":0.068,"verzinsung":0.015,"invalidenrente":47500,"invalidenkinderrente":9500,"ehegattenrente":28500,"waisenrente":4750,"todesfallkapital":null,"ueberbrueckungsrente":null}]
+
+Alle Betraege als reine Zahlen. Fehlende Felder: null.`;
+
+  let messages;
+  if (ext === 'pdf') {
+    const b64 = await toBase64(file);
+    messages = [{ role: 'user', content: [
+      { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: b64 } },
+      { type: 'text', text: prompt }
+    ]}];
+  } else if (['xlsx','xls','csv'].includes(ext)) {
+    const txt = await parseExcelForPersons(file);
+    messages = [{ role: 'user', content: `BVG-Offerte (${file.name}):
+
+${txt.substring(0,18000)}
+
+${prompt}` }];
+  } else {
+    const txt = await parseDocx(file);
+    messages = [{ role: 'user', content: `BVG-Offerte (${file.name}):
+
+${txt.substring(0,18000)}
+
+${prompt}` }];
+  }
+
+  const res = await fetch('/.netlify/functions/claude', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+    body: JSON.stringify({ model: 'claude-sonnet-4-5', max_tokens: 4096, messages })
+  });
+  if (!res.ok) { const e = await res.json(); throw new Error(e.error?.message || 'API Fehler'); }
+  const data = await res.json();
+  return safeParsePersonArray(data.content.map(c => c.text || '').join(''), file.name);
+}
+
+// ── LV: CHECK PENSION PROXIMITY ──
+function yearsToRetirement(p) {
+  if (!p.geburtsjahr) return null;
+  const pensionAge = p.geschlecht === 'F' ? PENSION_AGE_F : PENSION_AGE_M;
+  const retirementYear = p.geburtsjahr + pensionAge;
+  return retirementYear - CURRENT_YEAR;
+}
+
+// ── LV: MATCH PERSONS (same logic as VV) ──
+function lvMatchPersons(personsA, personsB) {
+  const usedB = new Set();
+  function matchKey(p) {
+    const yr = p.geburtsjahr ? String(p.geburtsjahr).trim() : null;
+    const lohn = p.lohn ? Math.round(parseFloat(String(p.lohn).replace(/[^0-9.]/g,''))) : null;
+    return { yr, lohn };
+  }
+  function findMatch(pA, idx) {
+    const kA = matchKey(pA);
+    if (kA.yr && kA.lohn) {
+      for (let j = 0; j < personsB.length; j++) {
+        if (usedB.has(j)) continue;
+        const kB = matchKey(personsB[j]);
+        if (kB.yr === kA.yr && kB.lohn && Math.abs(kB.lohn - kA.lohn) / kA.lohn < 0.05) { usedB.add(j); return personsB[j]; }
+      }
+    }
+    if (kA.yr) {
+      const cands = personsB.map((p,j) => ({p,j})).filter(({p,j}) => !usedB.has(j) && matchKey(p).yr === kA.yr);
+      if (cands.length === 1) { usedB.add(cands[0].j); return cands[0].p; }
+    }
+    if (kA.lohn) {
+      for (let j = 0; j < personsB.length; j++) {
+        if (usedB.has(j)) continue;
+        const kB = matchKey(personsB[j]);
+        if (kB.lohn && Math.abs(kB.lohn - kA.lohn) / kA.lohn < 0.02) { usedB.add(j); return personsB[j]; }
+      }
+    }
+    if (idx < personsB.length && !usedB.has(idx)) { usedB.add(idx); return personsB[idx]; }
+    return null;
+  }
+  return { findMatch, usedB };
+}
+
+// ── LV: BUILD COMPARISON ──
+function buildLvComparison(fileA, fileB) {
+  const nameA = fileA.anbieterName;
+  const nameB = fileB.anbieterName;
+  const personsA = fileA.parsedPersons;
+  const personsB = fileB.parsedPersons;
+  const { findMatch, usedB } = lvMatchPersons(personsA, personsB);
+
+  const LV_FIELDS = [
+    { key: 'altersrente',           label: 'Altersrente (jährl.)',         group: 'Altersleistungen', higherIsBetter: true },
+    { key: 'altersguthaben_rente',  label: 'Altersguthaben bei Rente',     group: 'Altersleistungen', higherIsBetter: true },
+    { key: 'altersguthaben_aktuell',label: 'Aktuelles Altersguthaben',     group: 'Altersleistungen', higherIsBetter: true },
+    { key: 'umwandlungssatz',       label: 'Umwandlungssatz (UWS)',        group: 'Altersleistungen', higherIsBetter: true, isPct: true },
+    { key: 'verzinsung',            label: 'Verzinsung',                   group: 'Altersleistungen', higherIsBetter: true, isPct: true },
+    { key: 'invalidenrente',        label: 'Invalidenrente (100% IV)',     group: 'Risikoleistungen', higherIsBetter: true },
+    { key: 'invalidenkinderrente',  label: 'Invalidenkinderrente',        group: 'Risikoleistungen', higherIsBetter: true },
+    { key: 'ehegattenrente',        label: 'Ehegatten-/Partnerrente',     group: 'Risikoleistungen', higherIsBetter: true },
+    { key: 'waisenrente',           label: 'Waisenrente',                 group: 'Risikoleistungen', higherIsBetter: true },
+    { key: 'todesfallkapital',      label: 'Todesfallkapital (einmalig)', group: 'Risikoleistungen', higherIsBetter: true },
+    { key: 'ueberbrueckungsrente',  label: 'Überbrückungsrente',          group: 'Risikoleistungen', higherIsBetter: true },
+  ];
+
+  const matched = [];
+  personsA.forEach((pA, i) => {
+    const pB = findMatch(pA, i);
+    const ytr = yearsToRetirement(pA);
+    const pensionSoon = ytr !== null && ytr >= 0 && ytr <= 5;
+    const displayName = (pA.name && !pA.name.startsWith('Person ')) ? pA.name : (pA.geburtsjahr ? `Jg. ${pA.geburtsjahr}` : `Person ${i+1}`);
+    const fields = {};
+    LV_FIELDS.forEach(f => {
+      const va = pA[f.key] ?? null;
+      const vb = pB ? (pB[f.key] ?? null) : null;
+      let winner = null;
+      if (va !== null && vb !== null) {
+        const na = parseFloat(va), nb = parseFloat(vb);
+        if (!isNaN(na) && !isNaN(nb) && na !== nb) {
+          winner = f.higherIsBetter ? (nb > na ? 'B' : 'A') : (nb < na ? 'B' : 'A');
+        }
+      }
+      fields[f.key] = { va, vb, winner };
+    });
+    matched.push({ name: displayName, lohn: pA.lohn, geburtsjahr: pA.geburtsjahr, geschlecht: pA.geschlecht, pensionSoon, ytr, fields, matched: !!pB });
+  });
+
+  // Pension alert persons
+  const pensionPersons = matched.filter(p => p.pensionSoon);
+
+  return { nameA, nameB, matched, pensionPersons, LV_FIELDS };
+}
+
+// ── LV: FORMAT ──
+function lvFmt(val, isPct) {
+  if (val === null || val === undefined) return '—';
+  const n = parseFloat(String(val).replace(/[^0-9.-]/g,''));
+  if (isNaN(n)) return '—';
+  if (isPct) return (n * (n < 1 ? 100 : 1)).toFixed(2) + '%';
+  return 'CHF ' + n.toLocaleString('de-CH', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
+
+// ── LV: MAIN ANALYSIS ──
+async function startLvAnalysis() {
+  const apiKey = localStorage.getItem('piq_api_key');
+  if (!apiKey) return;
+
+  lvFiles.forEach(f => {
+    const inp = document.getElementById('lv-name-' + f.slot);
+    if (inp && inp.value.trim()) f.anbieterName = inp.value.trim();
+  });
+
+  const btn = document.getElementById('lv-btn-analyse');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner" style="border-color:rgba(255,255,255,.2);border-top-color:#fff"></div> Analysiere Leistungen...';
+
+  const statusEl = document.getElementById('lv-status');
+  function setStatus(msg, type='loading') {
+    statusEl.style.display = 'flex';
+    statusEl.className = 'status-bar' + (type==='success'?' success':type==='error'?' error':'');
+    statusEl.innerHTML = type==='loading' ? `<div class="spinner"></div><span>${msg}</span>` : `<span>${msg}</span>`;
+  }
+
+  try {
+    const fileA = lvFiles.find(f => f.slot === 'a');
+    const fileB = lvFiles.find(f => f.slot === 'b');
+    setStatus('Lese Offerte A (Leistungen)...');
+    fileA.parsedPersons = await lvParseFile(fileA);
+    setStatus(`${fileA.parsedPersons.length} Personen in A. Lese Offerte B...`);
+    fileB.parsedPersons = await lvParseFile(fileB);
+    setStatus(`${fileB.parsedPersons.length} Personen in B. Erstelle Vergleich...`);
+    lvResults = buildLvComparison(fileA, fileB);
+    renderLvResults();
+    setStatus(`✓ ${lvResults.matched.length} Personen verglichen`, 'success');
+  } catch(e) {
+    setStatus('Fehler: ' + e.message, 'error');
+    console.error(e);
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> Erneut vergleichen';
+}
+
+// ── LV: RENDER ──
+function renderLvResults() {
+  const { nameA, nameB, matched, pensionPersons, LV_FIELDS } = lvResults;
+  document.getElementById('lv-empty').style.display = 'none';
+  document.getElementById('lv-result-view').style.display = 'block';
+
+  // KPI bar
+  const totalPersons = matched.length;
+  const winsA = matched.reduce((s,p) => s + Object.values(p.fields).filter(f=>f.winner==='A').length, 0);
+  const winsB = matched.reduce((s,p) => s + Object.values(p.fields).filter(f=>f.winner==='B').length, 0);
+  document.getElementById('lv-kpi-bar').innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+      <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--rl);padding:14px 16px">
+        <div style="font-size:9px;font-weight:600;color:var(--text-4);font-family:'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px">Personen</div>
+        <div style="font-family:'Fraunces',serif;font-size:22px;font-weight:300;color:var(--text-1)">${totalPersons}</div>
+      </div>
+      <div style="background:var(--white);border:1px solid rgba(27,79,216,.2);border-radius:var(--rl);padding:14px 16px">
+        <div style="font-size:9px;font-weight:600;color:var(--blue);font-family:'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px">${nameA} — besser bei</div>
+        <div style="font-family:'Fraunces',serif;font-size:22px;font-weight:300;color:var(--blue)">${winsA} <span style="font-size:13px;color:var(--text-4)">Feldern</span></div>
+      </div>
+      <div style="background:var(--white);border:1px solid rgba(14,124,110,.2);border-radius:var(--rl);padding:14px 16px">
+        <div style="font-size:9px;font-weight:600;color:var(--teal);font-family:'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px">${nameB} — besser bei</div>
+        <div style="font-family:'Fraunces',serif;font-size:22px;font-weight:300;color:var(--teal)">${winsB} <span style="font-size:13px;color:var(--text-4)">Feldern</span></div>
+      </div>
+      <div style="background:${pensionPersons.length>0?'var(--gold-lt)':'var(--white)'};border:1px solid ${pensionPersons.length>0?'rgba(184,150,90,.25)':'var(--border)'};border-radius:var(--rl);padding:14px 16px">
+        <div style="font-size:9px;font-weight:600;color:var(--gold);font-family:'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px">Bald pensionierbar</div>
+        <div style="font-family:'Fraunces',serif;font-size:22px;font-weight:300;color:${pensionPersons.length>0?'var(--gold)':'var(--text-4)'}">${pensionPersons.length} <span style="font-size:13px;color:var(--text-4)">Personen</span></div>
+      </div>
+    </div>`;
+
+  // Pension alert
+  const alertEl = document.getElementById('lv-pension-alert');
+  if (pensionPersons.length > 0) {
+    alertEl.style.display = 'flex';
+    document.getElementById('lv-pension-text').innerHTML = pensionPersons.map(p => {
+      const yr = p.ytr !== null ? (p.ytr === 0 ? 'dieses Jahr' : `in ${p.ytr} Jahr${p.ytr===1?'':'en'}`) : '';
+      const gender = p.geschlecht === 'F' ? 'Frau' : p.geschlecht === 'M' ? 'Mann' : 'Person';
+      return `<strong>${p.name}</strong> (${gender}, Jg. ${p.geburtsjahr||'?'}) — Pensionierung ${yr}. Leistungsvergleich besonders relevant.`;
+    }).join('<br>');
+  } else {
+    alertEl.style.display = 'none';
+  }
+
+  // Group fields
+  const groups = [...new Set(LV_FIELDS.map(f=>f.group))];
+
+  // Build thead
+  document.getElementById('lv-thead').innerHTML = `
+    <tr>
+      <th style="padding:9px 14px;text-align:left;font-size:9px;font-weight:600;color:var(--text-4);font-family:'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;background:var(--sand-2);border-bottom:1px solid var(--border);min-width:160px">Person</th>
+      <th style="padding:9px 14px;text-align:right;font-size:9px;font-weight:600;color:var(--text-4);font-family:'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;background:var(--sand-2);border-bottom:1px solid var(--border)">Lohn</th>
+      ${LV_FIELDS.map(f => `<th style="padding:9px 10px;text-align:right;font-size:9px;font-weight:600;color:var(--text-3);font-family:'JetBrains Mono',monospace;letter-spacing:.04em;text-transform:uppercase;background:var(--sand-2);border-bottom:1px solid var(--border);border-left:1px solid var(--border);white-space:nowrap">${f.label}</th>`).join('')}
+    </tr>
+    <tr>
+      <th style="background:var(--sand-2);border-bottom:2px solid var(--border-2)"></th>
+      <th style="background:var(--sand-2);border-bottom:2px solid var(--border-2)"></th>
+      ${LV_FIELDS.map(f => `<th style="padding:4px 10px;text-align:center;font-size:9px;font-weight:600;background:var(--sand-2);border-bottom:2px solid var(--border-2);border-left:1px solid var(--border)">
+        <span style="color:var(--blue)">${nameA}</span> <span style="color:var(--text-4)">/</span> <span style="color:var(--teal)">${nameB}</span>
+      </th>`).join('')}
+    </tr>`;
+
+  // Build tbody
+  document.getElementById('lv-tbody').innerHTML = matched.map((p, i) => {
+    const rowBg = p.pensionSoon ? 'background:rgba(184,150,90,.06)' : i % 2 === 0 ? '' : 'background:var(--sand)';
+    const pensionBadge = p.pensionSoon
+      ? `<span style="font-size:8px;background:var(--gold-lt);color:var(--gold);border:1px solid rgba(184,150,90,.3);padding:1px 6px;border-radius:4px;margin-left:5px;font-family:'JetBrains Mono',monospace">⚠ ${p.ytr===0?'dieses Jahr':'in '+p.ytr+' J.'}</span>`
+      : '';
+    const matchBadge = !p.matched ? `<span style="font-size:8px;background:var(--warning-lt);color:var(--warning);padding:1px 5px;border-radius:4px;margin-left:5px;font-family:'JetBrains Mono',monospace">kein Match</span>` : '';
+
+    const fieldCells = LV_FIELDS.map(f => {
+      const { va, vb, winner } = p.fields[f.key];
+      const dispA = lvFmt(va, f.isPct);
+      const dispB = lvFmt(vb, f.isPct);
+      const colorA = winner === 'A' ? 'var(--blue)' : winner === 'B' ? 'var(--danger)' : 'var(--text-3)';
+      const colorB = winner === 'B' ? 'var(--teal)' : winner === 'A' ? 'var(--warning)' : 'var(--text-3)';
+      return `<td style="padding:8px 10px;border-bottom:1px solid var(--border);border-left:1px solid var(--border);font-family:'JetBrains Mono',monospace;font-size:10px;white-space:nowrap;vertical-align:middle">
+        <div style="display:flex;flex-direction:column;gap:2px;text-align:right">
+          <span style="color:${colorA};font-weight:${winner==='A'?'700':'400'}">${dispA}</span>
+          <span style="color:${colorB};font-weight:${winner==='B'?'700':'400'}">${dispB}</span>
+        </div>
+      </td>`;
+    }).join('');
+
+    return `<tr style="${rowBg}">
+      <td style="padding:9px 14px;font-size:12px;color:var(--text-1);font-weight:500;border-bottom:1px solid var(--border);white-space:nowrap">${p.name}${pensionBadge}${matchBadge}</td>
+      <td style="padding:9px 14px;font-size:11px;color:var(--text-3);border-bottom:1px solid var(--border);font-family:'JetBrains Mono',monospace;text-align:right;white-space:nowrap">${p.lohn ? 'CHF '+parseFloat(p.lohn).toLocaleString('de-CH') : '—'}</td>
+      ${fieldCells}
+    </tr>`;
+  }).join('');
+}
+
+// ── LV: DOWNLOAD EXCEL ──
+function lvDownloadExcel() {
+  if (!lvResults) return;
+  const { nameA, nameB, matched, LV_FIELDS } = lvResults;
+  const header = ['Person', 'Lohn', ...LV_FIELDS.flatMap(f => [`${f.label} (${nameA})`, `${f.label} (${nameB})`])];
+  const rows = [header];
+  matched.forEach(p => {
+    rows.push([
+      p.name + (p.pensionSoon ? ` (Pension in ${p.ytr}J.)` : ''),
+      p.lohn,
+      ...LV_FIELDS.flatMap(f => [p.fields[f.key].va, p.fields[f.key].vb])
+    ]);
+  });
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{ wch: 24 }, { wch: 14 }, ...LV_FIELDS.flatMap(() => [{ wch: 18 }, { wch: 18 }])];
+  XLSX.utils.book_append_sheet(wb, ws, 'Leistungsvergleich');
+  XLSX.writeFile(wb, `PensionIQ_Leistungsvergleich_${nameA}_vs_${nameB}.xlsx`);
+}
+
+// ── LV: DOWNLOAD PDF ──
+function lvDownloadPDF() {
+  if (!lvResults) return;
+  const { nameA, nameB, matched, pensionPersons, LV_FIELDS } = lvResults;
+  const date = new Date().toLocaleDateString('de-CH');
+
+  const headerRow1 = `<tr><th rowspan="2" style="text-align:left;background:#F5F3EE">Person</th><th rowspan="2" style="background:#F5F3EE">Lohn</th>${LV_FIELDS.map(f=>`<th colspan="2" style="background:#EEF3FD;color:#1B4FD8;font-size:7px">${f.label}</th>`).join('')}</tr>`;
+  const headerRow2 = `<tr>${LV_FIELDS.flatMap(()=>[`<th style="background:#EEF3FD;color:#1B4FD8;font-size:7px">${nameA}</th>`,`<th style="background:#E8F5F3;color:#0E7C6E;font-size:7px">${nameB}</th>`]).join('')}</tr>`;
+
+  function fc(val, isPct) {
+    if (val===null||val===undefined) return '—';
+    const n=parseFloat(String(val).replace(/[^0-9.-]/g,''));
+    if(isNaN(n)) return '—';
+    if(isPct) return (n*(n<1?100:1)).toFixed(2)+'%';
+    return 'CHF '+n.toLocaleString('de-CH',{minimumFractionDigits:0,maximumFractionDigits:0});
+  }
+
+  const bodyRows = matched.map((p,i) => {
+    const bg = p.pensionSoon ? '#FDF8EE' : i%2===0?'#fff':'#F5F3EE';
+    const pensionNote = p.pensionSoon ? ` ⚠ ${p.ytr}J.` : '';
+    const cells = LV_FIELDS.flatMap(f => {
+      const {va,vb,winner} = p.fields[f.key];
+      const ca = winner==='A'?'color:#1B4FD8;font-weight:700':winner==='B'?'color:#B83232':'color:#6B7194';
+      const cb = winner==='B'?'color:#0E7C6E;font-weight:700':winner==='A'?'color:#C05C2A':'color:#6B7194';
+      return [`<td style="${ca}">${fc(va,f.isPct)}</td>`,`<td style="${cb}">${fc(vb,f.isPct)}</td>`];
+    }).join('');
+    return `<tr style="background:${bg}"><td style="font-weight:500">${p.name}${pensionNote}</td><td>${p.lohn?'CHF '+parseFloat(p.lohn).toLocaleString('de-CH'):'—'}</td>${cells}</tr>`;
+  }).join('');
+
+  const pensionBlock = pensionPersons.length > 0
+    ? `<div style="margin-top:10px;background:#FDF8EE;border-left:3px solid #B8965A;padding:7px 10px;font-size:9px"><b style="color:#B8965A">⚠ Bald pensionierbar:</b> ${pensionPersons.map(p=>`${p.name} (Jg. ${p.geburtsjahr}, in ${p.ytr} J.)`).join(' · ')}</div>`
+    : '';
+
+  const html = `<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8">
+  <style>@page{size:A4 landscape;margin:8mm}*{box-sizing:border-box}body{font-family:'Helvetica Neue',Arial,sans-serif;margin:0;font-size:8px;color:#0F1117;-webkit-print-color-adjust:exact;print-color-adjust:exact}.hdr{display:flex;justify-content:space-between;margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid #0F1117}.logo{font-size:13px;font-weight:300}.logo b{font-weight:700}.title{font-size:15px;font-weight:300;margin:2px 0}.sub{font-size:7px;color:#6B7194}table{width:100%;border-collapse:collapse}th{padding:4px 6px;font-size:7px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;border-bottom:1px solid #ddd}td{padding:4px 6px;border-bottom:1px solid #f0f0f0}.footer{margin-top:8px;padding-top:6px;border-top:1px solid #eee;font-size:7px;color:#9EA4BE;display:flex;justify-content:space-between}</style>
+  </head><body>
+  <div class="hdr"><div><div class="logo">Pension<b>IQ</b></div><div class="title">Leistungsvergleich</div><div class="sub">${nameA} vs. ${nameB} · ${matched.length} Personen · ${date}</div></div><div style="width:90px;height:36px;border:1.5px dashed #D0D0D0;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:7px;color:#C0C0C0;text-transform:uppercase">Kundenlogo</div></div>
+  <table><thead>${headerRow1}${headerRow2}</thead><tbody>${bodyRows}</tbody></table>
+  ${pensionBlock}
+  <div class="footer"><span>PensionIQ AG · Zürich · pensioniq.ch</span><span>Vertraulich · Nur für interne Verwendung</span></div>
+  </body></html>`;
+
+  const win = window.open('', '_blank');
+  win.document.write(html);
+  win.document.close();
+  setTimeout(() => win.print(), 500);
+}
+
 </script>
 </body>
 </html>
