@@ -2891,25 +2891,34 @@ async function vvParseFile(fileObj) {
   const ext = file.name.split('.').pop().toLowerCase();
   const apiKey = localStorage.getItem('piq_api_key');
 
-  const perPersonPrompt = `Du analysierst eine BVG-Offerte die Daten pro versicherte Person enthält.
-Extrahiere für JEDE einzelne Person folgende Daten. Antworte NUR mit einem JSON-Array, keine Erklärungen:
-[
-  {
-    "name": "Vorname Nachname oder Zeilen-ID falls kein Name",
-    "geburtsjahr": Zahl oder null,
-    "lohn": versicherter Jahreslohn als Zahl,
-    "beitrag_an": Arbeitnehmerbeitrag total (Spar+Risiko+Kosten) als Zahl,
-    "beitrag_ag": Arbeitgeberbeitrag total als Zahl,
-    "beitrag_total": beitrag_an + beitrag_ag,
-    "sparbeitrag_an": Sparbeitrag AN als Zahl oder null,
-    "sparbeitrag_ag": Sparbeitrag AG als Zahl oder null,
-    "risiko_an": Risikobeitrag AN als Zahl oder null,
-    "risiko_ag": Risikobeitrag AG als Zahl oder null,
-    "kosten_an": Kostenbeitrag AN als Zahl oder null,
-    "kosten_ag": Kostenbeitrag AG als Zahl oder null
-  }
-]
-Alle Beträge als reine Zahlen ohne CHF, Apostrophe oder Prozentzeichen. Falls eine Spalte nicht vorhanden ist: null.`;
+  const perPersonPrompt = `Du analysierst eine BVG-Offerte mit Daten pro versicherte Person.
+
+WICHTIG: Extrahiere fuer JEDE einzelne Person alle verfuegbaren Felder.
+Antworte NUR mit einem JSON-Array, keine Erklaerungen, keine Backticks.
+
+Die zwei wichtigsten Matching-Schluessel (immer extrahieren wenn vorhanden):
+- geburtsjahr: Jahreszahl z.B. 1985. Falls nur Alter angegeben: berechne aktuelles Jahr (2026) minus Alter.
+- lohn: versicherter Jahreslohn als exakte Zahl (Spalten wie: vers. Lohn, Jahreslohn, Lohn Sparen)
+
+Identifikation:
+- name: Vor- und Nachname wenn vorhanden, sonst "Person 1", "Person 2" etc.
+- geschlecht: "M", "F" oder null
+
+Beitraege (falls kein Total: Spar+Risiko+Kosten addieren):
+- beitrag_an: Gesamtbeitrag Arbeitnehmer (AN)
+- beitrag_ag: Gesamtbeitrag Arbeitgeber (AG)
+- beitrag_total: beitrag_an + beitrag_ag
+- sparbeitrag_an: Sparbeitrag AN oder null
+- sparbeitrag_ag: Sparbeitrag AG oder null
+- risiko_an: Risikopraemie AN oder null
+- risiko_ag: Risikopraemie AG oder null
+- kosten_an: Kostenbeitrag AN oder null
+- kosten_ag: Kostenbeitrag AG oder null
+
+Beispiel (gekuerzt):
+[{"name":"Anonym 1","geburtsjahr":1978,"geschlecht":"M","lohn":85000,"beitrag_an":3200,"beitrag_ag":4100,"beitrag_total":7300,"sparbeitrag_an":2400,"sparbeitrag_ag":3200,"risiko_an":600,"risiko_ag":700,"kosten_an":200,"kosten_ag":200}]
+
+Alle Betraege als reine Zahlen ohne CHF, Apostrophe oder Prozentzeichen. Fehlende Felder: null.`;
 
   let messages;
   if (ext === 'pdf') {
@@ -3023,28 +3032,67 @@ async function startVvAnalysis() {
 }
 
 // ── VV: BUILD COMPARISON ──
+// Matching priority: 1) Geburtsjahr+Lohn  2) Geburtsjahr only  3) Lohn only  4) Index
 function buildVvComparison(fileA, fileB) {
   const nameA = fileA.anbieterName;
   const nameB = fileB.anbieterName;
   const personsA = fileA.parsedPersons;
   const personsB = fileB.parsedPersons;
 
-  // Try to match by name; fallback to index
-  const matched = [];
-  const maxLen = Math.max(personsA.length, personsB.length);
+  // Build match key from a person object
+  function matchKey(p) {
+    const yr = p.geburtsjahr ? String(p.geburtsjahr).trim() : null;
+    const lohn = p.lohn ? Math.round(parseFloat(String(p.lohn).replace(/[^0-9.]/g,''))) : null;
+    return { yr, lohn };
+  }
 
-  for (let i = 0; i < maxLen; i++) {
-    const pA = personsA[i] || null;
-    const pB = personsB[i] || null;
-
-    // Try name match if both exist
-    let matchedB = pB;
-    if (pA && pA.name && personsB.length > 0) {
-      const byName = personsB.find(p => p.name && p.name.toLowerCase().trim() === pA.name.toLowerCase().trim());
-      if (byName) matchedB = byName;
+  // Find best match in personsB for a given person from A
+  const usedB = new Set();
+  function findMatch(pA, idx) {
+    const kA = matchKey(pA);
+    // 1. Exact: same geburtsjahr AND lohn (within 5% tolerance)
+    if (kA.yr && kA.lohn) {
+      for (let j = 0; j < personsB.length; j++) {
+        if (usedB.has(j)) continue;
+        const kB = matchKey(personsB[j]);
+        if (kB.yr === kA.yr && kB.lohn) {
+          const lohnDiff = Math.abs(kB.lohn - kA.lohn) / kA.lohn;
+          if (lohnDiff < 0.05) { usedB.add(j); return personsB[j]; }
+        }
+      }
     }
+    // 2. Geburtsjahr only (if unique in remaining)
+    if (kA.yr) {
+      const candidates = personsB.map((p,j) => ({p,j})).filter(({p,j}) => !usedB.has(j) && matchKey(p).yr === kA.yr);
+      if (candidates.length === 1) { usedB.add(candidates[0].j); return candidates[0].p; }
+    }
+    // 3. Lohn only with tight tolerance (2%)
+    if (kA.lohn) {
+      for (let j = 0; j < personsB.length; j++) {
+        if (usedB.has(j)) continue;
+        const kB = matchKey(personsB[j]);
+        if (kB.lohn && Math.abs(kB.lohn - kA.lohn) / kA.lohn < 0.02) { usedB.add(j); return personsB[j]; }
+      }
+    }
+    // 4. Name match (normalized)
+    if (pA.name && pA.name !== 'Person ' + (idx+1)) {
+      const normA = pA.name.toLowerCase().replace(/[^a-z]/g,'');
+      for (let j = 0; j < personsB.length; j++) {
+        if (usedB.has(j)) continue;
+        const normB = (personsB[j].name||'').toLowerCase().replace(/[^a-z]/g,'');
+        if (normA.length > 3 && (normA.includes(normB.slice(0,4)) || normB.includes(normA.slice(0,4)))) {
+          usedB.add(j); return personsB[j];
+        }
+      }
+    }
+    // 5. Index fallback
+    if (idx < personsB.length && !usedB.has(idx)) { usedB.add(idx); return personsB[idx]; }
+    return null;
+  }
 
-    const p = pA || matchedB;
+  const matched = [];
+  personsA.forEach((pA, i) => {
+    const matchedB = findMatch(pA, i);
     const an_a = pA?.beitrag_an ?? null;
     const ag_a = pA?.beitrag_ag ?? null;
     const an_b = matchedB?.beitrag_an ?? null;
@@ -3052,16 +3100,32 @@ function buildVvComparison(fileA, fileB) {
     const diff_an = (an_a !== null && an_b !== null) ? (an_b - an_a) : null;
     const diff_ag = (ag_a !== null && ag_b !== null) ? (ag_b - ag_a) : null;
     const diff_total = (diff_an !== null && diff_ag !== null) ? diff_an + diff_ag : null;
-
+    // Determine display label
+    const yr = pA.geburtsjahr ? ` (${pA.geburtsjahr})` : '';
+    const displayName = (pA.name && !pA.name.startsWith('Person ')) ? pA.name : (pA.geburtsjahr ? `Jg. ${pA.geburtsjahr}` : `Person ${i+1}`);
     matched.push({
-      name: p?.name || `Person ${i+1}`,
+      name: displayName,
       lohn: pA?.lohn ?? matchedB?.lohn ?? null,
       an_a, ag_a, total_a: pA?.beitrag_total ?? (an_a !== null && ag_a !== null ? an_a + ag_a : null),
       an_b, ag_b, total_b: matchedB?.beitrag_total ?? (an_b !== null && ag_b !== null ? an_b + ag_b : null),
       diff_an, diff_ag, diff_total,
-      hasA: !!pA, hasB: !!matchedB
+      matched: !!matchedB, matchMethod: matchedB ? 'ok' : 'unmatched'
     });
-  }
+  });
+  // Add any unmatched persons from B
+  personsB.forEach((pB, j) => {
+    if (!usedB.has(j)) {
+      const displayName = (pB.name && !pB.name.startsWith('Person ')) ? pB.name : (pB.geburtsjahr ? `Jg. ${pB.geburtsjahr}` : `Person B${j+1}`);
+      matched.push({
+        name: displayName + ' (nur B)',
+        lohn: pB.lohn ?? null,
+        an_a: null, ag_a: null, total_a: null,
+        an_b: pB.beitrag_an ?? null, ag_b: pB.beitrag_ag ?? null, total_b: pB.beitrag_total ?? null,
+        diff_an: null, diff_ag: null, diff_total: null,
+        matched: false, matchMethod: 'only-b'
+      });
+    }
+  });
 
   // Totals
   const sum = (arr, key) => arr.reduce((s, p) => s + (p[key] ?? 0), 0);
@@ -3146,8 +3210,11 @@ function renderVvResults() {
     const diffAnC = vvDiffColor(p.diff_an);
     const diffAgC = vvDiffColor(p.diff_ag);
     const diffTotalC = vvDiffColor(p.diff_total);
+    const matchBadge = !p.matched
+      ? `<span style="font-size:8px;background:var(--warning-lt);color:var(--warning);padding:1px 5px;border-radius:4px;margin-left:5px;font-family:'JetBrains Mono',monospace">kein Match</span>`
+      : '';
     return `<tr style="${rowBg}">
-      <td style="padding:9px 14px;font-size:12px;color:var(--text-1);font-weight:500;border-bottom:1px solid var(--border);white-space:nowrap">${p.name}</td>
+      <td style="padding:9px 14px;font-size:12px;color:var(--text-1);font-weight:500;border-bottom:1px solid var(--border);white-space:nowrap">${p.name}${matchBadge}</td>
       <td style="padding:9px 14px;font-size:11px;color:var(--text-3);border-bottom:1px solid var(--border);font-family:'JetBrains Mono',monospace;text-align:right">${vvFmt(p.lohn)}</td>
       <td style="padding:9px 14px;font-size:11px;color:var(--text-2);border-bottom:1px solid var(--border);font-family:'JetBrains Mono',monospace;text-align:right;border-left:2px solid var(--blue-lt)">${vvFmt(p.an_a)}</td>
       <td style="padding:9px 14px;font-size:11px;color:var(--text-2);border-bottom:1px solid var(--border);font-family:'JetBrains Mono',monospace;text-align:right">${vvFmt(p.ag_a)}</td>
