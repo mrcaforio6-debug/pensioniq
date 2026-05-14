@@ -542,6 +542,7 @@ footer{border-top:1px solid var(--border);padding:52px 0 32px;background:var(--w
     <ul class="nav-links">
       <li><a id="nav-features" onclick="showPage('features')">Features</a></li>
       <li><a id="nav-tool" onclick="showPage('tool')" style="color:var(--blue);font-weight:500">Offertvergleich →</a></li>
+      <li><a id="nav-versichertenvergleich" onclick="showPage('versichertenvergleich')" style="color:var(--teal);font-weight:500">Versichertenvergleich →</a></li>
       <li><a id="nav-pricing" onclick="showPage('pricing')">Preise</a></li>
       <li><a id="nav-about" onclick="showPage('about')">Über uns</a></li>
       <li><a id="nav-faq" onclick="showPage('faq')">FAQ</a></li>
@@ -1841,6 +1842,189 @@ footer{border-top:1px solid var(--border);padding:52px 0 32px;background:var(--w
 </div><!-- end page-tool -->
 
 
+<!-- ═══════════════════════════════════════
+     PAGE: VERSICHERTENVERGLEICH
+═══════════════════════════════════════ -->
+<div id="page-versichertenvergleich" class="page">
+
+<style>
+/* VV-specific styles */
+.vv-wrap{min-height:100vh;background:var(--sand);padding-top:80px}
+.vv-header{background:var(--white);border-bottom:1px solid var(--border);padding:14px 32px;display:flex;align-items:center;justify-content:space-between;position:fixed;top:0;left:0;right:0;z-index:900}
+.vv-header-inner{max-width:1200px;margin:0 auto;width:100%;display:flex;align-items:center;justify-content:space-between}
+.vv-upload-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.vv-slot-card{background:var(--white);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden}
+.vv-slot-header{padding:10px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--sand)}
+.vv-slot-title{font-size:12px;font-weight:600;font-family:'JetBrains Mono',monospace;color:var(--text-2);letter-spacing:.04em;text-transform:uppercase}
+.vv-slot-body{padding:14px}
+.vv-name-label{font-size:10px;color:var(--text-3);margin-bottom:4px;font-family:'JetBrains Mono',monospace}
+.vv-name-input{width:100%;border:1px solid var(--border-2);border-radius:7px;padding:7px 10px;font-size:12px;background:var(--sand);color:var(--text-1);outline:none;font-family:'DM Sans',sans-serif;margin-bottom:10px}
+.vv-name-input:focus{border-color:var(--blue)}
+.vv-result-wrap{background:var(--white);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden}
+.vv-table-scroll{overflow-x:auto}
+.vv-table{width:100%;border-collapse:collapse;font-size:11px}
+.vv-table th,.vv-table td{white-space:nowrap}
+</style>
+
+<!-- Fixed header for VV page -->
+<div class="vv-header">
+  <div class="vv-header-inner">
+    <div style="display:flex;align-items:center;gap:16px">
+      <div class="logo" onclick="showPage('home')" style="cursor:pointer">
+        <div class="logo-mark">PIQ</div>
+        <span class="logo-text">PensionIQ</span>
+      </div>
+      <div style="width:1px;height:24px;background:var(--border)"></div>
+      <div>
+        <div class="tool-title">Versichertenvergleich</div>
+        <div class="tool-subtitle">Kosten-Vergleich auf Personenebene</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div id="vv-key-status" style="display:none">
+        <button class="key-bar" onclick="resetApiKey();checkVvApiKey()">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          API Key aktiv · Ändern
+        </button>
+      </div>
+      <button class="btn-ghost" onclick="showPage('tool')">Offertvergleich →</button>
+      <button class="btn-ghost" onclick="showPage('home')">← Zurück</button>
+    </div>
+  </div>
+</div>
+
+<!-- Content -->
+<div class="vv-wrap">
+  <div style="max-width:1200px;margin:0 auto;padding:24px 32px">
+
+    <!-- API KEY GATE -->
+    <div id="vv-api-gate" style="display:none;max-width:480px;margin:80px auto 0">
+      <div class="api-gate">
+        <div style="width:52px;height:52px;background:var(--ink);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 20px">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
+        <h2>API Key eingeben</h2>
+        <p>Um den Versichertenvergleich zu nutzen, benötigst du einen Anthropic API Key.<br>Erstelle ihn kostenlos auf <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a>.</p>
+        <div class="api-input-row">
+          <input class="api-input" id="vv-api-key-input" type="password" placeholder="sk-ant-api03-..." autocomplete="off">
+          <button class="btn btn-primary" onclick="saveVvApiKey()">Speichern</button>
+        </div>
+        <div class="api-hint">Der Key wird nur lokal in deinem Browser gespeichert.</div>
+        <div id="vv-api-error" style="display:none;margin-top:12px;font-size:12px;color:var(--danger)"></div>
+      </div>
+    </div>
+
+    <!-- MAIN TOOL -->
+    <div id="vv-main" style="display:none">
+
+      <!-- Intro banner -->
+      <div style="background:var(--blue-lt);border:1px solid rgba(27,79,216,.15);border-radius:var(--rl);padding:14px 20px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
+        <div style="width:36px;height:36px;background:var(--blue);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--text-1);margin-bottom:2px">Versichertenvergleich — Personenebene</div>
+          <div style="font-size:12px;color:var(--text-3)">Lade zwei Offerten hoch und sieh auf einen Blick, wie sich AN- und AG-Beiträge pro Person zwischen den Anbietern unterscheiden.</div>
+        </div>
+      </div>
+
+      <!-- Upload grid -->
+      <div class="vv-upload-grid">
+
+        <!-- Slot A -->
+        <div class="vv-slot-card">
+          <div class="vv-slot-header">
+            <span class="vv-slot-title" style="color:var(--blue)">▌ Offerte A</span>
+            <span style="font-size:9px;color:var(--text-4);font-family:'JetBrains Mono',monospace">Referenz-Anbieter</span>
+          </div>
+          <div class="vv-slot-body">
+            <div class="vv-name-label">Anbietername (für Anzeige)</div>
+            <input class="vv-name-input" id="vv-name-a" type="text" placeholder="z.B. AXA, Zurich, Swiss Life...">
+            <div id="vv-zone-a"></div>
+          </div>
+        </div>
+
+        <!-- Slot B -->
+        <div class="vv-slot-card">
+          <div class="vv-slot-header">
+            <span class="vv-slot-title" style="color:var(--teal)">▌ Offerte B</span>
+            <span style="font-size:9px;color:var(--text-4);font-family:'JetBrains Mono',monospace">Vergleichs-Anbieter</span>
+          </div>
+          <div class="vv-slot-body">
+            <div class="vv-name-label">Anbietername (für Anzeige)</div>
+            <input class="vv-name-input" id="vv-name-b" type="text" placeholder="z.B. AXA, Zurich, Swiss Life...">
+            <div id="vv-zone-b"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Analyse button -->
+      <button class="btn-analyse" id="vv-btn-analyse" onclick="startVvAnalysis()" disabled style="margin-bottom:12px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Versichertenvergleich starten
+      </button>
+
+      <!-- Status -->
+      <div id="vv-status" style="display:none;margin-bottom:12px"></div>
+
+      <!-- Empty state -->
+      <div id="vv-empty" class="result-wrap">
+        <div class="empty-state">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--border-2)" stroke-width="1" style="margin:0 auto 16px;display:block"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <h3>Noch kein Vergleich</h3>
+          <p>Lade Offerte A und Offerte B hoch und klicke<br>auf «Versichertenvergleich starten».</p>
+        </div>
+      </div>
+
+      <!-- Results view -->
+      <div id="vv-result-view" style="display:none">
+
+        <!-- KPI bar -->
+        <div id="vv-kpi-bar"></div>
+
+        <!-- Table -->
+        <div class="vv-result-wrap">
+          <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--sand)">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="ai-tag">VERGLEICH</div>
+              <span style="font-size:11px;color:var(--text-4);font-family:'JetBrains Mono',monospace">AN- &amp; AG-Beiträge pro Person · Differenz B − A</span>
+            </div>
+          </div>
+          <div class="vv-table-scroll">
+            <table class="vv-table">
+              <thead id="vv-thead"></thead>
+              <tbody id="vv-tbody"></tbody>
+            </table>
+          </div>
+
+          <!-- Legende -->
+          <div style="padding:10px 16px;border-top:1px solid var(--border);display:flex;align-items:center;gap:20px;background:var(--sand)">
+            <span style="font-size:10px;color:var(--text-4);font-family:'JetBrains Mono',monospace">Legende:</span>
+            <span style="font-size:10px;color:var(--teal);font-family:'JetBrains Mono',monospace">● negativ = B günstiger</span>
+            <span style="font-size:10px;color:var(--danger);font-family:'JetBrains Mono',monospace">● positiv = B teurer</span>
+          </div>
+        </div>
+
+        <!-- Download buttons -->
+        <div id="vv-download-row" style="display:none;gap:8px;margin-top:12px;justify-content:flex-end">
+          <button class="btn-outline" onclick="vvDownloadExcel()" style="display:flex;align-items:center;gap:7px;padding:9px 18px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Excel herunterladen
+          </button>
+          <button class="btn btn-primary" onclick="vvDownloadPDF()" style="display:flex;align-items:center;gap:7px;padding:9px 18px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            PDF Bericht
+          </button>
+        </div>
+
+      </div>
+    </div><!-- end vv-main -->
+  </div>
+</div>
+
+</div><!-- end page-versichertenvergleich -->
+
+
 <!-- ══════ JAVASCRIPT ══════ -->
 <script>
 function showPage(name) {
@@ -1853,6 +2037,7 @@ function showPage(name) {
   if (name === 'faq') document.getElementById('nav-faq').classList.add('active');
   if (name === 'about') document.getElementById('nav-about').classList.add('active');
   if (name === 'tool') { document.getElementById('nav-tool').classList.add('active'); checkApiKey(); }
+  if (name === 'versichertenvergleich') { document.getElementById('nav-versichertenvergleich').classList.add('active'); checkVvApiKey(); }
   setTimeout(() => {
     document.querySelectorAll('#page-' + name + ' .fade-up').forEach(el => {
       const rect = el.getBoundingClientRect();
@@ -2598,7 +2783,525 @@ window.addEventListener('load', () => {
   renderParamCheckboxes();
   initDragDrop();
   checkApiKey();
+  renderVvFileList();
+  // Show VV key status if key exists
+  const key = localStorage.getItem('piq_api_key');
+  const vvks = document.getElementById('vv-key-status');
+  if (vvks && key) vvks.style.display = 'flex';
 });
+
+// ════════════════════════════════════════
+// VERSICHERTENVERGLEICH — STATE & LOGIC
+// ════════════════════════════════════════
+
+let vvFiles = [];           // { file, anbieterName, parsedPersons: [] }
+let vvResults = null;       // final comparison data
+
+// ── VV: API KEY (reuses same key) ──
+function checkVvApiKey() {
+  const key = localStorage.getItem('piq_api_key');
+  const gate = document.getElementById('vv-api-gate');
+  const main = document.getElementById('vv-main');
+  if (!gate) return;
+  if (key) { gate.style.display = 'none'; main.style.display = 'block'; }
+  else { gate.style.display = 'block'; main.style.display = 'none'; }
+}
+
+function saveVvApiKey() {
+  const key = document.getElementById('vv-api-key-input').value.trim();
+  if (!key.startsWith('sk-ant-')) {
+    document.getElementById('vv-api-error').style.display = 'block';
+    document.getElementById('vv-api-error').textContent = 'Ungültiger API Key.';
+    return;
+  }
+  localStorage.setItem('piq_api_key', key);
+  document.getElementById('vv-api-gate').style.display = 'none';
+  document.getElementById('vv-main').style.display = 'block';
+}
+
+// ── VV: FILE HANDLING ──
+function vvHandleFiles(files, slot) {
+  // slot = 'a' or 'b'
+  const file = files[0];
+  if (!file) return;
+  const ext = file.name.split('.').pop().toLowerCase();
+  const allowed = ['pdf','xlsx','xls','csv','docx','doc'];
+  if (!allowed.includes(ext)) return;
+
+  const idx = vvFiles.findIndex(f => f.slot === slot);
+  const obj = { file, slot, anbieterName: file.name.replace(/\.[^.]+$/, ''), parsedPersons: [], status: 'ready' };
+  if (idx >= 0) vvFiles[idx] = obj;
+  else vvFiles.push(obj);
+  renderVvFileList();
+  updateVvButton();
+}
+
+function renderVvFileList() {
+  ['a','b'].forEach(slot => {
+    const label = slot === 'a' ? 'Offerte A' : 'Offerte B';
+    const f = vvFiles.find(f => f.slot === slot);
+    const zone = document.getElementById(`vv-zone-${slot}`);
+    const nameInput = document.getElementById(`vv-name-${slot}`);
+    if (!zone) return;
+    if (f) {
+      const ext = f.file.name.split('.').pop().toUpperCase();
+      const cls = ext === 'PDF' ? 'fb-pdf' : 'fb-xlsx';
+      zone.innerHTML = `<div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--teal-lt);border:1px solid rgba(14,124,110,.2);border-radius:9px">
+        <div class="file-badge ${cls}" style="width:32px;height:32px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;font-family:'JetBrains Mono',monospace">${ext}</div>
+        <div style="flex:1;min-width:0"><div style="font-size:12px;color:var(--text-1);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f.file.name}</div><div style="font-size:10px;color:var(--teal);margin-top:1px">✓ Bereit</div></div>
+        <button onclick="vvRemoveFile('${slot}')" style="background:none;border:none;cursor:pointer;color:var(--text-4);font-size:16px;padding:2px 6px;border-radius:4px" title="Entfernen">✕</button>
+      </div>`;
+      if (nameInput) nameInput.value = f.anbieterName;
+    } else {
+      zone.innerHTML = `<label style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:24px 16px;border:2px dashed var(--border-2);border-radius:10px;cursor:pointer;transition:all .2s;background:var(--sand)" 
+        id="vv-label-${slot}"
+        ondragover="event.preventDefault();this.style.borderColor='var(--blue)'"
+        ondragleave="this.style.borderColor=''"
+        ondrop="event.preventDefault();vvHandleFiles(event.dataTransfer.files,'${slot}')">
+        <input type="file" accept=".pdf,.xlsx,.xls,.csv,.docx,.doc" style="display:none" onchange="vvHandleFiles(this.files,'${slot}')">
+        <div style="width:36px;height:36px;background:var(--blue-lt);border-radius:9px;display:flex;align-items:center;justify-content:center">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        </div>
+        <div style="font-size:12px;color:var(--text-2);font-weight:500">${label} hochladen</div>
+        <div style="font-size:10px;color:var(--text-4)">PDF, Excel, Word</div>
+      </label>`;
+      if (nameInput) nameInput.value = '';
+    }
+  });
+}
+
+function vvRemoveFile(slot) {
+  vvFiles = vvFiles.filter(f => f.slot !== slot);
+  renderVvFileList();
+  updateVvButton();
+}
+
+function updateVvButton() {
+  const btn = document.getElementById('vv-btn-analyse');
+  if (btn) btn.disabled = vvFiles.length < 2;
+}
+
+function initVvDragDrop() {
+  // Handled inline via ondrop attributes in renderVvFileList
+}
+
+// ── VV: PARSE FILE → PER-PERSON DATA ──
+async function vvParseFile(fileObj) {
+  const { file } = fileObj;
+  const ext = file.name.split('.').pop().toLowerCase();
+  const apiKey = localStorage.getItem('piq_api_key');
+
+  const perPersonPrompt = `Du analysierst eine BVG-Offerte die Daten pro versicherte Person enthält.
+Extrahiere für JEDE einzelne Person folgende Daten. Antworte NUR mit einem JSON-Array, keine Erklärungen:
+[
+  {
+    "name": "Vorname Nachname oder Zeilen-ID falls kein Name",
+    "geburtsjahr": Zahl oder null,
+    "lohn": versicherter Jahreslohn als Zahl,
+    "beitrag_an": Arbeitnehmerbeitrag total (Spar+Risiko+Kosten) als Zahl,
+    "beitrag_ag": Arbeitgeberbeitrag total als Zahl,
+    "beitrag_total": beitrag_an + beitrag_ag,
+    "sparbeitrag_an": Sparbeitrag AN als Zahl oder null,
+    "sparbeitrag_ag": Sparbeitrag AG als Zahl oder null,
+    "risiko_an": Risikobeitrag AN als Zahl oder null,
+    "risiko_ag": Risikobeitrag AG als Zahl oder null,
+    "kosten_an": Kostenbeitrag AN als Zahl oder null,
+    "kosten_ag": Kostenbeitrag AG als Zahl oder null
+  }
+]
+Alle Beträge als reine Zahlen ohne CHF, Apostrophe oder Prozentzeichen. Falls eine Spalte nicht vorhanden ist: null.`;
+
+  let messages;
+  if (ext === 'pdf') {
+    const b64 = await toBase64(file);
+    messages = [{ role: 'user', content: [
+      { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: b64 } },
+      { type: 'text', text: perPersonPrompt }
+    ]}];
+  } else if (['xlsx','xls','csv'].includes(ext)) {
+    const txt = await parseExcelForPersons(file);
+    messages = [{ role: 'user', content: `BVG-Offerte (${file.name}):\n\n${txt.substring(0,18000)}\n\n${perPersonPrompt}` }];
+  } else {
+    const txt = await parseDocx(file);
+    messages = [{ role: 'user', content: `BVG-Offerte (${file.name}):\n\n${txt.substring(0,18000)}\n\n${perPersonPrompt}` }];
+  }
+
+  const res = await fetch('/.netlify/functions/claude', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+    body: JSON.stringify({ model: 'claude-sonnet-4-5', max_tokens: 4096, messages })
+  });
+  if (!res.ok) { const e = await res.json(); throw new Error(e.error?.message || 'API Fehler'); }
+  const data = await res.json();
+  const raw = data.content.map(c => c.text || '').join('');
+  return safeParsePersonArray(raw, file.name);
+}
+
+// ── VV: Parse Excel with full row data per person ──
+function parseExcelForPersons(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = (e) => {
+      try {
+        const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+        let output = '';
+        wb.SheetNames.forEach(name => {
+          const ws = wb.Sheets[name];
+          const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null, raw: true });
+          if (!rows.length) return;
+          output += `\n=== Tabellenblatt: ${name} ===\n`;
+          rows.forEach((row, i) => {
+            const filled = row.map((v, j) => v !== null ? `[${j}]${v}` : '').filter(Boolean);
+            if (filled.length) output += `Zeile ${i}: ${filled.join(' | ')}\n`;
+          });
+        });
+        res(output.trim());
+      } catch(err) { rej(err); }
+    };
+    r.onerror = rej;
+    r.readAsArrayBuffer(file);
+  });
+}
+
+// ── VV: Safe parse JSON array ──
+function safeParsePersonArray(text, filename) {
+  let clean = text.replace(/```json|```/g, '').trim();
+  // Try direct
+  try { const r = JSON.parse(clean); if (Array.isArray(r)) return r; } catch(e) {}
+  // Extract [...] block
+  const start = clean.indexOf('[');
+  const end = clean.lastIndexOf(']');
+  if (start !== -1 && end !== -1) {
+    try { const r = JSON.parse(clean.slice(start, end + 1)); if (Array.isArray(r)) return r; } catch(e) {}
+  }
+  console.warn('Person array parse failed for', filename);
+  return [];
+}
+
+// ── VV: MAIN ANALYSIS ──
+async function startVvAnalysis() {
+  const apiKey = localStorage.getItem('piq_api_key');
+  if (!apiKey) return;
+
+  // Read anbieter names from inputs
+  vvFiles.forEach(f => {
+    const inp = document.getElementById(`vv-name-${f.slot}`);
+    if (inp && inp.value.trim()) f.anbieterName = inp.value.trim();
+  });
+
+  const btn = document.getElementById('vv-btn-analyse');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner" style="border-color:rgba(255,255,255,.2);border-top-color:#fff"></div> Analysiere Personen...';
+
+  const statusBar = document.getElementById('vv-status');
+  function setStatus(msg, type='loading') {
+    statusBar.style.display = 'flex';
+    statusBar.className = 'status-bar' + (type==='success'?' success':type==='error'?' error':'');
+    statusBar.innerHTML = type==='loading' ? `<div class="spinner"></div><span>${msg}</span>` : `<span>${msg}</span>`;
+  }
+
+  try {
+    setStatus('Lese Offerte A...');
+    const fileA = vvFiles.find(f => f.slot === 'a');
+    const fileB = vvFiles.find(f => f.slot === 'b');
+
+    fileA.parsedPersons = await vvParseFile(fileA);
+    setStatus(`Offerte A: ${fileA.parsedPersons.length} Personen gefunden. Lese Offerte B...`);
+    fileB.parsedPersons = await vvParseFile(fileB);
+    setStatus(`Offerte B: ${fileB.parsedPersons.length} Personen gefunden. Erstelle Vergleich...`);
+
+    vvResults = buildVvComparison(fileA, fileB);
+    renderVvResults();
+    setStatus(`✓ ${vvResults.matched.length} Personen verglichen`, 'success');
+  } catch(e) {
+    setStatus('Fehler: ' + e.message, 'error');
+    console.error(e);
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg> Erneut vergleichen';
+}
+
+// ── VV: BUILD COMPARISON ──
+function buildVvComparison(fileA, fileB) {
+  const nameA = fileA.anbieterName;
+  const nameB = fileB.anbieterName;
+  const personsA = fileA.parsedPersons;
+  const personsB = fileB.parsedPersons;
+
+  // Try to match by name; fallback to index
+  const matched = [];
+  const maxLen = Math.max(personsA.length, personsB.length);
+
+  for (let i = 0; i < maxLen; i++) {
+    const pA = personsA[i] || null;
+    const pB = personsB[i] || null;
+
+    // Try name match if both exist
+    let matchedB = pB;
+    if (pA && pA.name && personsB.length > 0) {
+      const byName = personsB.find(p => p.name && p.name.toLowerCase().trim() === pA.name.toLowerCase().trim());
+      if (byName) matchedB = byName;
+    }
+
+    const p = pA || matchedB;
+    const an_a = pA?.beitrag_an ?? null;
+    const ag_a = pA?.beitrag_ag ?? null;
+    const an_b = matchedB?.beitrag_an ?? null;
+    const ag_b = matchedB?.beitrag_ag ?? null;
+    const diff_an = (an_a !== null && an_b !== null) ? (an_b - an_a) : null;
+    const diff_ag = (ag_a !== null && ag_b !== null) ? (ag_b - ag_a) : null;
+    const diff_total = (diff_an !== null && diff_ag !== null) ? diff_an + diff_ag : null;
+
+    matched.push({
+      name: p?.name || `Person ${i+1}`,
+      lohn: pA?.lohn ?? matchedB?.lohn ?? null,
+      an_a, ag_a, total_a: pA?.beitrag_total ?? (an_a !== null && ag_a !== null ? an_a + ag_a : null),
+      an_b, ag_b, total_b: matchedB?.beitrag_total ?? (an_b !== null && ag_b !== null ? an_b + ag_b : null),
+      diff_an, diff_ag, diff_total,
+      hasA: !!pA, hasB: !!matchedB
+    });
+  }
+
+  // Totals
+  const sum = (arr, key) => arr.reduce((s, p) => s + (p[key] ?? 0), 0);
+
+  return {
+    nameA, nameB, matched,
+    totals: {
+      an_a: sum(matched, 'an_a'), ag_a: sum(matched, 'ag_a'), total_a: sum(matched, 'total_a'),
+      an_b: sum(matched, 'an_b'), ag_b: sum(matched, 'ag_b'), total_b: sum(matched, 'total_b'),
+      diff_an: sum(matched, 'diff_an'), diff_ag: sum(matched, 'diff_ag'), diff_total: sum(matched, 'diff_total'),
+    }
+  };
+}
+
+// ── VV: FORMAT HELPERS ──
+function vvFmt(val) {
+  if (val === null || val === undefined) return '—';
+  const n = parseFloat(String(val).replace(/['\s,]/g, ''));
+  if (isNaN(n)) return '—';
+  return 'CHF\u00a0' + n.toLocaleString('de-CH', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
+
+function vvFmtDiff(val) {
+  if (val === null || val === undefined) return '—';
+  const n = parseFloat(String(val).replace(/['\s,]/g, ''));
+  if (isNaN(n)) return '—';
+  const sign = n > 0 ? '+' : '';
+  return sign + 'CHF\u00a0' + n.toLocaleString('de-CH', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
+
+function vvDiffColor(val) {
+  if (val === null || val === undefined) return 'var(--text-4)';
+  const n = parseFloat(String(val).replace(/['\s,]/g, ''));
+  if (isNaN(n) || n === 0) return 'var(--text-3)';
+  return n < 0 ? 'var(--teal)' : 'var(--danger)';
+}
+
+// ── VV: RENDER RESULTS ──
+function renderVvResults() {
+  const { nameA, nameB, matched, totals } = vvResults;
+  const view = document.getElementById('vv-result-view');
+  const empty = document.getElementById('vv-empty');
+  empty.style.display = 'none';
+  view.style.display = 'block';
+
+  // KPI summary row
+  const diffAnColor = vvDiffColor(totals.diff_an);
+  const diffAgColor = vvDiffColor(totals.diff_ag);
+  const diffTotalColor = vvDiffColor(totals.diff_total);
+
+  document.getElementById('vv-kpi-bar').innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:12px">
+      <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--rl);padding:14px 16px">
+        <div style="font-size:9px;font-weight:600;color:var(--text-4);font-family:'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px">Personen</div>
+        <div style="font-family:'Fraunces',serif;font-size:22px;font-weight:300;color:var(--text-1)">${matched.length}</div>
+      </div>
+      <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--rl);padding:14px 16px">
+        <div style="font-size:9px;font-weight:600;color:var(--text-4);font-family:'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px">${nameA} — Total</div>
+        <div style="font-family:'Fraunces',serif;font-size:16px;font-weight:300;color:var(--text-1)">${vvFmt(totals.total_a)}</div>
+        <div style="font-size:9px;color:var(--text-4);margin-top:3px;font-family:'JetBrains Mono',monospace">AN+AG Jahresbeitrag</div>
+      </div>
+      <div style="background:var(--white);border:1px solid var(--border);border-radius:var(--rl);padding:14px 16px">
+        <div style="font-size:9px;font-weight:600;color:var(--text-4);font-family:'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px">${nameB} — Total</div>
+        <div style="font-family:'Fraunces',serif;font-size:16px;font-weight:300;color:var(--text-1)">${vvFmt(totals.total_b)}</div>
+        <div style="font-size:9px;color:var(--text-4);margin-top:3px;font-family:'JetBrains Mono',monospace">AN+AG Jahresbeitrag</div>
+      </div>
+      <div style="background:var(--white);border:1px solid rgba(14,124,110,.2);border-radius:var(--rl);padding:14px 16px">
+        <div style="font-size:9px;font-weight:600;color:var(--text-4);font-family:'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px">Diff. AN-Beitrag</div>
+        <div style="font-family:'Fraunces',serif;font-size:16px;font-weight:300;color:${diffAnColor}">${vvFmtDiff(totals.diff_an)}</div>
+        <div style="font-size:9px;color:var(--text-4);margin-top:3px;font-family:'JetBrains Mono',monospace">B vs. A</div>
+      </div>
+      <div style="background:var(--white);border:1px solid rgba(14,124,110,.2);border-radius:var(--rl);padding:14px 16px">
+        <div style="font-size:9px;font-weight:600;color:var(--text-4);font-family:'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px">Diff. AG-Beitrag</div>
+        <div style="font-family:'Fraunces',serif;font-size:16px;font-weight:300;color:${diffAgColor}">${vvFmtDiff(totals.diff_ag)}</div>
+        <div style="font-size:9px;color:var(--text-4);margin-top:3px;font-family:'JetBrains Mono',monospace">B vs. A</div>
+      </div>
+    </div>`;
+
+  // Per-person table
+  const tbody = matched.map((p, i) => {
+    const rowBg = i % 2 === 0 ? '' : 'background:var(--sand)';
+    const diffAnC = vvDiffColor(p.diff_an);
+    const diffAgC = vvDiffColor(p.diff_ag);
+    const diffTotalC = vvDiffColor(p.diff_total);
+    return `<tr style="${rowBg}">
+      <td style="padding:9px 14px;font-size:12px;color:var(--text-1);font-weight:500;border-bottom:1px solid var(--border);white-space:nowrap">${p.name}</td>
+      <td style="padding:9px 14px;font-size:11px;color:var(--text-3);border-bottom:1px solid var(--border);font-family:'JetBrains Mono',monospace;text-align:right">${vvFmt(p.lohn)}</td>
+      <td style="padding:9px 14px;font-size:11px;color:var(--text-2);border-bottom:1px solid var(--border);font-family:'JetBrains Mono',monospace;text-align:right;border-left:2px solid var(--blue-lt)">${vvFmt(p.an_a)}</td>
+      <td style="padding:9px 14px;font-size:11px;color:var(--text-2);border-bottom:1px solid var(--border);font-family:'JetBrains Mono',monospace;text-align:right">${vvFmt(p.ag_a)}</td>
+      <td style="padding:9px 14px;font-size:11px;color:var(--text-2);border-bottom:1px solid var(--border);font-family:'JetBrains Mono',monospace;text-align:right;border-left:2px solid var(--teal-lt)">${vvFmt(p.an_b)}</td>
+      <td style="padding:9px 14px;font-size:11px;color:var(--text-2);border-bottom:1px solid var(--border);font-family:'JetBrains Mono',monospace;text-align:right">${vvFmt(p.ag_b)}</td>
+      <td style="padding:9px 14px;font-size:12px;font-weight:600;color:${diffAnC};border-bottom:1px solid var(--border);font-family:'JetBrains Mono',monospace;text-align:right;border-left:2px solid var(--sand-2)">${vvFmtDiff(p.diff_an)}</td>
+      <td style="padding:9px 14px;font-size:12px;font-weight:600;color:${diffAgC};border-bottom:1px solid var(--border);font-family:'JetBrains Mono',monospace;text-align:right">${vvFmtDiff(p.diff_ag)}</td>
+      <td style="padding:9px 14px;font-size:12px;font-weight:700;color:${diffTotalC};border-bottom:1px solid var(--border);font-family:'JetBrains Mono',monospace;text-align:right">${vvFmtDiff(p.diff_total)}</td>
+    </tr>`;
+  }).join('');
+
+  // Totals row
+  const totalsRow = `<tr style="background:var(--sand)">
+    <td style="padding:10px 14px;font-size:12px;font-weight:700;color:var(--text-1);border-top:2px solid var(--border-2)">TOTAL</td>
+    <td style="padding:10px 14px;border-top:2px solid var(--border-2)"></td>
+    <td style="padding:10px 14px;font-size:12px;font-weight:700;color:var(--text-1);text-align:right;border-top:2px solid var(--border-2);border-left:2px solid var(--blue-lt);font-family:'JetBrains Mono',monospace">${vvFmt(totals.an_a)}</td>
+    <td style="padding:10px 14px;font-size:12px;font-weight:700;color:var(--text-1);text-align:right;border-top:2px solid var(--border-2);font-family:'JetBrains Mono',monospace">${vvFmt(totals.ag_a)}</td>
+    <td style="padding:10px 14px;font-size:12px;font-weight:700;color:var(--text-1);text-align:right;border-top:2px solid var(--border-2);border-left:2px solid var(--teal-lt);font-family:'JetBrains Mono',monospace">${vvFmt(totals.an_b)}</td>
+    <td style="padding:10px 14px;font-size:12px;font-weight:700;color:var(--text-1);text-align:right;border-top:2px solid var(--border-2);font-family:'JetBrains Mono',monospace">${vvFmt(totals.ag_b)}</td>
+    <td style="padding:10px 14px;font-size:13px;font-weight:700;color:${vvDiffColor(totals.diff_an)};text-align:right;border-top:2px solid var(--border-2);border-left:2px solid var(--sand-2);font-family:'JetBrains Mono',monospace">${vvFmtDiff(totals.diff_an)}</td>
+    <td style="padding:10px 14px;font-size:13px;font-weight:700;color:${vvDiffColor(totals.diff_ag)};text-align:right;border-top:2px solid var(--border-2);font-family:'JetBrains Mono',monospace">${vvFmtDiff(totals.diff_ag)}</td>
+    <td style="padding:10px 14px;font-size:13px;font-weight:700;color:${vvDiffColor(totals.diff_total)};text-align:right;border-top:2px solid var(--border-2);font-family:'JetBrains Mono',monospace">${vvFmtDiff(totals.diff_total)}</td>
+  </tr>`;
+
+  document.getElementById('vv-tbody').innerHTML = tbody + totalsRow;
+  document.getElementById('vv-thead').innerHTML = `<tr>
+    <th style="padding:9px 14px;text-align:left;font-size:9px;font-weight:600;color:var(--text-4);font-family:'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;background:var(--sand-2);border-bottom:1px solid var(--border);min-width:150px">Person</th>
+    <th style="padding:9px 14px;text-align:right;font-size:9px;font-weight:600;color:var(--text-4);font-family:'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;background:var(--sand-2);border-bottom:1px solid var(--border)">Lohn</th>
+    <th colspan="2" style="padding:9px 14px;text-align:center;font-size:10px;font-weight:700;color:var(--blue);font-family:'JetBrains Mono',monospace;background:var(--blue-lt);border-bottom:1px solid var(--border);border-left:2px solid var(--blue-lt)">${nameA}</th>
+    <th colspan="2" style="padding:9px 14px;text-align:center;font-size:10px;font-weight:700;color:var(--teal);font-family:'JetBrains Mono',monospace;background:var(--teal-lt);border-bottom:1px solid var(--border);border-left:2px solid var(--teal-lt)">${nameB}</th>
+    <th colspan="3" style="padding:9px 14px;text-align:center;font-size:10px;font-weight:700;color:var(--text-2);font-family:'JetBrains Mono',monospace;background:var(--sand-2);border-bottom:1px solid var(--border);border-left:2px solid var(--sand-2)">Differenz (B − A)</th>
+  </tr>
+  <tr>
+    <th style="background:var(--sand-2);border-bottom:2px solid var(--border-2)"></th>
+    <th style="background:var(--sand-2);border-bottom:2px solid var(--border-2)"></th>
+    <th style="padding:6px 14px;font-size:9px;font-weight:600;color:var(--blue);font-family:'JetBrains Mono',monospace;text-transform:uppercase;background:var(--blue-lt);border-bottom:2px solid var(--border-2);border-left:2px solid var(--blue-lt);text-align:right">AN-Beitrag</th>
+    <th style="padding:6px 14px;font-size:9px;font-weight:600;color:var(--blue);font-family:'JetBrains Mono',monospace;text-transform:uppercase;background:var(--blue-lt);border-bottom:2px solid var(--border-2);text-align:right">AG-Beitrag</th>
+    <th style="padding:6px 14px;font-size:9px;font-weight:600;color:var(--teal);font-family:'JetBrains Mono',monospace;text-transform:uppercase;background:var(--teal-lt);border-bottom:2px solid var(--border-2);border-left:2px solid var(--teal-lt);text-align:right">AN-Beitrag</th>
+    <th style="padding:6px 14px;font-size:9px;font-weight:600;color:var(--teal);font-family:'JetBrains Mono',monospace;text-transform:uppercase;background:var(--teal-lt);border-bottom:2px solid var(--border-2);text-align:right">AG-Beitrag</th>
+    <th style="padding:6px 14px;font-size:9px;font-weight:600;color:var(--text-3);font-family:'JetBrains Mono',monospace;text-transform:uppercase;background:var(--sand-2);border-bottom:2px solid var(--border-2);border-left:2px solid var(--sand-2);text-align:right">Δ AN</th>
+    <th style="padding:6px 14px;font-size:9px;font-weight:600;color:var(--text-3);font-family:'JetBrains Mono',monospace;text-transform:uppercase;background:var(--sand-2);border-bottom:2px solid var(--border-2);text-align:right">Δ AG</th>
+    <th style="padding:6px 14px;font-size:9px;font-weight:600;color:var(--text-3);font-family:'JetBrains Mono',monospace;text-transform:uppercase;background:var(--sand-2);border-bottom:2px solid var(--border-2);text-align:right">Δ Total</th>
+  </tr>`;
+
+  // Show download buttons
+  document.getElementById('vv-download-row').style.display = 'flex';
+}
+
+// ── VV: DOWNLOAD EXCEL ──
+function vvDownloadExcel() {
+  if (!vvResults) return;
+  const { nameA, nameB, matched, totals } = vvResults;
+  const rows = [
+    ['Person', 'Lohn', `${nameA} AN-Beitrag`, `${nameA} AG-Beitrag`, `${nameA} Total`, `${nameB} AN-Beitrag`, `${nameB} AG-Beitrag`, `${nameB} Total`, 'Diff AN (B-A)', 'Diff AG (B-A)', 'Diff Total (B-A)']
+  ];
+  matched.forEach(p => {
+    rows.push([p.name, p.lohn, p.an_a, p.ag_a, p.total_a, p.an_b, p.ag_b, p.total_b, p.diff_an, p.diff_ag, p.diff_total]);
+  });
+  rows.push([]);
+  rows.push(['TOTAL', '', totals.an_a, totals.ag_a, totals.total_a, totals.an_b, totals.ag_b, totals.total_b, totals.diff_an, totals.diff_ag, totals.diff_total]);
+
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{ wch: 24 }, { wch: 14 }, ...Array(9).fill({ wch: 16 })];
+  XLSX.utils.book_append_sheet(wb, ws, 'Versichertenvergleich');
+  XLSX.writeFile(wb, `PensionIQ_Versichertenvergleich_${nameA}_vs_${nameB}.xlsx`);
+}
+
+// ── VV: DOWNLOAD PDF ──
+function vvDownloadPDF() {
+  if (!vvResults) return;
+  const { nameA, nameB, matched, totals } = vvResults;
+  const date = new Date().toLocaleDateString('de-CH');
+
+  const rows = matched.map((p, i) => {
+    const bg = i % 2 === 0 ? '#fff' : '#F5F3EE';
+    const diffAnC = p.diff_an < 0 ? '#0E7C6E' : p.diff_an > 0 ? '#B83232' : '#6B7194';
+    const diffAgC = p.diff_ag < 0 ? '#0E7C6E' : p.diff_ag > 0 ? '#B83232' : '#6B7194';
+    const diffTotalC = p.diff_total < 0 ? '#0E7C6E' : p.diff_total > 0 ? '#B83232' : '#6B7194';
+    function fc(v) { if (v===null||v===undefined) return '—'; const n=parseFloat(String(v).replace(/['\s,]/g,'')); return isNaN(n)?'—':'CHF\u00a0'+n.toLocaleString('de-CH',{minimumFractionDigits:0,maximumFractionDigits:0}); }
+    function fd(v) { if (v===null||v===undefined) return '—'; const n=parseFloat(String(v).replace(/['\s,]/g,'')); if(isNaN(n))return '—'; return (n>0?'+':'')+'CHF\u00a0'+n.toLocaleString('de-CH',{minimumFractionDigits:0,maximumFractionDigits:0}); }
+    return `<tr style="background:${bg}"><td>${p.name}</td><td>${fc(p.lohn)}</td><td>${fc(p.an_a)}</td><td>${fc(p.ag_a)}</td><td>${fc(p.an_b)}</td><td>${fc(p.ag_b)}</td><td style="color:${diffAnC};font-weight:600">${fd(p.diff_an)}</td><td style="color:${diffAgC};font-weight:600">${fd(p.diff_ag)}</td><td style="color:${diffTotalC};font-weight:700">${fd(p.diff_total)}</td></tr>`;
+  }).join('');
+
+  function fc(v) { if (v===null||v===undefined) return '—'; const n=parseFloat(String(v).replace(/['\s,]/g,'')); return isNaN(n)?'—':'CHF\u00a0'+n.toLocaleString('de-CH',{minimumFractionDigits:0,maximumFractionDigits:0}); }
+  function fd(v) { if (v===null||v===undefined) return '—'; const n=parseFloat(String(v).replace(/['\s,]/g,'')); if(isNaN(n))return '—'; return (n>0?'+':'')+'CHF\u00a0'+n.toLocaleString('de-CH',{minimumFractionDigits:0,maximumFractionDigits:0}); }
+  const diffAnC = totals.diff_an < 0 ? '#0E7C6E' : totals.diff_an > 0 ? '#B83232' : '#6B7194';
+  const diffAgC = totals.diff_ag < 0 ? '#0E7C6E' : totals.diff_ag > 0 ? '#B83232' : '#6B7194';
+  const diffTotalC = totals.diff_total < 0 ? '#0E7C6E' : totals.diff_total > 0 ? '#B83232' : '#6B7194';
+
+  const html = `<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8">
+  <style>
+    @page{size:A4 landscape;margin:10mm 8mm}
+    *{box-sizing:border-box}
+    body{font-family:'Helvetica Neue',Arial,sans-serif;margin:0;color:#0F1117;font-size:9px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #0F1117}
+    .logo{font-size:14px;font-weight:300}.logo b{font-weight:700}
+    .title{font-size:16px;font-weight:300;margin:2px 0}
+    .sub{font-size:8px;color:#6B7194}
+    table{width:100%;border-collapse:collapse;font-size:9px}
+    th{padding:5px 8px;font-size:8px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+    td{padding:5px 8px;border-bottom:1px solid #f0f0f0}
+    td:not(:first-child){text-align:right;font-family:monospace}
+    th:not(:first-child){text-align:right}
+    .grp-a{background:#EEF3FD;color:#1B4FD8}
+    .grp-b{background:#E8F5F3;color:#0E7C6E}
+    .grp-d{background:#EAE7DF;color:#3A3F52}
+    .total-row td{font-weight:700;background:#EAE7DF;border-top:2px solid #ccc}
+    .footer{margin-top:10px;padding-top:6px;border-top:1px solid #eee;font-size:7px;color:#9EA4BE;display:flex;justify-content:space-between}
+  </style></head><body>
+  <div class="hdr">
+    <div>
+      <div class="logo">Pension<b>IQ</b></div>
+      <div class="title">Versichertenvergleich — Personenebene</div>
+      <div class="sub">${nameA} vs. ${nameB} · ${matched.length} Personen · ${date}</div>
+    </div>
+    <div style="width:100px;height:40px;border:1.5px dashed #D0D0D0;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:7px;color:#C0C0C0;text-transform:uppercase;letter-spacing:.06em">Kundenlogo</div>
+  </div>
+  <table>
+    <thead>
+      <tr>
+        <th rowspan="2" style="text-align:left;background:#F5F3EE;border-bottom:1px solid #ddd">Person</th>
+        <th rowspan="2" style="background:#F5F3EE;border-bottom:1px solid #ddd">Lohn</th>
+        <th colspan="2" class="grp-a" style="border-bottom:1px solid #ddd">${nameA}</th>
+        <th colspan="2" class="grp-b" style="border-bottom:1px solid #ddd">${nameB}</th>
+        <th colspan="3" class="grp-d" style="border-bottom:1px solid #ddd">Differenz (B − A)</th>
+      </tr>
+      <tr>
+        <th class="grp-a">AN-Beitrag</th><th class="grp-a">AG-Beitrag</th>
+        <th class="grp-b">AN-Beitrag</th><th class="grp-b">AG-Beitrag</th>
+        <th class="grp-d">Δ AN</th><th class="grp-d">Δ AG</th><th class="grp-d">Δ Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${rows}
+      <tr class="total-row">
+        <td>TOTAL</td><td></td>
+        <td>${fc(totals.an_a)}</td><td>${fc(totals.ag_a)}</td>
+        <td>${fc(totals.an_b)}</td><td>${fc(totals.ag_b)}</td>
+        <td style="color:${diffAnC}">${fd(totals.diff_an)}</td>
+        <td style="color:${diffAgC}">${fd(totals.diff_ag)}</td>
+        <td style="color:${diffTotalC}">${fd(totals.diff_total)}</td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="footer"><span>PensionIQ AG · Zürich · pensioniq.ch</span><span>Vertraulich · Nur für interne Verwendung</span></div>
+  </body></html>`;
+
+  const win = window.open('', '_blank');
+  win.document.write(html);
+  win.document.close();
+  setTimeout(() => win.print(), 500);
+}
 </script>
 </body>
 </html>
+<!-- VERSICHERTENVERGLEICH PAGE IS INSERTED BELOW VIA JS INJECTION PATTERN -->
