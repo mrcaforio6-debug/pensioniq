@@ -542,6 +542,7 @@ footer{border-top:1px solid var(--border);padding:52px 0 32px;background:var(--w
     <ul class="nav-links">
       <li><a id="nav-features" onclick="showPage('features')">Features</a></li>
       <li><a id="nav-vergleich" onclick="showPage('vergleich')" style="color:var(--blue);font-weight:500">Vergleich →</a></li>
+      <li><a id="nav-anbieter" onclick="showPage('anbieter')" style="color:var(--gold);font-weight:500">Anbieter →</a></li>
       <li><a id="nav-pricing" onclick="showPage('pricing')">Preise</a></li>
       <li><a id="nav-about" onclick="showPage('about')">Über uns</a></li>
       <li><a id="nav-faq" onclick="showPage('faq')">FAQ</a></li>
@@ -2038,6 +2039,211 @@ footer{border-top:1px solid var(--border);padding:52px 0 32px;background:var(--w
 </div><!-- end page-vergleich -->
 
 
+<!-- ═══════════════════════════════════════
+     PAGE: ANBIETER DASHBOARD
+═══════════════════════════════════════ -->
+<div id="page-anbieter" class="page">
+<style>
+.av-header{background:var(--white);border-bottom:1px solid var(--border);padding:14px 0;position:fixed;top:0;left:0;right:0;z-index:900}
+.av-header-inner{max-width:1300px;margin:0 auto;padding:0 32px;display:flex;align-items:center;justify-content:space-between}
+.av-wrap{max-width:1300px;margin:0 auto;padding:100px 32px 48px}
+.av-grid{display:grid;grid-template-columns:320px 1fr;gap:24px;align-items:start}
+.av-card{background:var(--white);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden}
+.av-card-hdr{padding:14px 18px;border-bottom:1px solid var(--border);background:var(--sand);display:flex;align-items:center;justify-content:space-between}
+.av-card-title{font-size:12px;font-weight:600;color:var(--text-2);font-family:'JetBrains Mono',monospace;letter-spacing:.04em;text-transform:uppercase}
+.av-list{display:flex;flex-direction:column}
+.av-list-item{display:flex;align-items:center;gap:10px;padding:12px 18px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s}
+.av-list-item:hover{background:var(--sand)}
+.av-list-item.active{background:var(--blue-lt);border-left:3px solid var(--blue)}
+.av-list-item:last-child{border-bottom:none}
+.av-item-name{font-size:13px;font-weight:500;color:var(--text-1);flex:1}
+.av-item-meta{font-size:10px;color:var(--text-4);font-family:'JetBrains Mono',monospace}
+.av-item-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.av-form{padding:20px}
+.av-form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.av-form-row.full{grid-template-columns:1fr}
+.av-label{font-size:10px;color:var(--text-3);font-family:'JetBrains Mono',monospace;margin-bottom:4px;display:block;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.av-input{width:100%;border:1px solid var(--border-2);border-radius:7px;padding:8px 11px;font-size:12px;background:var(--sand);color:var(--text-1);outline:none;font-family:'DM Sans',sans-serif;transition:border-color .15s}
+.av-input:focus{border-color:var(--blue);background:var(--white)}
+.av-section-title{font-size:10px;font-weight:700;color:var(--blue);letter-spacing:.08em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;padding:10px 0 6px;border-bottom:2px solid var(--blue-lt);margin-bottom:12px;margin-top:8px}
+.av-tag{display:inline-flex;align-items:center;gap:5px;background:var(--sand);border:1px solid var(--border);border-radius:6px;padding:3px 9px;font-size:11px;color:var(--text-2);cursor:pointer;transition:all .15s}
+.av-tag:hover{border-color:var(--danger);color:var(--danger)}
+.av-tag.selected{background:var(--teal-lt);border-color:rgba(14,124,110,.3);color:var(--teal)}
+.av-empty{text-align:center;padding:48px 20px;color:var(--text-3)}
+.av-empty h3{font-family:'Fraunces',serif;font-size:18px;font-weight:300;margin-bottom:8px;color:var(--text-2)}
+
+/* Anbietervergleich modal */
+.av-compare-wrap{background:var(--white);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;margin-top:24px}
+.av-compare-hdr{padding:14px 18px;border-bottom:1px solid var(--border);background:var(--sand);display:flex;align-items:center;justify-content:space-between}
+.av-compare-table{width:100%;border-collapse:collapse;font-size:11px}
+.av-compare-table th{padding:9px 14px;font-size:9px;font-weight:700;color:var(--text-4);font-family:'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;background:var(--sand-2);border-bottom:1px solid var(--border)}
+.av-compare-table td{padding:9px 14px;border-bottom:1px solid var(--border);font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-2)}
+.av-compare-table tr:last-child td{border:none}
+.av-compare-table tr:hover td{background:var(--sand)}
+.av-group-row td{background:var(--sand)!important;font-size:9px;font-weight:700;color:var(--blue);letter-spacing:.08em;text-transform:uppercase;border-top:2px solid var(--blue)!important;padding:7px 14px!important}
+</style>
+
+<!-- Fixed header -->
+<div class="av-header">
+  <div class="av-header-inner">
+    <div style="display:flex;align-items:center;gap:16px">
+      <div class="logo" onclick="showPage('home')" style="cursor:pointer">
+        <div class="logo-mark">PIQ</div>
+        <span class="logo-text">PensionIQ</span>
+      </div>
+      <div style="width:1px;height:24px;background:var(--border)"></div>
+      <div>
+        <div class="tool-title">Anbieter-Dashboard</div>
+        <div class="tool-subtitle">Stammdaten verwalten &amp; vergleichen</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="btn-ghost" onclick="showPage('vergleich')">Vergleich →</button>
+      <button class="btn-ghost" onclick="showPage('home')">← Zurück</button>
+    </div>
+  </div>
+</div>
+
+<div class="av-wrap">
+
+  <!-- Top bar -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
+    <div>
+      <h2 style="font-family:'Fraunces',serif;font-size:28px;font-weight:300;color:var(--text-1);letter-spacing:-.02em">Meine Anbieter</h2>
+      <p style="font-size:13px;color:var(--text-3);margin-top:4px">Pflege deine BVG-Anbieter mit Tarifen und Konditionen — für schnelle Vergleiche ohne Datei-Upload.</p>
+    </div>
+    <button class="btn btn-primary" onclick="avNewAnbieter()" style="display:flex;align-items:center;gap:7px;padding:10px 20px">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Anbieter hinzufügen
+    </button>
+  </div>
+
+  <div class="av-grid">
+
+    <!-- LEFT: Anbieter list -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+
+      <div class="av-card">
+        <div class="av-card-hdr">
+          <span class="av-card-title">Meine Anbieter</span>
+          <span id="av-count" style="font-size:10px;color:var(--text-4);font-family:'JetBrains Mono',monospace">0 gespeichert</span>
+        </div>
+        <div id="av-list" class="av-list">
+          <div class="av-empty">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--border-2)" stroke-width="1" style="margin:0 auto 10px;display:block"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+            <p style="font-size:12px">Noch keine Anbieter.<br>Klicke auf «Anbieter hinzufügen».</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vergleich starten -->
+      <div class="av-card">
+        <div class="av-card-hdr">
+          <span class="av-card-title">Anbietervergleich</span>
+        </div>
+        <div style="padding:16px">
+          <p style="font-size:12px;color:var(--text-3);margin-bottom:12px">Wähle 2–6 Anbieter für einen direkten Vergleich der gespeicherten Konditionen.</p>
+          <div id="av-select-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px"></div>
+          <button class="btn-analyse" id="av-compare-btn" onclick="avRunComparison()" disabled style="font-size:13px;padding:10px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+            Vergleich starten
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT: Edit form / Comparison -->
+    <div>
+      <!-- Form -->
+      <div class="av-card" id="av-form-card">
+        <div class="av-card-hdr">
+          <span class="av-card-title" id="av-form-title">Neuer Anbieter</span>
+          <div style="display:flex;gap:6px">
+            <button class="btn-ghost" id="av-delete-btn" onclick="avDeleteCurrent()" style="font-size:11px;padding:5px 10px;color:var(--danger);display:none">Löschen</button>
+            <button class="btn btn-primary" onclick="avSaveCurrent()" style="font-size:12px;padding:7px 16px">Speichern</button>
+          </div>
+        </div>
+        <div class="av-form" id="av-form-body">
+
+          <div class="av-section-title">Grunddaten</div>
+          <div class="av-form-row">
+            <div><label class="av-label">Anbietername *</label><input class="av-input" id="av-f-name" type="text" placeholder="z.B. AXA, Zurich, Swiss Life"></div>
+            <div><label class="av-label">Kürzel</label><input class="av-input" id="av-f-kuerzel" type="text" placeholder="z.B. AXA" maxlength="6"></div>
+          </div>
+          <div class="av-form-row full">
+            <div><label class="av-label">Notizen / Besonderheiten</label><input class="av-input" id="av-f-notizen" type="text" placeholder="z.B. Rabatt möglich, Ansprechperson..."></div>
+          </div>
+
+          <div class="av-section-title">Kosten</div>
+          <div class="av-form-row">
+            <div><label class="av-label">Verwaltungskosten %</label><input class="av-input" id="av-f-verw" type="number" step="0.01" placeholder="z.B. 0.42"></div>
+            <div><label class="av-label">Risikoprämie (% des Lohns)</label><input class="av-input" id="av-f-risiko" type="number" step="0.01" placeholder="z.B. 0.80"></div>
+          </div>
+          <div class="av-form-row">
+            <div><label class="av-label">Mindestbeitrag AN (CHF/J.)</label><input class="av-input" id="av-f-min-an" type="number" placeholder="z.B. 1200"></div>
+            <div><label class="av-label">AG-Beitrag Anteil %</label><input class="av-input" id="av-f-ag-anteil" type="number" step="1" placeholder="z.B. 60 (= 60% übernimmt AG)"></div>
+          </div>
+
+          <div class="av-section-title">Altersleistungen</div>
+          <div class="av-form-row">
+            <div><label class="av-label">Umwandlungssatz (UWS) %</label><input class="av-input" id="av-f-uws" type="number" step="0.01" placeholder="z.B. 6.80"></div>
+            <div><label class="av-label">Verzinsung Altersguthaben %</label><input class="av-input" id="av-f-verzinsung" type="number" step="0.01" placeholder="z.B. 1.50"></div>
+          </div>
+          <div class="av-form-row">
+            <div><label class="av-label">Sparbeitrag AN % (Basis)</label><input class="av-input" id="av-f-spar-an" type="number" step="0.1" placeholder="z.B. 7.0"></div>
+            <div><label class="av-label">Sparbeitrag AG % (Basis)</label><input class="av-input" id="av-f-spar-ag" type="number" step="0.1" placeholder="z.B. 9.0"></div>
+          </div>
+
+          <div class="av-section-title">Risikoleistungen</div>
+          <div class="av-form-row">
+            <div><label class="av-label">Invalidenrente (% des Lohns)</label><input class="av-input" id="av-f-iv-rente" type="number" step="0.1" placeholder="z.B. 60"></div>
+            <div><label class="av-label">Todesfallkapital (% Guthaben)</label><input class="av-input" id="av-f-tod-kap" type="number" step="1" placeholder="z.B. 100"></div>
+          </div>
+          <div class="av-form-row">
+            <div><label class="av-label">Ehegattenrente (% des Lohns)</label><input class="av-input" id="av-f-ehe-rente" type="number" step="0.1" placeholder="z.B. 36"></div>
+            <div><label class="av-label">Waisenrente (% des Lohns)</label><input class="av-input" id="av-f-waisenrente" type="number" step="0.1" placeholder="z.B. 9"></div>
+          </div>
+
+          <div class="av-section-title">Konditionen</div>
+          <div class="av-form-row">
+            <div><label class="av-label">Kündigungsfrist</label><input class="av-input" id="av-f-kuend" type="text" placeholder="z.B. 6 Monate"></div>
+            <div><label class="av-label">Mindestlohnsumme (CHF)</label><input class="av-input" id="av-f-mindest-lohn" type="number" placeholder="z.B. 500000"></div>
+          </div>
+          <div class="av-form-row full">
+            <div><label class="av-label">Zusatzdeckungen (Komma-getrennt)</label><input class="av-input" id="av-f-zusatz" type="text" placeholder="z.B. Überbrückungsrente, Lohnfortzahlung, UVG-Zusatz"></div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Comparison result -->
+      <div id="av-compare-result" style="display:none;margin-top:20px">
+        <div class="av-compare-wrap">
+          <div class="av-compare-hdr">
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="ai-tag">VERGLEICH</div>
+              <span id="av-compare-meta" style="font-size:11px;color:var(--text-4);font-family:'JetBrains Mono',monospace"></span>
+            </div>
+            <div style="display:flex;gap:6px">
+              <button class="btn-ghost" onclick="avDownloadExcel()" style="font-size:11px;padding:5px 10px">↓ Excel</button>
+              <button class="btn-ghost" onclick="avDownloadPDF()" style="font-size:11px;padding:5px 10px">↓ PDF</button>
+            </div>
+          </div>
+          <div style="overflow-x:auto">
+            <table class="av-compare-table">
+              <thead id="av-compare-thead"></thead>
+              <tbody id="av-compare-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</div><!-- end page-anbieter -->
+
 <!-- ══════ JAVASCRIPT ══════ -->
 <script>
 function showPage(name) {
@@ -2062,6 +2268,7 @@ function showPage(name) {
   }
   // Legacy aliases
   if (name === 'tool') { showPage('vergleich'); switchSubtab('offert'); return; }
+  if (name === 'anbieter') { document.getElementById('nav-anbieter').classList.add('active'); navbar.style.display = 'none'; renderAnbieterDashboard(); return; }
   if (name === 'versichertenvergleich') { showPage('vergleich'); switchSubtab('versichertenvergleich'); return; }
   setTimeout(() => {
     document.querySelectorAll('#page-' + name + ' .fade-up').forEach(el => {
@@ -3883,6 +4090,331 @@ function lvDownloadPDF() {
   win.document.write(html);
   win.document.close();
   setTimeout(() => win.print(), 500);
+}
+
+
+// ════════════════════════════════════════
+// ANBIETER DASHBOARD — STATE & LOGIC
+// ════════════════════════════════════════
+
+const AV_STORAGE_KEY = 'piq_anbieter_v1';
+let avAnbieter = [];       // array of anbieter objects
+let avCurrentId = null;    // currently edited anbieter id
+let avCompareIds = [];     // selected for comparison
+let avCompareData = null;  // last comparison result
+
+const AV_FIELDS = [
+  { group: 'Kosten', key: 'verw',         label: 'Verwaltungskosten',          unit: '%',    higherIsBetter: false },
+  { group: 'Kosten', key: 'risiko',        label: 'Risikoprämie',               unit: '%',    higherIsBetter: false },
+  { group: 'Kosten', key: 'ag_anteil',     label: 'AG-Beitragsanteil',          unit: '%',    higherIsBetter: true  },
+  { group: 'Kosten', key: 'min_an',        label: 'Mindestbeitrag AN',          unit: 'CHF',  higherIsBetter: false },
+  { group: 'Altersleistungen', key: 'uws',          label: 'Umwandlungssatz (UWS)',      unit: '%',    higherIsBetter: true  },
+  { group: 'Altersleistungen', key: 'verzinsung',   label: 'Verzinsung Altersguthaben',  unit: '%',    higherIsBetter: true  },
+  { group: 'Altersleistungen', key: 'spar_an',      label: 'Sparbeitrag AN (Basis)',     unit: '%',    higherIsBetter: false },
+  { group: 'Altersleistungen', key: 'spar_ag',      label: 'Sparbeitrag AG (Basis)',     unit: '%',    higherIsBetter: true  },
+  { group: 'Risikoleistungen', key: 'iv_rente',     label: 'Invalidenrente',             unit: '%',    higherIsBetter: true  },
+  { group: 'Risikoleistungen', key: 'tod_kap',      label: 'Todesfallkapital',           unit: '%',    higherIsBetter: true  },
+  { group: 'Risikoleistungen', key: 'ehe_rente',    label: 'Ehegattenrente',             unit: '%',    higherIsBetter: true  },
+  { group: 'Risikoleistungen', key: 'waisenrente',  label: 'Waisenrente',                unit: '%',    higherIsBetter: true  },
+  { group: 'Konditionen',      key: 'kuend',        label: 'Kündigungsfrist',            unit: 'text', higherIsBetter: null  },
+  { group: 'Konditionen',      key: 'mindest_lohn', label: 'Mindestlohnsumme',           unit: 'CHF',  higherIsBetter: false },
+  { group: 'Konditionen',      key: 'zusatz',       label: 'Zusatzdeckungen',            unit: 'text', higherIsBetter: null  },
+];
+
+// ── STORAGE ──
+function avLoad() {
+  try { avAnbieter = JSON.parse(localStorage.getItem(AV_STORAGE_KEY) || '[]'); } catch { avAnbieter = []; }
+}
+function avSave() {
+  localStorage.setItem(AV_STORAGE_KEY, JSON.stringify(avAnbieter));
+}
+function avGenId() { return 'av_' + Date.now() + '_' + Math.random().toString(36).slice(2,7); }
+
+// ── RENDER DASHBOARD ──
+function renderAnbieterDashboard() {
+  avLoad();
+  renderAvList();
+  renderAvSelectList();
+  avCurrentId = null;
+  avClearForm();
+  document.getElementById('av-form-title').textContent = 'Neuer Anbieter';
+  document.getElementById('av-delete-btn').style.display = 'none';
+  document.getElementById('av-compare-result').style.display = 'none';
+}
+
+function renderAvList() {
+  const list = document.getElementById('av-list');
+  const count = document.getElementById('av-count');
+  if (!list) return;
+  count.textContent = avAnbieter.length + ' gespeichert';
+  if (avAnbieter.length === 0) {
+    list.innerHTML = `<div class="av-empty"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--border-2)" stroke-width="1" style="margin:0 auto 10px;display:block"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg><p style="font-size:12px">Noch keine Anbieter.<br>Klicke auf «Anbieter hinzufügen».</p></div>`;
+    return;
+  }
+  list.innerHTML = avAnbieter.map(a => {
+    const isActive = a.id === avCurrentId;
+    const filledCount = AV_FIELDS.filter(f => a[f.key] && String(a[f.key]).trim()).length;
+    const pct = Math.round(filledCount / AV_FIELDS.length * 100);
+    const dotColor = pct >= 70 ? 'var(--teal)' : pct >= 30 ? 'var(--warning)' : 'var(--danger)';
+    return `<div class="av-list-item${isActive?' active':''}" onclick="avSelectAnbieter('${a.id}')">
+      <div class="av-item-dot" style="background:${dotColor}"></div>
+      <div style="flex:1;min-width:0">
+        <div class="av-item-name">${a.name || 'Unbenannt'}</div>
+        <div class="av-item-meta">${pct}% ausgefüllt · ${a.kuend || '—'} Kündigungsfrist</div>
+      </div>
+      <div style="font-size:10px;color:var(--text-4);font-family:'JetBrains Mono',monospace">${a.kuerzel || ''}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderAvSelectList() {
+  const el = document.getElementById('av-select-list');
+  if (!el) return;
+  if (avAnbieter.length === 0) {
+    el.innerHTML = '<p style="font-size:11px;color:var(--text-4)">Keine Anbieter vorhanden.</p>';
+    return;
+  }
+  el.innerHTML = avAnbieter.map(a => {
+    const checked = avCompareIds.includes(a.id);
+    return `<label style="display:flex;align-items:center;gap:9px;cursor:pointer;padding:7px 10px;border-radius:7px;border:1px solid ${checked?'rgba(27,79,216,.25)':'var(--border)'};background:${checked?'var(--blue-lt)':'var(--white)'};transition:all .15s">
+      <input type="checkbox" ${checked?'checked':''} onchange="avToggleCompare('${a.id}',this.checked)" style="width:14px;height:14px;accent-color:var(--blue)">
+      <span style="font-size:12px;font-weight:500;color:var(--text-1);flex:1">${a.name || 'Unbenannt'}</span>
+      <span style="font-size:9px;color:var(--text-4);font-family:'JetBrains Mono',monospace">${a.kuerzel || ''}</span>
+    </label>`;
+  }).join('');
+  updateAvCompareBtn();
+}
+
+function avToggleCompare(id, checked) {
+  if (checked && avCompareIds.length < 6) avCompareIds.push(id);
+  else avCompareIds = avCompareIds.filter(x => x !== id);
+  renderAvSelectList();
+}
+
+function updateAvCompareBtn() {
+  const btn = document.getElementById('av-compare-btn');
+  if (btn) btn.disabled = avCompareIds.length < 2;
+}
+
+// ── FORM ──
+function avClearForm() {
+  ['name','kuerzel','notizen','verw','risiko','min_an','ag_anteil','uws','verzinsung','spar_an','spar_ag','iv_rente','tod_kap','ehe_rente','waisenrente','kuend','mindest_lohn','zusatz'].forEach(k => {
+    const el = document.getElementById('av-f-' + k.replace('_','-'));
+    if (el) el.value = '';
+  });
+}
+
+function avFillForm(a) {
+  const map = { name:'name', kuerzel:'kuerzel', notizen:'notizen', verw:'verw', risiko:'risiko', min_an:'min-an', ag_anteil:'ag-anteil', uws:'uws', verzinsung:'verzinsung', spar_an:'spar-an', spar_ag:'spar-ag', iv_rente:'iv-rente', tod_kap:'tod-kap', ehe_rente:'ehe-rente', waisenrente:'waisenrente', kuend:'kuend', mindest_lohn:'mindest-lohn', zusatz:'zusatz' };
+  Object.entries(map).forEach(([dataKey, inputKey]) => {
+    const el = document.getElementById('av-f-' + inputKey);
+    if (el) el.value = a[dataKey] || '';
+  });
+}
+
+function avReadForm() {
+  const map = { name:'name', kuerzel:'kuerzel', notizen:'notizen', verw:'verw', risiko:'risiko', min_an:'min-an', ag_anteil:'ag-anteil', uws:'uws', verzinsung:'verzinsung', spar_an:'spar-an', spar_ag:'spar-ag', iv_rente:'iv-rente', tod_kap:'tod-kap', ehe_rente:'ehe-rente', waisenrente:'waisenrente', kuend:'kuend', mindest_lohn:'mindest-lohn', zusatz:'zusatz' };
+  const obj = {};
+  Object.entries(map).forEach(([dataKey, inputKey]) => {
+    const el = document.getElementById('av-f-' + inputKey);
+    obj[dataKey] = el ? el.value.trim() : '';
+  });
+  return obj;
+}
+
+function avSelectAnbieter(id) {
+  avCurrentId = id;
+  const a = avAnbieter.find(x => x.id === id);
+  if (!a) return;
+  avFillForm(a);
+  document.getElementById('av-form-title').textContent = a.name || 'Anbieter bearbeiten';
+  document.getElementById('av-delete-btn').style.display = 'inline-flex';
+  renderAvList();
+}
+
+function avNewAnbieter() {
+  avCurrentId = null;
+  avClearForm();
+  document.getElementById('av-form-title').textContent = 'Neuer Anbieter';
+  document.getElementById('av-delete-btn').style.display = 'none';
+  document.querySelectorAll('.av-list-item').forEach(el => el.classList.remove('active'));
+  document.getElementById('av-f-name').focus();
+}
+
+function avSaveCurrent() {
+  const data = avReadForm();
+  if (!data.name) { alert('Bitte Anbietername eingeben.'); return; }
+  avLoad();
+  if (avCurrentId) {
+    const idx = avAnbieter.findIndex(x => x.id === avCurrentId);
+    if (idx >= 0) avAnbieter[idx] = { ...avAnbieter[idx], ...data };
+  } else {
+    const newA = { id: avGenId(), ...data, created: Date.now() };
+    avAnbieter.push(newA);
+    avCurrentId = newA.id;
+  }
+  avSave();
+  document.getElementById('av-form-title').textContent = data.name;
+  document.getElementById('av-delete-btn').style.display = 'inline-flex';
+  renderAvList();
+  renderAvSelectList();
+  // Flash save confirmation
+  const btn = document.querySelector('[onclick="avSaveCurrent()"]');
+  if (btn) { const orig = btn.textContent; btn.textContent = '✓ Gespeichert'; btn.style.background='var(--teal)'; setTimeout(()=>{ btn.textContent=orig; btn.style.background=''; }, 1500); }
+}
+
+function avDeleteCurrent() {
+  if (!avCurrentId) return;
+  if (!confirm('Anbieter wirklich löschen?')) return;
+  avLoad();
+  avAnbieter = avAnbieter.filter(x => x.id !== avCurrentId);
+  avCompareIds = avCompareIds.filter(x => x !== avCurrentId);
+  avSave();
+  avCurrentId = null;
+  avClearForm();
+  document.getElementById('av-form-title').textContent = 'Neuer Anbieter';
+  document.getElementById('av-delete-btn').style.display = 'none';
+  renderAvList();
+  renderAvSelectList();
+}
+
+// ── FORMAT ──
+function avFmtVal(val, unit) {
+  if (!val || String(val).trim() === '') return '—';
+  if (unit === 'text') return String(val);
+  if (unit === 'CHF') {
+    const n = parseFloat(String(val).replace(/[^0-9.-]/g,''));
+    return isNaN(n) ? val : 'CHF ' + n.toLocaleString('de-CH', {minimumFractionDigits:0, maximumFractionDigits:0});
+  }
+  if (unit === '%') {
+    const n = parseFloat(String(val).replace(/[^0-9.-]/g,''));
+    return isNaN(n) ? val : n.toFixed(2) + '%';
+  }
+  return String(val);
+}
+
+// ── RUN COMPARISON ──
+function avRunComparison() {
+  avLoad();
+  const selected = avCompareIds.map(id => avAnbieter.find(a => a.id === id)).filter(Boolean);
+  if (selected.length < 2) return;
+  avCompareData = selected;
+
+  document.getElementById('av-compare-result').style.display = 'block';
+  document.getElementById('av-compare-meta').textContent = `${selected.length} Anbieter · ${new Date().toLocaleDateString('de-CH')}`;
+
+  // Find best per field (for highlighting)
+  function getBest(field) {
+    if (field.higherIsBetter === null) return null;
+    const vals = selected.map(a => parseFloat(String(a[field.key]||'').replace(/[^0-9.-]/g,'')));
+    const valid = vals.filter(v => !isNaN(v));
+    if (valid.length < 2) return null;
+    return field.higherIsBetter ? Math.max(...valid) : Math.min(...valid);
+  }
+
+  // Thead
+  document.getElementById('av-compare-thead').innerHTML = `<tr>
+    <th style="text-align:left;min-width:200px">Kondition</th>
+    ${selected.map(a => `<th style="text-align:right;color:var(--text-1);font-size:11px;font-family:'DM Sans',sans-serif;font-weight:600">${a.name}<br><span style="font-size:8px;color:var(--text-4);font-weight:400;font-family:'JetBrains Mono',monospace">${a.kuerzel||''}</span></th>`).join('')}
+  </tr>`;
+
+  // Tbody grouped
+  const groups = [...new Set(AV_FIELDS.map(f=>f.group))];
+  let tbodyHtml = '';
+  groups.forEach(group => {
+    tbodyHtml += `<tr class="av-group-row"><td colspan="${1+selected.length}">${group}</td></tr>`;
+    AV_FIELDS.filter(f=>f.group===group).forEach((f, fi) => {
+      const best = getBest(f);
+      const rowBg = fi%2===0 ? '' : 'background:rgba(0,0,0,.015)';
+      const cells = selected.map(a => {
+        const raw = a[f.key];
+        const display = avFmtVal(raw, f.unit);
+        const n = parseFloat(String(raw||'').replace(/[^0-9.-]/g,''));
+        const isBest = best !== null && !isNaN(n) && n === best;
+        const color = isBest ? (f.higherIsBetter ? 'var(--teal)' : 'var(--blue)') : 'var(--text-2)';
+        const bold = isBest ? '700' : '400';
+        return `<td style="text-align:right;color:${color};font-weight:${bold}${isBest?';background:rgba(14,124,110,.04)':''}">${display}${isBest?'<span style="font-size:8px;margin-left:4px;color:var(--teal)">★</span>':''}</td>`;
+      }).join('');
+      tbodyHtml += `<tr style="${rowBg}"><td style="color:var(--text-3)">${f.label}</td>${cells}</tr>`;
+    });
+    // Notizen row
+    tbodyHtml += `<tr><td style="color:var(--text-4)">Notizen</td>${selected.map(a=>`<td style="text-align:right;font-size:10px;color:var(--text-3);max-width:160px;white-space:normal;line-height:1.4">${a.notizen||'—'}</td>`).join('')}</tr>`;
+  });
+
+  document.getElementById('av-compare-tbody').innerHTML = tbodyHtml;
+
+  // Scroll to result
+  setTimeout(() => document.getElementById('av-compare-result').scrollIntoView({ behavior:'smooth', block:'start' }), 100);
+}
+
+// ── DOWNLOAD EXCEL ──
+function avDownloadExcel() {
+  if (!avCompareData) return;
+  const selected = avCompareData;
+  const rows = [['Kondition', ...selected.map(a=>a.name)]];
+  const groups = [...new Set(AV_FIELDS.map(f=>f.group))];
+  groups.forEach(group => {
+    rows.push([group.toUpperCase()]);
+    AV_FIELDS.filter(f=>f.group===group).forEach(f => {
+      rows.push([f.label, ...selected.map(a => a[f.key] || '—')]);
+    });
+    rows.push(['Notizen', ...selected.map(a => a.notizen || '—')]);
+    rows.push([]);
+  });
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{ wch: 28 }, ...selected.map(() => ({ wch: 20 }))];
+  XLSX.utils.book_append_sheet(wb, ws, 'Anbietervergleich');
+  XLSX.writeFile(wb, `PensionIQ_Anbietervergleich_${new Date().toLocaleDateString('de-CH').replace(/\./g,'-')}.xlsx`);
+}
+
+// ── DOWNLOAD PDF ──
+function avDownloadPDF() {
+  if (!avCompareData) return;
+  const selected = avCompareData;
+  const date = new Date().toLocaleDateString('de-CH');
+
+  function fv(val, unit) {
+    if (!val || String(val).trim()==='') return '—';
+    if (unit==='CHF') { const n=parseFloat(String(val).replace(/[^0-9.-]/g,'')); return isNaN(n)?val:'CHF '+n.toLocaleString('de-CH'); }
+    if (unit==='%') { const n=parseFloat(String(val).replace(/[^0-9.-]/g,'')); return isNaN(n)?val:n.toFixed(2)+'%'; }
+    return String(val);
+  }
+
+  function getBest(field) {
+    if (field.higherIsBetter===null) return null;
+    const vals = selected.map(a=>parseFloat(String(a[field.key]||'').replace(/[^0-9.-]/g,'')));
+    const valid=vals.filter(v=>!isNaN(v));
+    if(valid.length<2) return null;
+    return field.higherIsBetter?Math.max(...valid):Math.min(...valid);
+  }
+
+  const groups = [...new Set(AV_FIELDS.map(f=>f.group))];
+  let tbody = '';
+  groups.forEach(group => {
+    tbody += `<tr><td colspan="${1+selected.length}" style="background:#EEF3FD;color:#1B4FD8;font-size:8px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:5px 8px;border-top:2px solid #1B4FD8">${group}</td></tr>`;
+    AV_FIELDS.filter(f=>f.group===group).forEach((f,fi) => {
+      const best=getBest(f);
+      const bg=fi%2===0?'#fff':'#F5F3EE';
+      const cells=selected.map(a=>{
+        const raw=a[f.key]; const n=parseFloat(String(raw||'').replace(/[^0-9.-]/g,''));
+        const isBest=best!==null&&!isNaN(n)&&n===best;
+        return `<td style="text-align:right;color:${isBest?'#0E7C6E':'#0F1117'};font-weight:${isBest?'700':'400'};background:${isBest?'rgba(14,124,110,.04)':'inherit'}">${fv(raw,f.unit)}${isBest?' ★':''}</td>`;
+      }).join('');
+      tbody+=`<tr style="background:${bg}"><td style="color:#6B7194">${f.label}</td>${cells}</tr>`;
+    });
+  });
+
+  const html=`<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><style>@page{size:A4 landscape;margin:10mm 8mm}*{box-sizing:border-box}body{font-family:'Helvetica Neue',Arial,sans-serif;font-size:9px;color:#0F1117;-webkit-print-color-adjust:exact;print-color-adjust:exact}.hdr{display:flex;justify-content:space-between;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #0F1117}.logo{font-size:14px;font-weight:300}.logo b{font-weight:700}table{width:100%;border-collapse:collapse}th{padding:6px 8px;font-size:8px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;background:#0F1117;color:#fff;border-bottom:1px solid #ddd}th:first-child{text-align:left}th:not(:first-child){text-align:right}td{padding:5px 8px;border-bottom:1px solid #f0f0f0}td:first-child{color:#6B7194}.footer{margin-top:10px;padding-top:6px;border-top:1px solid #eee;font-size:7px;color:#9EA4BE;display:flex;justify-content:space-between}</style></head><body>
+  <div class="hdr"><div><div class="logo">Pension<b>IQ</b></div><div style="font-size:15px;font-weight:300;margin:2px 0">Anbietervergleich</div><div style="font-size:8px;color:#6B7194">${selected.length} Anbieter · ${date}</div></div><div style="width:90px;height:36px;border:1.5px dashed #D0D0D0;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:7px;color:#C0C0C0;text-transform:uppercase">Kundenlogo</div></div>
+  <table><thead><tr><th style="text-align:left">Kondition</th>${selected.map(a=>`<th>${a.name}</th>`).join('')}</tr></thead><tbody>${tbody}</tbody></table>
+  <div class="footer"><span>PensionIQ AG · Zürich · pensioniq.ch</span><span>★ = bester Wert · Vertraulich</span></div>
+  </body></html>`;
+
+  const win=window.open('','_blank');
+  win.document.write(html);
+  win.document.close();
+  setTimeout(()=>win.print(),500);
 }
 
 </script>
