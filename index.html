@@ -2189,19 +2189,19 @@ footer{border-top:1px solid var(--border);padding:52px 0 32px;background:var(--w
             <div><label class="av-label">Anzahl Waisenrenten</label><input class="av-input" id="av-f-waisenrenten" type="number" onblur="avFormatThousands(this)" onfocus="avUnformatThousands(this)" step="1" placeholder="z.B. 890"></div>
           </div>
           <div class="av-form-row">
-            <div><label class="av-label">Verhältnis Aktive / Rentner</label><input class="av-input" id="av-f-verhaeltnis" type="text" placeholder="z.B. 4.2 : 1 (auto berechnet)" id="av-f-verhaeltnis" readonly style="background:var(--sand-2);color:var(--text-3)"></div>
+            <div><label class="av-label">Verhältnis Aktive / Rentner</label><input class="av-input" id="av-f-verhaeltnis" type="text" placeholder="z.B. 4.2 : 1 (auto berechnet)" readonly style="background:var(--sand-2);color:var(--text-3)"></div>
             <div><label class="av-label">Rentenquote (%)</label><input class="av-input" id="av-f-rentenquote" type="number" step="0.1" placeholder="z.B. 19.2" readonly style="background:var(--sand-2);color:var(--text-3)"></div>
           </div>
           <div class="av-form-row">
-            <div><label class="av-label">Bilanzsumme (CHF)</label><input class="av-input" id="av-f-bilanzsumme" type="number" onblur="avFormatThousands(this)" onfocus="avUnformatThousands(this)" step="1000000" placeholder="z.B. 12000000000"></div>
-            <div><label class="av-label">Gesamtkapital (CHF)</label><input class="av-input" id="av-f-gesamtkapital" type="number" onblur="avFormatThousands(this)" onfocus="avUnformatThousands(this)" step="1000000" placeholder="z.B. 11500000000"></div>
+            <div><label class="av-label">Bilanzsumme (CHF)</label><input class="av-input" id="av-f-bilanzsumme" type="number" onblur="avFormatThousands(this)" onfocus="avUnformatThousands(this)" step="1000000" placeholder="z.B. 12'000'000'000"></div>
+            <div><label class="av-label">Gesamtkapital (CHF)</label><input class="av-input" id="av-f-gesamtkapital" type="number" onblur="avFormatThousands(this)" onfocus="avUnformatThousands(this)" step="1000000" placeholder="z.B. 11'500'000'000"></div>
           </div>
           <div class="av-form-row">
-            <div><label class="av-label">Vorsorgekapital Aktive (CHF)</label><input class="av-input" id="av-f-vk-aktive" type="number" onblur="avFormatThousands(this)" onfocus="avUnformatThousands(this)" step="1000000" placeholder="z.B. 8000000000"></div>
-            <div><label class="av-label">Vorsorgekapital Rentner (CHF)</label><input class="av-input" id="av-f-vk-rentner" type="number" onblur="avFormatThousands(this)" onfocus="avUnformatThousands(this)" step="1000000" placeholder="z.B. 3500000000"></div>
+            <div><label class="av-label">Vorsorgekapital Aktive (CHF)</label><input class="av-input" id="av-f-vk-aktive" type="number" onblur="avFormatThousands(this)" onfocus="avUnformatThousands(this)" step="1000000" placeholder="z.B. 8'000'000'000"></div>
+            <div><label class="av-label">Vorsorgekapital Rentner (CHF)</label><input class="av-input" id="av-f-vk-rentner" type="number" onblur="avFormatThousands(this)" onfocus="avUnformatThousands(this)" step="1000000" placeholder="z.B. 3'500'000'000"></div>
           </div>
           <div class="av-form-row">
-            <div><label class="av-label">Technische Rückstellungen (CHF)</label><input class="av-input" id="av-f-rueckstellungen" type="number" onblur="avFormatThousands(this)" onfocus="avUnformatThousands(this)" step="1000000" placeholder="z.B. 500000000"></div>
+            <div><label class="av-label">Technische Rückstellungen (CHF)</label><input class="av-input" id="av-f-rueckstellungen" type="number" onblur="avFormatThousands(this)" onfocus="avUnformatThousands(this)" step="1000000" placeholder="z.B. 500'000'000"></div>
             <div><label class="av-label">Technischer Zinssatz (%)</label><input class="av-input" id="av-f-sollzins" type="number" step="0.01" placeholder="z.B. 1.75"></div>
           </div>
           <div class="av-form-row">
@@ -4398,7 +4398,7 @@ function updateAvCompareBtn() {
 }
 
 // ── FORM ──
-const AV_FORM_KEYS = ["name", "kuerzel", "typ", "notizen", "anschluesse", "versicherte", "altersrentner", "invalidenrentner", "verhaeltnis", "rentenquote", "bilanzsumme", "gesamtkapital", "vk_aktive", "vk_rentner", "rueckstellungen", "sollzins", "wsr_aktuell", "wsr_ziel", "dg_2016", "dg_2017", "dg_2018", "dg_2019", "dg_2020", "dg_2021", "dg_2022", "dg_2023", "dg_2024", "dg_2025", "dg_avg5", "dg_avg10", "verz_2016", "verz_2017", "verz_2018", "verz_2019", "verz_2020", "verz_2021", "verz_2022", "verz_2023", "verz_2024", "verz_2025", "verz_avg5", "verz_avg10", "perf_2016", "perf_2017", "perf_2018", "perf_2019", "perf_2020", "perf_2021", "perf_2022", "perf_2023", "perf_2024", "perf_2025", "perf_avg5", "perf_avg10", "uws", "uws_ueob", "uws_umhuellend", "verw_fix", "verw_info"];
+const AV_FORM_KEYS = ["name", "kuerzel", "typ", "notizen", "anschluesse", "versicherte", "altersrentner", "invalidenrentner", "ehegattenrenten", "waisenrenten", "verhaeltnis", "rentenquote", "bilanzsumme", "gesamtkapital", "vk_aktive", "vk_rentner", "rueckstellungen", "sollzins", "wsr_aktuell", "wsr_ziel", "dg_2016", "dg_2017", "dg_2018", "dg_2019", "dg_2020", "dg_2021", "dg_2022", "dg_2023", "dg_2024", "dg_2025", "dg_avg5", "dg_avg10", "verz_2016", "verz_2017", "verz_2018", "verz_2019", "verz_2020", "verz_2021", "verz_2022", "verz_2023", "verz_2024", "verz_2025", "verz_avg5", "verz_avg10", "perf_2016", "perf_2017", "perf_2018", "perf_2019", "perf_2020", "perf_2021", "perf_2022", "perf_2023", "perf_2024", "perf_2025", "perf_avg5", "perf_avg10", "strat_liquiditaet", "strat_aktien", "strat_obligationen", "strat_immobilien", "strat_alternative", "uws", "uws_ueob", "uws_umhuellend", "verw_fix", "verw_info"];
 
 function avClearForm() {
   AV_FORM_KEYS.forEach(k => {
