@@ -2149,11 +2149,20 @@ footer{border-top:1px solid var(--border);padding:52px 0 32px;background:var(--w
       <div class="av-card" id="av-form-card">
         <div class="av-card-hdr">
           <span class="av-card-title" id="av-form-title">Neuer Anbieter</span>
-          <div style="display:flex;gap:6px">
+          <div style="display:flex;gap:6px;align-items:center">
+            <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;padding:6px 12px;border:1px solid var(--border-2);border-radius:7px;font-size:11px;color:var(--text-2);background:var(--sand);transition:all .15s" title="Geschäftsbericht hochladen — AI befüllt die Felder automatisch">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M12 18v-6"/><path d="m9 15 3-3 3 3"/></svg>
+              Geschäftsbericht
+              <input type="file" accept=".pdf" style="display:none" onchange="avImportGeschaeftsbericht(this)">
+            </label>
             <button class="btn-ghost" id="av-delete-btn" onclick="avDeleteCurrent()" style="font-size:11px;padding:5px 10px;color:var(--danger);display:none">Löschen</button>
             <button class="btn btn-primary" onclick="avSaveCurrent()" style="font-size:12px;padding:7px 16px">Speichern</button>
           </div>
         </div>
+        <div id="av-import-status" style="display:none;padding:10px 16px;border-bottom:1px solid var(--border);font-size:12px;background:var(--blue-lt);color:var(--blue);display:flex;align-items:center;gap:8px">
+          <div class="spinner"></div><span id="av-import-msg">Lese Geschäftsbericht...</span>
+        </div>
+        <div id="av-import-result" style="display:none;padding:10px 16px;border-bottom:1px solid var(--border);font-size:12px"></div>
         <div class="av-form" id="av-form-body">
 
           <div class="av-section-title">Grunddaten</div>
@@ -4277,6 +4286,149 @@ function avCalcStratTotal() {
   el.style.color = ok ? 'var(--teal)' : rounded > 100 ? 'var(--danger)' : 'var(--text-3)';
   el.style.borderColor = ok ? 'rgba(14,124,110,.3)' : rounded > 100 ? 'rgba(184,50,50,.3)' : 'var(--border)';
   el.style.background = ok ? 'var(--teal-lt)' : 'var(--sand)';
+}
+
+
+// ── ANBIETER: Geschäftsbericht Import ──
+async function avImportGeschaeftsbericht(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const apiKey = localStorage.getItem('piq_api_key');
+  if (!apiKey) { alert('Bitte zuerst API Key hinterlegen.'); return; }
+
+  const statusEl = document.getElementById('av-import-status');
+  const resultEl = document.getElementById('av-import-result');
+  const msgEl = document.getElementById('av-import-msg');
+
+  statusEl.style.display = 'flex';
+  resultEl.style.display = 'none';
+  msgEl.textContent = 'Lese Geschäftsbericht...';
+
+  try {
+    const b64 = await toBase64(file);
+
+    const currentYear = new Date().getFullYear();
+    const years = Array.from({length:10}, (_,i) => currentYear - 10 + i + 1);
+
+    const prompt = `Du analysierst einen BVG-Geschäftsbericht einer Schweizer Pensionskasse.
+Extrahiere alle verfügbaren Daten und gib sie als JSON zurück. Antworte NUR mit JSON, keine Erklärungen, keine Backticks.
+
+{
+  "name": "Name der Pensionskasse",
+  "kuerzel": "Kürzel falls erkennbar",
+  "typ": "Vollversicherung" oder "Sammelstiftung (teilautonom)",
+  "anschluesse": Anzahl angeschlossene Unternehmen als Zahl oder null,
+  "versicherte": Anzahl aktiv Versicherte als Zahl oder null,
+  "altersrentner": Anzahl Altersrentner als Zahl oder null,
+  "invalidenrentner": Anzahl Invalidenrentner als Zahl oder null,
+  "ehegattenrenten": Anzahl Ehegatten-/Partnerrenten als Zahl oder null,
+  "waisenrenten": Anzahl Waisenrenten als Zahl oder null,
+  "bilanzsumme": Bilanzsumme in CHF als Zahl oder null,
+  "gesamtkapital": Gesamtkapital/Gesamtvermögen in CHF als Zahl oder null,
+  "vk_aktive": Vorsorgekapital Aktive in CHF als Zahl oder null,
+  "vk_rentner": Vorsorgekapital Rentner in CHF als Zahl oder null,
+  "rueckstellungen": Technische Rückstellungen in CHF als Zahl oder null,
+  "sollzins": Technischer Zinssatz in % als Dezimalzahl oder null,
+  "wsr_aktuell": Wertschwankungsreserven aktuell in % als Dezimalzahl oder null,
+  "wsr_ziel": Wertschwankungsreserven Ziel in % als Dezimalzahl oder null,
+  "uws": UWS Obligatorium in % als Dezimalzahl oder null,
+  "uws_ueob": UWS Überobligatorium in % als Dezimalzahl oder null,
+  "uws_umhuellend": UWS umhüllend (nur Teilautonom) in % als Dezimalzahl oder null,
+  "strat_liquiditaet": Anteil Liquidität in % als Dezimalzahl oder null,
+  "strat_aktien": Anteil Aktien in % als Dezimalzahl oder null,
+  "strat_obligationen": Anteil Obligationen in % als Dezimalzahl oder null,
+  "strat_immobilien": Anteil Immobilien in % als Dezimalzahl oder null,
+  "strat_alternative": Anteil Alternative Anlagen in % als Dezimalzahl oder null,
+  "verw_fix": Verwaltungskosten Fixbetrag pro Person CHF/Jahr als Zahl oder null,
+  "deckungsgrad": { ${years.map(y => `"${y}": Deckungsgrad per 31.12.${y} in % als Dezimalzahl oder null`).join(', ')} },
+  "verzinsung": { ${years.map(y => `"${y}": Verzinsung ${y} in % als Dezimalzahl oder null`).join(', ')} },
+  "performance": { ${years.map(y => `"${y}": Anlageperformance ${y} in % als Dezimalzahl oder null`).join(', ')} }
+}
+
+Alle Prozentwerte als normale Dezimalzahl (z.B. 6.8 für 6.8%, nicht 0.068). Fehlende Werte: null.`;
+
+    const res = await fetch('/.netlify/functions/claude', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5',
+        max_tokens: 4096,
+        messages: [{ role: 'user', content: [
+          { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: b64 } },
+          { type: 'text', text: prompt }
+        ]}]
+      })
+    });
+
+    if (!res.ok) { const e = await res.json(); throw new Error(e.error?.message || 'API Fehler'); }
+    const data = await res.json();
+    const raw = data.content.map(c => c.text || '').join('');
+    const clean = raw.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
+
+    // Count filled fields
+    let filled = 0, total = 0;
+
+    // Fill flat fields
+    const flatKeys = ['name','kuerzel','typ','anschluesse','versicherte','altersrentner','invalidenrentner',
+      'ehegattenrenten','waisenrenten','bilanzsumme','gesamtkapital','vk_aktive','vk_rentner',
+      'rueckstellungen','sollzins','wsr_aktuell','wsr_ziel','uws','uws_ueob','uws_umhuellend',
+      'strat_liquiditaet','strat_aktien','strat_obligationen','strat_immobilien','strat_alternative','verw_fix'];
+
+    flatKeys.forEach(k => {
+      total++;
+      const val = parsed[k];
+      if (val !== null && val !== undefined && val !== '') {
+        const el = document.getElementById('av-f-' + k.replace(/_/g,'-'));
+        if (el) { el.value = val; filled++; }
+      }
+    });
+
+    // Fill time series
+    years.forEach(y => {
+      ['deckungsgrad','verzinsung','performance'].forEach(serie => {
+        const prefix = serie === 'deckungsgrad' ? 'dg' : serie === 'verzinsung' ? 'verz' : 'perf';
+        total++;
+        const val = parsed[serie]?.[y];
+        if (val !== null && val !== undefined) {
+          const el = document.getElementById(`av-f-${prefix}-${y}`);
+          if (el) { el.value = val; filled++; }
+        }
+      });
+    });
+
+    // Auto-calc averages for dg, verz, perf
+    ['dg','verz','perf'].forEach(prefix => {
+      const vals10 = years.map(y => parseFloat(document.getElementById(`av-f-${prefix}-${y}`)?.value || '')).filter(v => !isNaN(v));
+      const vals5  = years.slice(-5).map(y => parseFloat(document.getElementById(`av-f-${prefix}-${y}`)?.value || '')).filter(v => !isNaN(v));
+      if (vals5.length)  { const el = document.getElementById(`av-f-${prefix}-avg5`);  if (el) el.value = (vals5.reduce((a,b)=>a+b,0)/vals5.length).toFixed(2); }
+      if (vals10.length) { const el = document.getElementById(`av-f-${prefix}-avg10`); if (el) el.value = (vals10.reduce((a,b)=>a+b,0)/vals10.length).toFixed(2); }
+    });
+
+    avUpdateUwsFields();
+    avCalcKennzahlen();
+    avCalcStratTotal();
+
+    const pct = Math.round(filled / total * 100);
+    statusEl.style.display = 'none';
+    resultEl.style.display = 'block';
+    resultEl.style.background = pct >= 60 ? 'var(--teal-lt)' : 'var(--gold-lt)';
+    resultEl.style.borderColor = pct >= 60 ? 'rgba(14,124,110,.2)' : 'rgba(184,150,90,.2)';
+    resultEl.style.color = pct >= 60 ? 'var(--teal)' : 'var(--gold)';
+    resultEl.innerHTML = `<div style="display:flex;align-items:center;gap:8px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      <span><strong>${filled} von ${total} Feldern</strong> aus «${file.name}» befüllt (${pct}%). Bitte prüfen und Speichern klicken.</span>
+    </div>`;
+
+  } catch(e) {
+    statusEl.style.display = 'none';
+    resultEl.style.display = 'block';
+    resultEl.style.background = 'rgba(184,50,50,.06)';
+    resultEl.style.color = 'var(--danger)';
+    resultEl.innerHTML = 'Fehler: ' + e.message;
+  }
+
+  input.value = '';
 }
 
 // ── UWS: Toggle based on Typ ──
