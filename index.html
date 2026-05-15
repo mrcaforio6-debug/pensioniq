@@ -2185,6 +2185,10 @@ footer{border-top:1px solid var(--border);padding:52px 0 32px;background:var(--w
             <div><label class="av-label">Anzahl Invalidenrentner</label><input class="av-input" id="av-f-invalidenrentner" type="number" onblur="avFormatThousands(this)" onfocus="avUnformatThousands(this)" step="1" placeholder="z.B. 1'200" onchange="avCalcKennzahlen()"></div>
           </div>
           <div class="av-form-row">
+            <div><label class="av-label">Anzahl Ehegattenrenten</label><input class="av-input" id="av-f-ehegattenrenten" type="number" onblur="avFormatThousands(this)" onfocus="avUnformatThousands(this)" step="1" placeholder="z.B. 4'200"></div>
+            <div><label class="av-label">Anzahl Waisenrenten</label><input class="av-input" id="av-f-waisenrenten" type="number" onblur="avFormatThousands(this)" onfocus="avUnformatThousands(this)" step="1" placeholder="z.B. 890"></div>
+          </div>
+          <div class="av-form-row">
             <div><label class="av-label">Verhältnis Aktive / Rentner</label><input class="av-input" id="av-f-verhaeltnis" type="text" placeholder="z.B. 4.2 : 1 (auto berechnet)" id="av-f-verhaeltnis" readonly style="background:var(--sand-2);color:var(--text-3)"></div>
             <div><label class="av-label">Rentenquote (%)</label><input class="av-input" id="av-f-rentenquote" type="number" step="0.1" placeholder="z.B. 19.2" readonly style="background:var(--sand-2);color:var(--text-3)"></div>
           </div>
@@ -2198,7 +2202,7 @@ footer{border-top:1px solid var(--border);padding:52px 0 32px;background:var(--w
           </div>
           <div class="av-form-row">
             <div><label class="av-label">Technische Rückstellungen (CHF)</label><input class="av-input" id="av-f-rueckstellungen" type="number" onblur="avFormatThousands(this)" onfocus="avUnformatThousands(this)" step="1000000" placeholder="z.B. 500000000"></div>
-            <div><label class="av-label">Sollzins / Technischer Zinssatz (%)</label><input class="av-input" id="av-f-sollzins" type="number" step="0.01" placeholder="z.B. 1.75"></div>
+            <div><label class="av-label">Technischer Zinssatz (%)</label><input class="av-input" id="av-f-sollzins" type="number" step="0.01" placeholder="z.B. 1.75"></div>
           </div>
           <div class="av-form-row">
             <div><label class="av-label">Wertschwankungsreserven — aktuell (%)</label><input class="av-input" id="av-f-wsr-aktuell" type="number" step="0.1" placeholder="z.B. 12.5"></div>
@@ -2249,6 +2253,23 @@ footer{border-top:1px solid var(--border);padding:52px 0 32px;background:var(--w
           <div id="av-uws-teilaut" class="av-form-row" style="display:none">
             <div><label class="av-label">UWS umhüllend (%)</label><input class="av-input" id="av-f-uws-umhuellend" type="number" step="0.01" placeholder="z.B. 5.80"></div>
             <div></div>
+          </div>
+
+          <div class="av-section-title">Anlagestrategie</div>
+          <div style="font-size:10px;color:var(--text-3);font-family:'JetBrains Mono',monospace;margin-bottom:10px;padding:6px 10px;background:var(--sand);border-radius:6px;border-left:2px solid var(--blue)">Summe sollte 100% ergeben. Wird automatisch im Vergleich als Balken dargestellt.</div>
+          <div class="av-form-row">
+            <div><label class="av-label">Liquidität (%)</label><input class="av-input" id="av-f-strat-liquiditaet" type="number" step="0.1" placeholder="z.B. 5.0" oninput="avCalcStratTotal()"></div>
+            <div><label class="av-label">Aktien (%)</label><input class="av-input" id="av-f-strat-aktien" type="number" step="0.1" placeholder="z.B. 30.0" oninput="avCalcStratTotal()"></div>
+          </div>
+          <div class="av-form-row">
+            <div><label class="av-label">Obligationen (%)</label><input class="av-input" id="av-f-strat-obligationen" type="number" step="0.1" placeholder="z.B. 35.0" oninput="avCalcStratTotal()"></div>
+            <div><label class="av-label">Immobilien (%)</label><input class="av-input" id="av-f-strat-immobilien" type="number" step="0.1" placeholder="z.B. 20.0" oninput="avCalcStratTotal()"></div>
+          </div>
+          <div class="av-form-row">
+            <div><label class="av-label">Alternative Anlagen (%)</label><input class="av-input" id="av-f-strat-alternative" type="number" step="0.1" placeholder="z.B. 10.0" oninput="avCalcStratTotal()"></div>
+            <div style="display:flex;align-items:flex-end;padding-bottom:2px">
+              <div id="av-strat-total" style="font-size:12px;font-family:'JetBrains Mono',monospace;padding:8px 12px;border-radius:7px;border:1px solid var(--border);background:var(--sand);width:100%;color:var(--text-3)">Total: —</div>
+            </div>
           </div>
 
           <div class="av-section-title">Verwaltungskosten</div>
@@ -4154,6 +4175,8 @@ const AV_FIELDS = [
   { group: 'Stiftungskennzahlen', key: 'versicherte',       label: 'Anzahl Versicherte (Aktive)',     unit: 'int',  higherIsBetter: null  },
   { group: 'Stiftungskennzahlen', key: 'altersrentner',     label: 'Anzahl Altersrentner',           unit: 'int',  higherIsBetter: null  },
   { group: 'Stiftungskennzahlen', key: 'invalidenrentner',  label: 'Anzahl Invalidenrentner',        unit: 'int',  higherIsBetter: null  },
+  { group: 'Stiftungskennzahlen', key: 'ehegattenrenten',  label: 'Anzahl Ehegattenrenten',         unit: 'int',  higherIsBetter: null  },
+  { group: 'Stiftungskennzahlen', key: 'waisenrenten',      label: 'Anzahl Waisenrenten',             unit: 'int',  higherIsBetter: null  },
   { group: 'Stiftungskennzahlen', key: 'verhaeltnis',       label: 'Verhältnis Aktive/Rentner',      unit: 'text', higherIsBetter: null  },
   { group: 'Stiftungskennzahlen', key: 'rentenquote',       label: 'Rentenquote',                    unit: '%',    higherIsBetter: false },
   { group: 'Stiftungskennzahlen', key: 'bilanzsumme',       label: 'Bilanzsumme',                    unit: 'CHF',  higherIsBetter: null  },
@@ -4161,7 +4184,7 @@ const AV_FIELDS = [
   { group: 'Stiftungskennzahlen', key: 'vk_aktive',         label: 'Vorsorgekapital Aktive',         unit: 'CHF',  higherIsBetter: null  },
   { group: 'Stiftungskennzahlen', key: 'vk_rentner',        label: 'Vorsorgekapital Rentner',        unit: 'CHF',  higherIsBetter: null  },
   { group: 'Stiftungskennzahlen', key: 'rueckstellungen',   label: 'Technische Rückstellungen',      unit: 'CHF',  higherIsBetter: null  },
-  { group: 'Stiftungskennzahlen', key: 'sollzins',          label: 'Sollzins / Techn. Zinssatz',     unit: '%',    higherIsBetter: false },
+  { group: 'Stiftungskennzahlen', key: 'sollzins',          label: 'Technischer Zinssatz',     unit: '%',    higherIsBetter: false },
   { group: 'Stiftungskennzahlen', key: 'wsr_aktuell',       label: 'Wertschwankungsres. aktuell',    unit: '%',    higherIsBetter: true  },
   { group: 'Stiftungskennzahlen', key: 'wsr_ziel',          label: 'Wertschwankungsres. Ziel',       unit: '%',    higherIsBetter: null  },
   // Deckungsgrad
@@ -4207,6 +4230,12 @@ const AV_FIELDS = [
   { group: 'Umwandlungssatz',    key: 'uws',           label: 'UWS Obligatorium',               unit: '%',    higherIsBetter: true  },
   { group: 'Umwandlungssatz',    key: 'uws_ueob',      label: 'UWS Überobligatorium',           unit: '%',    higherIsBetter: true  },
   { group: 'Umwandlungssatz',    key: 'uws_umhuellend',label: 'UWS umhüllend (Teilautonom)',    unit: '%',    higherIsBetter: true  },
+  // Anlagestrategie
+  { group: 'Anlagestrategie', key: 'strat_liquiditaet',   label: 'Liquidität',          unit: '%', higherIsBetter: null },
+  { group: 'Anlagestrategie', key: 'strat_aktien',        label: 'Aktien',              unit: '%', higherIsBetter: null },
+  { group: 'Anlagestrategie', key: 'strat_obligationen',  label: 'Obligationen',        unit: '%', higherIsBetter: null },
+  { group: 'Anlagestrategie', key: 'strat_immobilien',    label: 'Immobilien',          unit: '%', higherIsBetter: null },
+  { group: 'Anlagestrategie', key: 'strat_alternative',   label: 'Alternative Anlagen', unit: '%', higherIsBetter: null },
   // Verwaltungskosten
   { group: 'Verwaltungskosten',  key: 'verw_fix',      label: 'Fixbetrag pro Person (CHF/J.)',  unit: 'CHF',  higherIsBetter: false },
   { group: 'Verwaltungskosten',  key: 'verw_info',     label: 'Bemerkung',                      unit: 'text', higherIsBetter: null  },
@@ -4240,6 +4269,25 @@ function avReadFormValue(el) {
   if (!el) return '';
   const raw = el.dataset.rawValue || el.value;
   return raw.replace(/[^0-9.-]/g, '').trim();
+}
+
+
+// ── Anlagestrategie: Total berechnen ──
+function avCalcStratTotal() {
+  const keys = ['strat-liquiditaet','strat-aktien','strat-obligationen','strat-immobilien','strat-alternative'];
+  let total = 0;
+  keys.forEach(k => {
+    const v = parseFloat(document.getElementById('av-f-' + k)?.value || '0');
+    if (!isNaN(v)) total += v;
+  });
+  const el = document.getElementById('av-strat-total');
+  if (!el) return;
+  const rounded = Math.round(total * 10) / 10;
+  const ok = Math.abs(rounded - 100) < 0.1;
+  el.textContent = 'Total: ' + rounded.toFixed(1) + '%';
+  el.style.color = ok ? 'var(--teal)' : rounded > 100 ? 'var(--danger)' : 'var(--text-3)';
+  el.style.borderColor = ok ? 'rgba(14,124,110,.3)' : rounded > 100 ? 'rgba(184,50,50,.3)' : 'var(--border)';
+  el.style.background = ok ? 'var(--teal-lt)' : 'var(--sand)';
 }
 
 // ── UWS: Toggle based on Typ ──
@@ -4366,7 +4414,7 @@ function avFillForm(a) {
   });
   avUpdateUwsFields();
   // Format large integers after filling
-  ['bilanzsumme','gesamtkapital','vk-aktive','vk-rentner','rueckstellungen','anschluesse','versicherte','altersrentner','invalidenrentner'].forEach(k => {
+  ['bilanzsumme','gesamtkapital','vk-aktive','vk-rentner','rueckstellungen','anschluesse','versicherte','altersrentner','invalidenrentner','ehegattenrenten','waisenrenten'].forEach(k => {
     const el = document.getElementById('av-f-' + k);
     if (el && el.value) avFormatThousands(el);
   });
