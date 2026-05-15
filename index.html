@@ -2150,11 +2150,18 @@ footer{border-top:1px solid var(--border);padding:52px 0 32px;background:var(--w
         <div class="av-card-hdr">
           <span class="av-card-title" id="av-form-title">Neuer Anbieter</span>
           <div style="display:flex;gap:6px;align-items:center">
-            <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;padding:6px 12px;border:1px solid var(--border-2);border-radius:7px;font-size:11px;color:var(--text-2);background:var(--sand);transition:all .15s" title="Geschäftsbericht hochladen — AI befüllt die Felder automatisch">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M12 18v-6"/><path d="m9 15 3-3 3 3"/></svg>
-              Geschäftsbericht
-              <input type="file" accept=".pdf" style="display:none" onchange="avImportGeschaeftsbericht(this)">
-            </label>
+            <div style="display:flex;align-items:center;gap:6px">
+              <label id="av-gb-label" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;padding:6px 12px;border:1px solid var(--border-2);border-radius:7px;font-size:11px;color:var(--text-2);background:var(--sand);transition:all .15s" title="Geschäftsbericht als PDF auswählen">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M12 18v-6"/><path d="m9 15 3-3 3 3"/></svg>
+                <span id="av-gb-label-text">Geschäftsbericht</span>
+                <input type="file" id="av-gb-input" accept=".pdf" style="display:none" onchange="avGbFileSelected(this)">
+              </label>
+              <button id="av-gb-analyse-btn" onclick="avImportGeschaeftsbericht()" style="display:none;padding:6px 12px;font-size:11px;font-weight:600;background:var(--blue);color:#fff;border:none;border-radius:7px;cursor:pointer;transition:all .15s">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:4px"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+                Analysieren
+              </button>
+              <button id="av-gb-clear-btn" onclick="avGbClear()" style="display:none;padding:6px 8px;font-size:11px;background:none;border:1px solid var(--border-2);border-radius:7px;cursor:pointer;color:var(--text-4)">✕</button>
+            </div>
             <button class="btn-ghost" id="av-delete-btn" onclick="avDeleteCurrent()" style="font-size:11px;padding:5px 10px;color:var(--danger);display:none">Löschen</button>
             <button class="btn btn-primary" onclick="avSaveCurrent()" style="font-size:12px;padding:7px 16px">Speichern</button>
           </div>
@@ -4290,8 +4297,46 @@ function avCalcStratTotal() {
 
 
 // ── ANBIETER: Geschäftsbericht Import ──
-async function avImportGeschaeftsbericht(input) {
+function avGbFileSelected(input) {
   const file = input.files[0];
+  if (!file) return;
+  const sizeMB = (file.size / 1024 / 1024).toFixed(1);
+  const shortName = file.name.length > 18 ? file.name.substring(0,16)+'...' : file.name;
+  document.getElementById('av-gb-label-text').textContent = shortName + ' (' + sizeMB + ' MB)';
+  document.getElementById('av-gb-label').style.borderColor = 'rgba(27,79,216,.4)';
+  document.getElementById('av-gb-label').style.background = 'var(--blue-lt)';
+  document.getElementById('av-gb-label').style.color = 'var(--blue)';
+  document.getElementById('av-gb-analyse-btn').style.display = 'inline-flex';
+  document.getElementById('av-gb-clear-btn').style.display = 'inline-flex';
+}
+
+function avGbClear() {
+  document.getElementById('av-gb-input').value = '';
+  document.getElementById('av-gb-label-text').textContent = 'Geschäftsbericht';
+  document.getElementById('av-gb-label').style.borderColor = '';
+  document.getElementById('av-gb-label').style.background = '';
+  document.getElementById('av-gb-label').style.color = '';
+  document.getElementById('av-gb-analyse-btn').style.display = 'none';
+  document.getElementById('av-gb-clear-btn').style.display = 'none';
+  document.getElementById('av-import-result').style.display = 'none';
+}
+
+async function avImportGeschaeftsbericht() {
+  const input = document.getElementById('av-gb-input');
+  const file = input.files[0];
+  
+  // Check file size — Netlify limit is ~6MB for request body
+  const maxMB = 4;
+  if (file.size > maxMB * 1024 * 1024) {
+    document.getElementById('av-import-status').style.display = 'none';
+    const resultEl = document.getElementById('av-import-result');
+    resultEl.style.display = 'block';
+    resultEl.style.background = 'var(--gold-lt)';
+    resultEl.style.color = 'var(--gold)';
+    resultEl.style.borderColor = 'rgba(184,150,90,.2)';
+    resultEl.innerHTML = `⚠ Der Geschäftsbericht ist ${(file.size/1024/1024).toFixed(1)} MB gross — das Maximum beträgt ${maxMB} MB. Bitte lade eine kleinere Version hoch (z.B. ohne Bilder oder nur relevante Seiten).`;
+    return;
+  }
   if (!file) return;
   const apiKey = localStorage.getItem('piq_api_key');
   if (!apiKey) { alert('Bitte zuerst API Key hinterlegen.'); return; }
@@ -4436,7 +4481,8 @@ Alle Prozentwerte als normale Dezimalzahl (z.B. 6.8 für 6.8%, nicht 0.068). Feh
     resultEl.innerHTML = 'Fehler: ' + e.message;
   }
 
-  input.value = '';
+  // keep file selected for reference
+  document.getElementById('av-gb-analyse-btn').style.display = 'none';
 }
 
 // ── UWS: Toggle based on Typ ──
