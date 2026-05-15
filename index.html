@@ -4360,11 +4360,19 @@ Alle Prozentwerte als normale Dezimalzahl (z.B. 6.8 für 6.8%, nicht 0.068). Feh
       })
     });
 
-    if (!res.ok) { const e = await res.json(); throw new Error(e.error?.message || 'API Fehler'); }
-    const data = await res.json();
+    const resText = await res.text();
+    let data;
+    try { data = JSON.parse(resText); } catch(e) {
+      throw new Error('Server-Antwort ungültig: ' + resText.substring(0,120));
+    }
+    if (!res.ok) throw new Error(data?.error?.message || data?.message || `API Fehler (${res.status})`);
     const raw = data.content.map(c => c.text || '').join('');
     const clean = raw.replace(/```json|```/g, '').trim();
-    const parsed = JSON.parse(clean);
+    // Extract JSON object if wrapped in other text
+    const jsonStart = clean.indexOf('{');
+    const jsonEnd = clean.lastIndexOf('}');
+    if (jsonStart === -1 || jsonEnd === -1) throw new Error('Keine strukturierten Daten im Bericht gefunden.');
+    const parsed = JSON.parse(clean.slice(jsonStart, jsonEnd + 1));
 
     // Count filled fields
     let filled = 0, total = 0;
