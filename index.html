@@ -2174,7 +2174,7 @@ footer{border-top:1px solid var(--border);padding:52px 0 32px;background:var(--w
           <div class="av-form-row full">
             <div>
               <label class="av-label">Typ</label>
-              <select class="av-input" id="av-f-typ">
+              <select class="av-input" id="av-f-typ" onchange="avUpdateUwsFields()">
                 <option value="">— bitte wählen —</option>
                 <option value="Vollversicherung">Vollversicherung</option>
                 <option value="Sammelstiftung (teilautonom)">Sammelstiftung (teilautonom)</option>
@@ -2185,38 +2185,89 @@ footer{border-top:1px solid var(--border);padding:52px 0 32px;background:var(--w
             <div><label class="av-label">Notizen / Besonderheiten</label><textarea class="av-input" id="av-f-notizen" rows="2" placeholder="z.B. Ansprechperson, persönliche Einschätzung, Besonderheiten..." style="resize:vertical"></textarea></div>
           </div>
 
+          <div class="av-section-title">Stiftungskennzahlen</div>
+          <div class="av-form-row">
+            <div><label class="av-label">Anzahl Anschlüsse</label><input class="av-input" id="av-f-anschluesse" type="number" step="1" placeholder="z.B. 1'200"></div>
+            <div><label class="av-label">Anzahl Versicherte (Aktive)</label><input class="av-input" id="av-f-versicherte" type="number" step="1" placeholder="z.B. 45'000" onchange="avCalcKennzahlen()"></div>
+          </div>
+          <div class="av-form-row">
+            <div><label class="av-label">Anzahl Altersrentner</label><input class="av-input" id="av-f-altersrentner" type="number" step="1" placeholder="z.B. 8'500" onchange="avCalcKennzahlen()"></div>
+            <div><label class="av-label">Anzahl Invalidenrentner</label><input class="av-input" id="av-f-invalidenrentner" type="number" step="1" placeholder="z.B. 1'200" onchange="avCalcKennzahlen()"></div>
+          </div>
+          <div class="av-form-row">
+            <div><label class="av-label">Verhältnis Aktive / Rentner</label><input class="av-input" id="av-f-verhaeltnis" type="text" placeholder="z.B. 4.2 : 1 (auto berechnet)" id="av-f-verhaeltnis" readonly style="background:var(--sand-2);color:var(--text-3)"></div>
+            <div><label class="av-label">Rentenquote (%)</label><input class="av-input" id="av-f-rentenquote" type="number" step="0.1" placeholder="z.B. 19.2" readonly style="background:var(--sand-2);color:var(--text-3)"></div>
+          </div>
+          <div class="av-form-row">
+            <div><label class="av-label">Bilanzsumme (CHF)</label><input class="av-input" id="av-f-bilanzsumme" type="number" step="1000000" placeholder="z.B. 12000000000"></div>
+            <div><label class="av-label">Gesamtkapital (CHF)</label><input class="av-input" id="av-f-gesamtkapital" type="number" step="1000000" placeholder="z.B. 11500000000"></div>
+          </div>
+          <div class="av-form-row">
+            <div><label class="av-label">Vorsorgekapital Aktive (CHF)</label><input class="av-input" id="av-f-vk-aktive" type="number" step="1000000" placeholder="z.B. 8000000000"></div>
+            <div><label class="av-label">Vorsorgekapital Rentner (CHF)</label><input class="av-input" id="av-f-vk-rentner" type="number" step="1000000" placeholder="z.B. 3500000000"></div>
+          </div>
+          <div class="av-form-row">
+            <div><label class="av-label">Technische Rückstellungen (CHF)</label><input class="av-input" id="av-f-rueckstellungen" type="number" step="1000000" placeholder="z.B. 500000000"></div>
+            <div><label class="av-label">Sollzins / Technischer Zinssatz (%)</label><input class="av-input" id="av-f-sollzins" type="number" step="0.01" placeholder="z.B. 1.75"></div>
+          </div>
+          <div class="av-form-row">
+            <div><label class="av-label">Wertschwankungsreserven — aktuell (%)</label><input class="av-input" id="av-f-wsr-aktuell" type="number" step="0.1" placeholder="z.B. 12.5"></div>
+            <div><label class="av-label">Wertschwankungsreserven — Ziel (%)</label><input class="av-input" id="av-f-wsr-ziel" type="number" step="0.1" placeholder="z.B. 15.0"></div>
+          </div>
+
+          <div class="av-section-title">Deckungsgrad (31.12. pro Jahr)</div>
+          
+          <div class="av-form-row"><div><label class="av-label">2016</label><input class="av-input" id="av-f-dg-2016" type="number" step="0.1" placeholder="z.B. 108.5"></div><div><label class="av-label">2017</label><input class="av-input" id="av-f-dg-2017" type="number" step="0.1" placeholder="z.B. 108.5"></div></div>
+          <div class="av-form-row"><div><label class="av-label">2018</label><input class="av-input" id="av-f-dg-2018" type="number" step="0.1" placeholder="z.B. 108.5"></div><div><label class="av-label">2019</label><input class="av-input" id="av-f-dg-2019" type="number" step="0.1" placeholder="z.B. 108.5"></div></div>
+          <div class="av-form-row"><div><label class="av-label">2020</label><input class="av-input" id="av-f-dg-2020" type="number" step="0.1" placeholder="z.B. 108.5"></div><div><label class="av-label">2021</label><input class="av-input" id="av-f-dg-2021" type="number" step="0.1" placeholder="z.B. 108.5"></div></div>
+          <div class="av-form-row"><div><label class="av-label">2022</label><input class="av-input" id="av-f-dg-2022" type="number" step="0.1" placeholder="z.B. 108.5"></div><div><label class="av-label">2023</label><input class="av-input" id="av-f-dg-2023" type="number" step="0.1" placeholder="z.B. 108.5"></div></div>
+          <div class="av-form-row"><div><label class="av-label">2024</label><input class="av-input" id="av-f-dg-2024" type="number" step="0.1" placeholder="z.B. 108.5"></div><div><label class="av-label">2025</label><input class="av-input" id="av-f-dg-2025" type="number" step="0.1" placeholder="z.B. 108.5"></div></div>
+          <div class="av-form-row">
+            <div><label class="av-label" style="color:var(--blue)">Ø 5 Jahre (%)</label><input class="av-input" id="av-f-dg-avg5" type="number" step="0.01" placeholder="auto oder manuell" style="border-color:rgba(27,79,216,.3)"></div>
+            <div><label class="av-label" style="color:var(--blue)">Ø 10 Jahre (%)</label><input class="av-input" id="av-f-dg-avg10" type="number" step="0.01" placeholder="auto oder manuell" style="border-color:rgba(27,79,216,.3)"></div>
+          </div>
+
+          <div class="av-section-title">Verzinsung (pro Jahr)</div>
+          
+          <div class="av-form-row"><div><label class="av-label">2016</label><input class="av-input" id="av-f-verz-2016" type="number" step="0.01" placeholder="z.B. 1.75"></div><div><label class="av-label">2017</label><input class="av-input" id="av-f-verz-2017" type="number" step="0.01" placeholder="z.B. 1.75"></div></div>
+          <div class="av-form-row"><div><label class="av-label">2018</label><input class="av-input" id="av-f-verz-2018" type="number" step="0.01" placeholder="z.B. 1.75"></div><div><label class="av-label">2019</label><input class="av-input" id="av-f-verz-2019" type="number" step="0.01" placeholder="z.B. 1.75"></div></div>
+          <div class="av-form-row"><div><label class="av-label">2020</label><input class="av-input" id="av-f-verz-2020" type="number" step="0.01" placeholder="z.B. 1.75"></div><div><label class="av-label">2021</label><input class="av-input" id="av-f-verz-2021" type="number" step="0.01" placeholder="z.B. 1.75"></div></div>
+          <div class="av-form-row"><div><label class="av-label">2022</label><input class="av-input" id="av-f-verz-2022" type="number" step="0.01" placeholder="z.B. 1.75"></div><div><label class="av-label">2023</label><input class="av-input" id="av-f-verz-2023" type="number" step="0.01" placeholder="z.B. 1.75"></div></div>
+          <div class="av-form-row"><div><label class="av-label">2024</label><input class="av-input" id="av-f-verz-2024" type="number" step="0.01" placeholder="z.B. 1.75"></div><div><label class="av-label">2025</label><input class="av-input" id="av-f-verz-2025" type="number" step="0.01" placeholder="z.B. 1.75"></div></div>
+          <div class="av-form-row">
+            <div><label class="av-label" style="color:var(--blue)">Ø 5 Jahre (%)</label><input class="av-input" id="av-f-verz-avg5" type="number" step="0.01" placeholder="auto oder manuell" style="border-color:rgba(27,79,216,.3)"></div>
+            <div><label class="av-label" style="color:var(--blue)">Ø 10 Jahre (%)</label><input class="av-input" id="av-f-verz-avg10" type="number" step="0.01" placeholder="auto oder manuell" style="border-color:rgba(27,79,216,.3)"></div>
+          </div>
+
+          <div class="av-section-title">Anlageperformance (pro Jahr)</div>
+          
+          <div class="av-form-row"><div><label class="av-label">2016</label><input class="av-input" id="av-f-perf-2016" type="number" step="0.01" placeholder="z.B. 4.20"></div><div><label class="av-label">2017</label><input class="av-input" id="av-f-perf-2017" type="number" step="0.01" placeholder="z.B. 4.20"></div></div>
+          <div class="av-form-row"><div><label class="av-label">2018</label><input class="av-input" id="av-f-perf-2018" type="number" step="0.01" placeholder="z.B. 4.20"></div><div><label class="av-label">2019</label><input class="av-input" id="av-f-perf-2019" type="number" step="0.01" placeholder="z.B. 4.20"></div></div>
+          <div class="av-form-row"><div><label class="av-label">2020</label><input class="av-input" id="av-f-perf-2020" type="number" step="0.01" placeholder="z.B. 4.20"></div><div><label class="av-label">2021</label><input class="av-input" id="av-f-perf-2021" type="number" step="0.01" placeholder="z.B. 4.20"></div></div>
+          <div class="av-form-row"><div><label class="av-label">2022</label><input class="av-input" id="av-f-perf-2022" type="number" step="0.01" placeholder="z.B. 4.20"></div><div><label class="av-label">2023</label><input class="av-input" id="av-f-perf-2023" type="number" step="0.01" placeholder="z.B. 4.20"></div></div>
+          <div class="av-form-row"><div><label class="av-label">2024</label><input class="av-input" id="av-f-perf-2024" type="number" step="0.01" placeholder="z.B. 4.20"></div><div><label class="av-label">2025</label><input class="av-input" id="av-f-perf-2025" type="number" step="0.01" placeholder="z.B. 4.20"></div></div>
+          <div class="av-form-row">
+            <div><label class="av-label" style="color:var(--blue)">Ø 5 Jahre (%)</label><input class="av-input" id="av-f-perf-avg5" type="number" step="0.01" placeholder="auto oder manuell" style="border-color:rgba(27,79,216,.3)"></div>
+            <div><label class="av-label" style="color:var(--blue)">Ø 10 Jahre (%)</label><input class="av-input" id="av-f-perf-avg10" type="number" step="0.01" placeholder="auto oder manuell" style="border-color:rgba(27,79,216,.3)"></div>
+          </div>
+
+          <div class="av-section-title">Umwandlungssatz</div>
+          <div id="av-uws-vollv" class="av-form-row">
+            <div><label class="av-label">UWS Obligatorium (%)</label><input class="av-input" id="av-f-uws" type="number" step="0.01" placeholder="z.B. 6.80"></div>
+            <div><label class="av-label">UWS Überobligatorium (%)</label><input class="av-input" id="av-f-uws-ueob" type="number" step="0.01" placeholder="z.B. 5.40"></div>
+          </div>
+          <div id="av-uws-teilaut" class="av-form-row" style="display:none">
+            <div><label class="av-label">UWS umhüllend (%)</label><input class="av-input" id="av-f-uws-umhuellend" type="number" step="0.01" placeholder="z.B. 5.80"></div>
+            <div></div>
+          </div>
+
           <div class="av-section-title">Verwaltungskosten</div>
           <div class="av-form-row">
             <div><label class="av-label">Fixbetrag pro Person (CHF/Jahr)</label><input class="av-input" id="av-f-verw-fix" type="number" step="1" placeholder="z.B. 300"></div>
             <div><label class="av-label">Bemerkung / Individuell</label><input class="av-input" id="av-f-verw-info" type="text" placeholder="z.B. ab 50 Personen verhandelbar"></div>
           </div>
 
-          <div class="av-section-title">Verzinsung &amp; Anlageperformance</div>
-          <div class="av-form-row">
-            <div><label class="av-label">Verzinsung Ø 5 Jahre (%)</label><input class="av-input" id="av-f-verz-5" type="number" step="0.01" placeholder="z.B. 1.80"></div>
-            <div><label class="av-label">Verzinsung Ø 10 Jahre (%)</label><input class="av-input" id="av-f-verz-10" type="number" step="0.01" placeholder="z.B. 1.50"></div>
-          </div>
-          <div class="av-form-row">
-            <div><label class="av-label">Anlageperformance Ø 5 Jahre (%)</label><input class="av-input" id="av-f-perf-5" type="number" step="0.01" placeholder="z.B. 4.20"></div>
-            <div><label class="av-label">Anlageperformance Ø 10 Jahre (%)</label><input class="av-input" id="av-f-perf-10" type="number" step="0.01" placeholder="z.B. 3.90"></div>
-          </div>
-
-          <div class="av-section-title">Umwandlungssatz</div>
-          <div class="av-form-row">
-            <div><label class="av-label">UWS aktuelles Jahr — Obligatorium (%)</label><input class="av-input" id="av-f-uws" type="number" step="0.01" placeholder="z.B. 6.80"></div>
-            <div><label class="av-label">UWS aktuelles Jahr — Überobligatorium (%)</label><input class="av-input" id="av-f-uws-ueob" type="number" step="0.01" placeholder="z.B. 5.40"></div>
-          </div>
-
-          <div class="av-section-title">Deckungsgrad</div>
-          <div class="av-form-row">
-            <div><label class="av-label">Deckungsgrad per 31.12. akt. Jahr (%)</label><input class="av-input" id="av-f-dg-aktuell" type="number" step="0.1" placeholder="z.B. 108.5"></div>
-            <div></div>
-          </div>
-          <div class="av-form-row">
-            <div><label class="av-label">Deckungsgrad Ø 5 Jahre (%)</label><input class="av-input" id="av-f-dg-5" type="number" step="0.1" placeholder="z.B. 107.2"></div>
-            <div><label class="av-label">Deckungsgrad Ø 10 Jahre (%)</label><input class="av-input" id="av-f-dg-10" type="number" step="0.1" placeholder="z.B. 105.8"></div>
-          </div>
-
+        </div>
         </div>
       </div>
 
@@ -4107,18 +4158,100 @@ let avCompareIds = [];     // selected for comparison
 let avCompareData = null;  // last comparison result
 
 const AV_FIELDS = [
-  { group: 'Verwaltungskosten', key: 'verw_fix',    label: 'Fixbetrag pro Person (CHF/J.)', unit: 'CHF',  higherIsBetter: false },
-  { group: 'Verwaltungskosten', key: 'verw_info',   label: 'Bemerkung',                    unit: 'text', higherIsBetter: null  },
-  { group: 'Verzinsung',        key: 'verz_5',      label: 'Verzinsung Ø 5 Jahre',         unit: '%',    higherIsBetter: true  },
-  { group: 'Verzinsung',        key: 'verz_10',     label: 'Verzinsung Ø 10 Jahre',        unit: '%',    higherIsBetter: true  },
-  { group: 'Verzinsung',        key: 'perf_5',      label: 'Anlageperformance Ø 5 Jahre',  unit: '%',    higherIsBetter: true  },
-  { group: 'Verzinsung',        key: 'perf_10',     label: 'Anlageperformance Ø 10 Jahre', unit: '%',    higherIsBetter: true  },
-  { group: 'Umwandlungssatz',   key: 'uws',         label: 'UWS Obligatorium',             unit: '%',    higherIsBetter: true  },
-  { group: 'Umwandlungssatz',   key: 'uws_ueob',    label: 'UWS Überobligatorium',         unit: '%',    higherIsBetter: true  },
-  { group: 'Deckungsgrad',      key: 'dg_aktuell',  label: 'Deckungsgrad 31.12. akt. Jahr',unit: '%',    higherIsBetter: true  },
-  { group: 'Deckungsgrad',      key: 'dg_5',        label: 'Deckungsgrad Ø 5 Jahre',       unit: '%',    higherIsBetter: true  },
-  { group: 'Deckungsgrad',      key: 'dg_10',       label: 'Deckungsgrad Ø 10 Jahre',      unit: '%',    higherIsBetter: true  },
+  // Stiftungskennzahlen
+  { group: 'Stiftungskennzahlen', key: 'anschluesse',      label: 'Anzahl Anschlüsse',              unit: 'int',  higherIsBetter: null  },
+  { group: 'Stiftungskennzahlen', key: 'versicherte',       label: 'Anzahl Versicherte (Aktive)',     unit: 'int',  higherIsBetter: null  },
+  { group: 'Stiftungskennzahlen', key: 'altersrentner',     label: 'Anzahl Altersrentner',           unit: 'int',  higherIsBetter: null  },
+  { group: 'Stiftungskennzahlen', key: 'invalidenrentner',  label: 'Anzahl Invalidenrentner',        unit: 'int',  higherIsBetter: null  },
+  { group: 'Stiftungskennzahlen', key: 'verhaeltnis',       label: 'Verhältnis Aktive/Rentner',      unit: 'text', higherIsBetter: null  },
+  { group: 'Stiftungskennzahlen', key: 'rentenquote',       label: 'Rentenquote',                    unit: '%',    higherIsBetter: false },
+  { group: 'Stiftungskennzahlen', key: 'bilanzsumme',       label: 'Bilanzsumme',                    unit: 'CHF',  higherIsBetter: null  },
+  { group: 'Stiftungskennzahlen', key: 'gesamtkapital',     label: 'Gesamtkapital',                  unit: 'CHF',  higherIsBetter: null  },
+  { group: 'Stiftungskennzahlen', key: 'vk_aktive',         label: 'Vorsorgekapital Aktive',         unit: 'CHF',  higherIsBetter: null  },
+  { group: 'Stiftungskennzahlen', key: 'vk_rentner',        label: 'Vorsorgekapital Rentner',        unit: 'CHF',  higherIsBetter: null  },
+  { group: 'Stiftungskennzahlen', key: 'rueckstellungen',   label: 'Technische Rückstellungen',      unit: 'CHF',  higherIsBetter: null  },
+  { group: 'Stiftungskennzahlen', key: 'sollzins',          label: 'Sollzins / Techn. Zinssatz',     unit: '%',    higherIsBetter: false },
+  { group: 'Stiftungskennzahlen', key: 'wsr_aktuell',       label: 'Wertschwankungsres. aktuell',    unit: '%',    higherIsBetter: true  },
+  { group: 'Stiftungskennzahlen', key: 'wsr_ziel',          label: 'Wertschwankungsres. Ziel',       unit: '%',    higherIsBetter: null  },
+  // Deckungsgrad
+  { group: 'Deckungsgrad',      key: 'dg_2016',    label: 'Deckungsgrad 2016',           unit: '%',   higherIsBetter: true  },
+  { group: 'Deckungsgrad',      key: 'dg_2017',    label: 'Deckungsgrad 2017',           unit: '%',   higherIsBetter: true  },
+  { group: 'Deckungsgrad',      key: 'dg_2018',    label: 'Deckungsgrad 2018',           unit: '%',   higherIsBetter: true  },
+  { group: 'Deckungsgrad',      key: 'dg_2019',    label: 'Deckungsgrad 2019',           unit: '%',   higherIsBetter: true  },
+  { group: 'Deckungsgrad',      key: 'dg_2020',    label: 'Deckungsgrad 2020',           unit: '%',   higherIsBetter: true  },
+  { group: 'Deckungsgrad',      key: 'dg_2021',    label: 'Deckungsgrad 2021',           unit: '%',   higherIsBetter: true  },
+  { group: 'Deckungsgrad',      key: 'dg_2022',    label: 'Deckungsgrad 2022',           unit: '%',   higherIsBetter: true  },
+  { group: 'Deckungsgrad',      key: 'dg_2023',    label: 'Deckungsgrad 2023',           unit: '%',   higherIsBetter: true  },
+  { group: 'Deckungsgrad',      key: 'dg_2024',    label: 'Deckungsgrad 2024',           unit: '%',   higherIsBetter: true  },
+  { group: 'Deckungsgrad',      key: 'dg_2025',    label: 'Deckungsgrad 2025',           unit: '%',   higherIsBetter: true  },
+  { group: 'Deckungsgrad',      key: 'dg_avg5',   label: 'Deckungsgrad Ø 5 Jahre',      unit: '%',   higherIsBetter: true  },
+  { group: 'Deckungsgrad',      key: 'dg_avg10',  label: 'Deckungsgrad Ø 10 Jahre',     unit: '%',   higherIsBetter: true  },
+  // Verzinsung
+  { group: 'Verzinsung',        key: 'verz_2016',  label: 'Verzinsung 2016',             unit: '%',   higherIsBetter: true  },
+  { group: 'Verzinsung',        key: 'verz_2017',  label: 'Verzinsung 2017',             unit: '%',   higherIsBetter: true  },
+  { group: 'Verzinsung',        key: 'verz_2018',  label: 'Verzinsung 2018',             unit: '%',   higherIsBetter: true  },
+  { group: 'Verzinsung',        key: 'verz_2019',  label: 'Verzinsung 2019',             unit: '%',   higherIsBetter: true  },
+  { group: 'Verzinsung',        key: 'verz_2020',  label: 'Verzinsung 2020',             unit: '%',   higherIsBetter: true  },
+  { group: 'Verzinsung',        key: 'verz_2021',  label: 'Verzinsung 2021',             unit: '%',   higherIsBetter: true  },
+  { group: 'Verzinsung',        key: 'verz_2022',  label: 'Verzinsung 2022',             unit: '%',   higherIsBetter: true  },
+  { group: 'Verzinsung',        key: 'verz_2023',  label: 'Verzinsung 2023',             unit: '%',   higherIsBetter: true  },
+  { group: 'Verzinsung',        key: 'verz_2024',  label: 'Verzinsung 2024',             unit: '%',   higherIsBetter: true  },
+  { group: 'Verzinsung',        key: 'verz_2025',  label: 'Verzinsung 2025',             unit: '%',   higherIsBetter: true  },
+  { group: 'Verzinsung',        key: 'verz_avg5', label: 'Verzinsung Ø 5 Jahre',        unit: '%',   higherIsBetter: true  },
+  { group: 'Verzinsung',        key: 'verz_avg10',label: 'Verzinsung Ø 10 Jahre',       unit: '%',   higherIsBetter: true  },
+  // Anlageperformance
+  { group: 'Anlageperformance', key: 'perf_2016',  label: 'Anlageperformance 2016',      unit: '%',   higherIsBetter: true  },
+  { group: 'Anlageperformance', key: 'perf_2017',  label: 'Anlageperformance 2017',      unit: '%',   higherIsBetter: true  },
+  { group: 'Anlageperformance', key: 'perf_2018',  label: 'Anlageperformance 2018',      unit: '%',   higherIsBetter: true  },
+  { group: 'Anlageperformance', key: 'perf_2019',  label: 'Anlageperformance 2019',      unit: '%',   higherIsBetter: true  },
+  { group: 'Anlageperformance', key: 'perf_2020',  label: 'Anlageperformance 2020',      unit: '%',   higherIsBetter: true  },
+  { group: 'Anlageperformance', key: 'perf_2021',  label: 'Anlageperformance 2021',      unit: '%',   higherIsBetter: true  },
+  { group: 'Anlageperformance', key: 'perf_2022',  label: 'Anlageperformance 2022',      unit: '%',   higherIsBetter: true  },
+  { group: 'Anlageperformance', key: 'perf_2023',  label: 'Anlageperformance 2023',      unit: '%',   higherIsBetter: true  },
+  { group: 'Anlageperformance', key: 'perf_2024',  label: 'Anlageperformance 2024',      unit: '%',   higherIsBetter: true  },
+  { group: 'Anlageperformance', key: 'perf_2025',  label: 'Anlageperformance 2025',      unit: '%',   higherIsBetter: true  },
+  { group: 'Anlageperformance', key: 'perf_avg5', label: 'Performance Ø 5 Jahre',       unit: '%',   higherIsBetter: true  },
+  { group: 'Anlageperformance', key: 'perf_avg10',label: 'Performance Ø 10 Jahre',      unit: '%',   higherIsBetter: true  },
+  // UWS
+  { group: 'Umwandlungssatz',    key: 'uws',           label: 'UWS Obligatorium',               unit: '%',    higherIsBetter: true  },
+  { group: 'Umwandlungssatz',    key: 'uws_ueob',      label: 'UWS Überobligatorium',           unit: '%',    higherIsBetter: true  },
+  { group: 'Umwandlungssatz',    key: 'uws_umhuellend',label: 'UWS umhüllend (Teilautonom)',    unit: '%',    higherIsBetter: true  },
+  // Verwaltungskosten
+  { group: 'Verwaltungskosten',  key: 'verw_fix',      label: 'Fixbetrag pro Person (CHF/J.)',  unit: 'CHF',  higherIsBetter: false },
+  { group: 'Verwaltungskosten',  key: 'verw_info',     label: 'Bemerkung',                      unit: 'text', higherIsBetter: null  },
 ];
+
+
+// ── UWS: Toggle based on Typ ──
+function avUpdateUwsFields() {
+  const typ = document.getElementById('av-f-typ')?.value || '';
+  const vollv = document.getElementById('av-uws-vollv');
+  const teilaut = document.getElementById('av-uws-teilaut');
+  if (!vollv || !teilaut) return;
+  if (typ === 'Sammelstiftung (teilautonom)') {
+    vollv.style.display = 'none';
+    teilaut.style.display = '';
+  } else {
+    vollv.style.display = '';
+    teilaut.style.display = 'none';
+  }
+}
+
+// ── Auto-calc Verhältnis & Rentenquote ──
+function avCalcKennzahlen() {
+  const aktive = parseFloat(document.getElementById('av-f-versicherte')?.value || '');
+  const altersR = parseFloat(document.getElementById('av-f-altersrentner')?.value || '');
+  const invR = parseFloat(document.getElementById('av-f-invalidenrentner')?.value || '');
+  const totalR = (isNaN(altersR) ? 0 : altersR) + (isNaN(invR) ? 0 : invR);
+  const verhEl = document.getElementById('av-f-verhaeltnis');
+  const rqEl = document.getElementById('av-f-rentenquote');
+  if (verhEl && !isNaN(aktive) && totalR > 0) {
+    verhEl.value = (aktive / totalR).toFixed(1) + ' : 1';
+  }
+  if (rqEl && !isNaN(aktive) && aktive + totalR > 0) {
+    rqEl.value = ((totalR / (aktive + totalR)) * 100).toFixed(1);
+  }
+}
 
 // ── STORAGE ──
 function avLoad() {
@@ -4197,7 +4330,7 @@ function updateAvCompareBtn() {
 }
 
 // ── FORM ──
-const AV_FORM_KEYS = ['name','kuerzel','typ','notizen','verw_fix','verw_info','verz_5','verz_10','perf_5','perf_10','uws','uws_ueob','dg_aktuell','dg_5','dg_10'];
+const AV_FORM_KEYS = ["name", "kuerzel", "typ", "notizen", "anschluesse", "versicherte", "altersrentner", "invalidenrentner", "verhaeltnis", "rentenquote", "bilanzsumme", "gesamtkapital", "vk_aktive", "vk_rentner", "rueckstellungen", "sollzins", "wsr_aktuell", "wsr_ziel", "dg_2016", "dg_2017", "dg_2018", "dg_2019", "dg_2020", "dg_2021", "dg_2022", "dg_2023", "dg_2024", "dg_2025", "dg_avg5", "dg_avg10", "verz_2016", "verz_2017", "verz_2018", "verz_2019", "verz_2020", "verz_2021", "verz_2022", "verz_2023", "verz_2024", "verz_2025", "verz_avg5", "verz_avg10", "perf_2016", "perf_2017", "perf_2018", "perf_2019", "perf_2020", "perf_2021", "perf_2022", "perf_2023", "perf_2024", "perf_2025", "perf_avg5", "perf_avg10", "uws", "uws_ueob", "uws_umhuellend", "verw_fix", "verw_info"];
 
 function avClearForm() {
   AV_FORM_KEYS.forEach(k => {
@@ -4211,6 +4344,7 @@ function avFillForm(a) {
     const el = document.getElementById('av-f-' + k.replace(/_/g,'-'));
     if (el) el.value = a[k] || '';
   });
+  avUpdateUwsFields();
 }
 
 function avReadForm() {
